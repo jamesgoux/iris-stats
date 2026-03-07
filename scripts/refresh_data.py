@@ -405,6 +405,24 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
         cl.sort(key=lambda x: x["tt"], reverse=True)
         return cl
 
+    # Genre trends: year-over-year data for top genres
+    def _build_genre_trends(gm_y, gs_y):
+        all_years = sorted(set(list(gm_y) + list(gs_y)))
+        all_years = [y for y in all_years if int(y) >= 2012]
+        # Get top 8 genres across all time
+        total = Counter()
+        for y in all_years:
+            for g, c in (gm_y[y] + gs_y[y]).items():
+                total[g] += c
+        top_genres = [g for g, _ in total.most_common(8)]
+        # Build per-year counts for each genre
+        series = {}
+        for g in top_genres:
+            series[g] = []
+            for y in all_years:
+                series[g].append(gm_y[y].get(g, 0) + gs_y[y].get(g, 0))
+        return {"years": all_years, "genres": top_genres, "data": series}
+
     dir_list = build_crew(directors_raw)
     wr_list = build_crew(writers_raw)
 
@@ -432,6 +450,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "gm_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_movie_y.items()},
             "gs_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_show_y.items()},
             "ga_y": {y: [{"genre": g, "count": (genre_movie_y[y][g] + genre_show_y[y][g])} for g, _ in (genre_movie_y[y] + genre_show_y[y]).most_common(20)] for y in set(list(genre_movie_y) + list(genre_show_y))},
+            "gt": _build_genre_trends(genre_movie_y, genre_show_y),
             "dw": [{"day": d, "count": dwc.get(d, 0)} for d in dwn],
             "hod": {str(h): hod_all.get(h, 0) for h in range(24)},
             "hod_y": hod_by_year,

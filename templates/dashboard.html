@@ -83,7 +83,7 @@ body{overflow-x:hidden}
 <div class="fctrls">
 <div class="fbtn"><label>Type</label><select id="gs"><option value="all">Both</option><option value="movie">Movies</option><option value="show">Shows</option></select></div>
 <div class="fbtn"><label>Year</label><select id="ys"><option value="all">All Time</option></select></div>
-<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-tl">📊 Timeline</option><option value="sec-meta">🎯 Genres/Networks/Studios</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-time">📅 Day/Time/Yearly</option><option value="sec-rec">👁️ Recent</option></select></div>
+<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-tl">📊 Timeline</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-time">📅 Day/Time/Yearly</option><option value="sec-rec">👁️ Recent</option></select></div>
 <button class="rbtn" onclick="location.reload()">&#x21bb;</button>
 </div>
 </div>
@@ -114,6 +114,11 @@ body{overflow-x:hidden}
 </div>
 <div class="g3">
 <div id="sec-meta" class="cd s-g"><h3 id="gnh"><span class="i">🎯</span>Genres</h3><div id="gnc" style="height:360px"></div></div>
+</div>
+<div class="g2" id="gt-wrap" style="display:none">
+<div class="cd fw s-g"><h3><span class="i">📈</span>Genre Trends (year over year %)</h3><div id="gtc" style="height:350px"></div></div>
+</div>
+<div class="g3">
 <div class="cd s-n"><h3><span class="i">📡</span>Top Networks</h3><div id="netc" style="height:360px"></div></div>
 <div class="cd s-u"><h3><span class="i">🏢</span>Top Studios</h3><div id="stuc" style="height:360px"></div></div>
 </div>
@@ -224,6 +229,30 @@ function baseCharts(){
 
   // Genres click
   addClick(c2,document.getElementById('gnc'),'genre',gd,'genre');
+
+  // Genre trends (100% stacked area) - only show on All Time
+  var gtWrap=document.getElementById('gt-wrap');
+  if(cy==='all'&&D.c.gt){
+    gtWrap.style.display='';
+    var gt=D.c.gt;
+    var gtColors=['#e94560','#60a5fa','#a78bfa','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24'];
+    var gtSeries=gt.genres.map(function(g,i){return{name:g,type:'line',stack:'pct',areaStyle:{opacity:0.7},emphasis:{focus:'series'},data:gt.data[g],smooth:true,lineStyle:{width:0},itemStyle:{color:gtColors[i%gtColors.length]}}});
+    var cgt=echarts.init(document.getElementById('gtc'));
+    cgt.setOption({tooltip:{trigger:'axis',axisPointer:{type:'cross'},...tt,formatter:function(params){
+      // Calculate percentages
+      var total=0;params.forEach(function(p){total+=p.value});
+      var h='<b>'+params[0].axisValue+'</b><br/>';
+      params.forEach(function(p){var pct=total>0?Math.round(p.value/total*100):0;h+=p.marker+' '+p.seriesName+': '+pct+'% ('+p.value+')<br/>'});
+      return h}},
+      legend:{data:gt.genres,top:0,textStyle:{color:'#999',fontSize:10},type:'scroll'},
+      grid:{left:50,right:20,top:40,bottom:30},
+      xAxis:{type:'category',data:gt.years,axisLabel:{color:'#666'},axisLine:{lineStyle:{color:'#333'}},boundaryGap:false},
+      yAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return v}},splitLine:{lineStyle:{color:'#222'}},max:function(val){return val.max}},
+      series:gtSeries});
+    ch.push(cgt);
+  } else {
+    gtWrap.style.display='none';
+  }
 
   // Networks
   var nd=(cy!=='all'&&D.c.net_y&&D.c.net_y[cy]?D.c.net_y[cy]:(D.c.net||[])).slice(0,15).reverse();
