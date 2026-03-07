@@ -230,10 +230,42 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
 
     # Build ttw data: [{n, avg, count}] sorted by avg ascending (fastest first)
     ttw_all = []
+    catchup_all = []  # shows watched >365 days after air
     for slug, info in show_ttw.items():
-        if len(info["delays"]) >= 3:  # need at least 3 episodes
+        if len(info["delays"]) >= 3:
             ttw_all.append({"n": info["name"], "avg": round(sum(info["delays"])/len(info["delays"]), 1),
                            "ct": len(info["delays"])})
+
+    # Catch-up list: shows where avg delay > 365 days
+    catchup_shows = defaultdict(lambda: {"name": "", "delays": [], "delays_y": defaultdict(list)})
+    for key, info in ep_first_watch.items():
+        try:
+            aired = datetime.fromisoformat(info["aired"].replace("Z", "+00:00"))
+            watched = datetime.fromisoformat(info["watched"].replace("Z", "+00:00"))
+            days = (watched - aired).total_seconds() / 86400
+            if days > 365:
+                catchup_shows[info["slug"]]["name"] = info["show"]
+                catchup_shows[info["slug"]]["delays"].append(days)
+                catchup_shows[info["slug"]]["delays_y"][info["year"]].append(days)
+        except: pass
+
+    for slug, info in catchup_shows.items():
+        if len(info["delays"]) >= 3:
+            avg_days = sum(info["delays"]) / len(info["delays"])
+            avg_years = round(avg_days / 365, 1)
+            catchup_all.append({"n": info["name"], "avg": avg_years, "ct": len(info["delays"])})
+    catchup_all.sort(key=lambda x: x["avg"])
+
+    catchup_by_year = {}
+    for slug, info in catchup_shows.items():
+        for yr, delays in info["delays_y"].items():
+            if len(delays) >= 2:
+                if yr not in catchup_by_year: catchup_by_year[yr] = []
+                avg_years = round(sum(delays) / len(delays) / 365, 1)
+                catchup_by_year[yr].append({"n": info["name"], "avg": avg_years, "ct": len(delays)})
+    for yr in catchup_by_year:
+        catchup_by_year[yr].sort(key=lambda x: x["avg"])
+
     ttw_all.sort(key=lambda x: x["avg"])
 
     ttw_by_year = {}
@@ -530,6 +562,8 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "f": first_all,
             "ttw": ttw_all[:25],
             "ttw_y": {y: v[:25] for y, v in ttw_by_year.items()},
+            "cup": catchup_all[:25],
+            "cup_y": {y: v[:25] for y, v in catchup_by_year.items()},
             "vy": vintage_data,
             "vy_y": vintage_by_year,
             "mch": movies_by_community,
