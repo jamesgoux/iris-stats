@@ -27,10 +27,11 @@ jobs:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
         run: python scripts/refresh_headshots.py
 
-      - name: Rebuild dashboard with new headshots
+      - name: Rebuild dashboard (full refresh with cast+studios)
         env:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
           TRAKT_USERNAME: ${{ secrets.TRAKT_USERNAME }}
+          FULL_REFRESH: "1"
         run: python scripts/refresh_data.py
 
       - name: Commit and push

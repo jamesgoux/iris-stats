@@ -319,13 +319,25 @@ entries = [norm_movie(e) for e in raw_movies] + [norm_show(e) for e in raw_shows
 entries.sort(key=lambda x: x["watched_at"], reverse=True)
 print(f"  Total: {len(entries)} entries")
 
-print("\n[2/3] Fetching cast + studios...")
-people, slug_studios = fetch_cast_and_studios(entries)
-
-# Save people and entries for other scripts
 os.makedirs("data", exist_ok=True)
-with open("data/people.json", "w") as f:
-    json.dump(people, f, separators=(',', ':'))
+
+# Cast+studios: only on full refresh (FULL_REFRESH=1) or when no people.json exists
+do_cast = os.environ.get("FULL_REFRESH") == "1" or not os.path.exists("data/people.json")
+if do_cast:
+    print("\n[2/3] Fetching cast + studios...")
+    people, slug_studios = fetch_cast_and_studios(entries)
+    with open("data/people.json", "w") as f:
+        json.dump(people, f, separators=(',', ':'))
+else:
+    print("\n[2/3] Using cached cast + studios (set FULL_REFRESH=1 to re-fetch)")
+    with open("data/people.json") as f:
+        people = json.load(f)
+    slug_studios = {}
+    if os.path.exists("data/studios.json"):
+        with open("data/studios.json") as f:
+            raw = json.load(f)
+        for k, v in raw.items():
+            slug_studios[k] = v if isinstance(v, list) else [v]
 
 # Save entry slugs with last watched year for headshot priority
 slug_recency = {}
