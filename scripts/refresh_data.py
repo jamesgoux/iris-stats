@@ -502,7 +502,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
         for y in all_years:
             for g, c in (gm_y[y] + gs_y[y]).items():
                 total[g] += c
-        top_genres = [g for g, _ in total.most_common(8)]
+        top_genres = [g for g, _ in total.most_common(12)]
         series = {}
         for g in top_genres:
             series[g] = []
