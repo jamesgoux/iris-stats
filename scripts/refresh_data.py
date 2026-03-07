@@ -339,6 +339,7 @@ data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:
     template = f.read()
 html = template.replace("__DASHBOARD_DATA__", data_str)
+html = html.replace("__BUILD_TIME__", datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"))
 with open("index.html", "w") as f:
     f.write(html)
 

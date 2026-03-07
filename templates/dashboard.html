@@ -9,14 +9,16 @@
 <style>
 :root{--bg:#0f0f0f;--sf:#1a1a2e;--ac:#e94560;--tx:#eee;--t2:#999;--gr:#4ade80;--bl:#60a5fa;--pu:#a78bfa;--or:#fb923c}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:16px}
-.dash{max-width:1400px;margin:0 auto}
-.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.hdr h1{font-size:24px;font-weight:700}.hdr h1 span{color:var(--ac)}
-.ctrls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.yf,.gtog{display:flex;align-items:center;gap:6px;background:var(--sf);padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.06)}
-.yf label,.gtog label{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
-.yf select,.gtog select{background:#111;color:var(--tx);border:1px solid #333;border-radius:5px;padding:4px 8px;font-size:13px;cursor:pointer}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:0}
+.dash{max-width:1400px;margin:0 auto;padding:0 16px 16px}
+.fbar{position:sticky;top:0;z-index:100;background:rgba(15,15,15,.95);backdrop-filter:blur(10px);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:20px}
+.fbar h1{font-size:20px;font-weight:700}.fbar h1 span{color:var(--ac)}
+.fctrls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fbtn{background:var(--sf);border:1px solid rgba(255,255,255,.1);color:var(--tx);border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:44px}
+.fbtn:active{background:#222}
+.fbtn select{background:transparent;color:var(--tx);border:none;font-size:14px;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:4px}
+.fbtn label{font-size:10px;color:var(--t2);display:block;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px}
+.rbtn{background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:10px 14px;font-size:16px;cursor:pointer;min-height:44px}
 .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:22px}
 .sc{background:var(--sf);border-radius:10px;padding:14px 12px;text-align:center;border:1px solid rgba(255,255,255,.06)}
 .sc .v{font-size:26px;font-weight:800;line-height:1.1}.sc .l{font-size:10px;color:var(--t2);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
@@ -43,25 +45,29 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .poster-item span{display:block;font-size:10px;color:var(--t2);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dr td{padding:4px 8px;background:rgba(15,52,96,.15)!important}
 .dr table{font-size:11px}.dr table td{padding:3px 6px;border:none}
+.status{text-align:center;padding:20px;color:var(--t2);font-size:11px;border-top:1px solid rgba(255,255,255,.04);margin-top:20px}
+.status span{margin:0 10px}
 @media(max-width:768px){
 .g2,.g3{grid-template-columns:1fr}
 .sg{grid-template-columns:repeat(3,1fr)}
-body{padding:10px;overflow-x:hidden}
-.dash{overflow-x:hidden}
+body{overflow-x:hidden}
+.dash{overflow-x:hidden;padding:0 10px 10px}
 .cd{padding:12px}
 .cd [id$="c"]{height:260px!important}
 #sdc,#sec{height:400px!important}
+.fbar{padding:10px 12px}
+.fbar h1{font-size:16px}
 }
 </style></head><body>
-<div class="dash">
-<div class="hdr">
+<div class="fbar">
 <h1><span>trakt</span> // jamesgoux</h1>
-<div class="ctrls">
-<div class="gtog"><label>Genre</label><select id="gs"><option value="all">Both</option><option value="movie">Movies</option><option value="show">Shows</option></select></div>
-<div class="yf"><label>Year</label><select id="ys"><option value="all">All Time</option></select></div>
-<button id="rbtn" onclick="location.reload()" style="background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">&#x21bb; Refresh</button>
+<div class="fctrls">
+<div class="fbtn"><label>Type</label><select id="gs"><option value="all">Both</option><option value="movie">Movies</option><option value="show">Shows</option></select></div>
+<div class="fbtn"><label>Year</label><select id="ys"><option value="all">All Time</option></select></div>
+<button class="rbtn" onclick="location.reload()">&#x21bb;</button>
 </div>
 </div>
+<div class="dash">
 <div class="sg" id="st"></div>
 <div class="g2">
 <div class="cd"><h3>Most Watched Actors</h3><div class="stb"><table><thead><tr><th>#</th><th>Actor</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="atb"></tbody></table></div></div>
@@ -96,47 +102,138 @@ body{padding:10px;overflow-x:hidden}
 <div class="g2">
 <div class="cd fw"><h3>Recently Watched</h3><table><thead><tr><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody id="rtb"></tbody></table></div>
 </div>
+<div class="status" id="status"></div>
 </div>
 <script>
 var D=__DASHBOARD_DATA__;
-var HS=D.hs||{},TL=D.tl||[],SYD=D.syd||[],MYD=D.myd||{};
-var ch=[],cy='all',cg='all';
+var HS=D.hs||{},TL=D.tl||[],SYD=D.syd||[],MYD=D.myd||[];
+var ch=[],cy='all',ct='all';
 var mob=window.innerWidth<768;
 var tt={backgroundColor:'#1a1a2e',borderColor:'#333',textStyle:{color:'#eee'}};
 function LG(){var s=Array.from(arguments);return new echarts.graphic.LinearGradient(0,0,1,0,s.map(function(c,i){return{offset:i/(s.length-1),color:c}}))}
 function gl(px){return mob?Math.min(px,Math.round(window.innerWidth*0.32)):px}
+
+// URL hash persistence
+function readHash(){var h=location.hash.substring(1);var p=new URLSearchParams(h);cy=p.get('y')||'all';ct=p.get('t')||'all';document.getElementById('ys').value=cy;document.getElementById('gs').value=ct}
+function writeHash(){var p=new URLSearchParams();if(cy!=='all')p.set('y',cy);if(ct!=='all')p.set('t',ct);history.replaceState(null,'','#'+p.toString())}
+
 var ys=document.getElementById('ys');var yrs=new Set();D.c.m.forEach(function(m){yrs.add(m.month.substr(0,4))});
 Array.from(yrs).sort().reverse().forEach(function(y){var o=document.createElement('option');o.value=y;o.textContent=y;ys.appendChild(o)});
-ys.onchange=function(){cy=ys.value;render()};
-document.getElementById('gs').onchange=function(){cg=this.value;render()};
+ys.onchange=function(){cy=ys.value;writeHash();render()};
+document.getElementById('gs').onchange=function(){ct=this.value;writeHash();render()};
+readHash();
+
 function fby(e){if(cy==='all')return e||{};var f={};if(e&&e[cy])f[cy]=e[cy];return f}
 function sm(e){return Object.values(e||{}).reduce(function(a,b){return a+b},0)}
-function stats(){var el=document.getElementById('st');if(cy==='all'){var s=D.c.s;el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+s.total_watches.toLocaleString()+'</div><div class="l">Total Watches</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.unique_movies+'</div><div class="l">Movies</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.movie_watches+'</div><div class="l">Movie Watches</div></div><div class="sc"><div class="v" style="color:var(--pu)">'+s.unique_shows+'</div><div class="l">Shows</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+s.episode_watches.toLocaleString()+'</div><div class="l">Episodes</div></div><div class="sc"><div class="v" style="color:var(--or)">'+s.total_runtime_days+'</div><div class="l">Days Watched</div></div>'}else{var mw=0,ew=0;D.c.m.filter(function(m){return m.month.startsWith(cy)}).forEach(function(m){mw+=m.movies;ew+=m.episodes});el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+(mw+ew).toLocaleString()+'</div><div class="l">'+cy+' Total</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+mw+'</div><div class="l">Movie Watches</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+ew.toLocaleString()+'</div><div class="l">Episodes</div></div>'}}
-function ptbl(id,pp){var tb=document.getElementById(id);tb.innerHTML='';var rk=0;pp.forEach(function(p){var m=p.m,s=p.s;if(cy!=='all'&&p.ti){m=0;s=0;p.ti.forEach(function(i){var t=TL[i];if(!t)return;if(sm(fby(t.eby))>0){if(t.type==='movie')m++;else s++}});if(m+s<2)return}rk++;var tot=m+s;var img=HS[p.n]?'<img class="hs" src="'+HS[p.n]+'" loading="lazy" onerror="this.style.display=\'none\'" alt="">':'<div class="hp">'+p.n.charAt(0)+'</div>';var tr=document.createElement('tr');tr.className='pr';tr.innerHTML='<td style="color:var(--t2);font-size:10px;width:24px">'+rk+'</td><td><div class="pn">'+img+'<span>'+p.n+'</span></div></td><td class="nm nm-a">'+m+'</td><td class="nm nm-p">'+s+'</td><td class="nm nm-o">'+tot+'</td>';tr.onclick=function(){var nx=tr.nextElementSibling;if(nx&&nx.classList.contains('dr')){nx.remove();return}document.querySelectorAll('.dr').forEach(function(r){r.remove()});if(!p.ti)return;var dr=document.createElement('tr');dr.className='dr';var h='<td colspan="5"><table>';p.ti.forEach(function(i){var t=TL[i];if(!t)return;var eb=cy==='all'?t.eby:fby(t.eby);var ct=sm(eb);if(ct===0&&cy!=='all')return;h+='<tr><td><span class="badge '+(t.type==='movie'?'b-m':'b-e')+'">'+t.type+'</span></td><td style="font-weight:600">'+t.t+'</td><td style="color:var(--t2)">'+(t.yr||'')+'</td><td class="nm '+(t.type==='show'?'nm-b':'nm-a')+'">'+(t.type==='show'?ct+' eps':(ct>1?ct+'x':''))+'</td></tr>'});h+='</table></td>';dr.innerHTML=h;tr.after(dr)};tb.appendChild(tr)})}
-function showCharts(){var dm={},em={};SYD.forEach(function(s){var e=0,m=0;if(cy==='all'){Object.values(s.yd).forEach(function(d){e+=d.e;m+=d.m})}else if(s.yd[cy]){e=s.yd[cy].e;m=s.yd[cy].m}if(e>0){dm[s.n]=m/60;em[s.n]=e}});var da=Object.entries(dm).sort(function(a,b){return b[1]-a[1]}).slice(0,20).reverse();var ea=Object.entries(em).sort(function(a,b){return b[1]-a[1]}).slice(0,20).reverse();document.getElementById('sdh').textContent='Top Shows by Duration'+(cy!=='all'?' ('+cy+')':'');document.getElementById('seh').textContent='Top Shows by Episodes'+(cy!=='all'?' ('+cy+')':'');var c1=echarts.init(document.getElementById('sdc'));c1.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+p[0].name+'</b><br/>'+p[0].value.toFixed(1)+'h'}},grid:{left:gl(155),right:mob?30:55,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return Math.round(v)+'h'}},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:da.map(function(d){return d[0]}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:da.map(function(d){return Math.round(d[1]*10)/10}),itemStyle:{color:LG('#0f3460','#fb923c')},barMaxWidth:18,label:{show:true,position:'right',color:'#fb923c',fontSize:10,formatter:function(p){return p.value+'h'}}}]});var c2=echarts.init(document.getElementById('sec'));c2.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(155),right:mob?30:55,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:ea.map(function(d){return d[0]}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:ea.map(function(d){return d[1]}),itemStyle:{color:LG('#0f3460','#a78bfa')},barMaxWidth:18,label:{show:true,position:'right',color:'#a78bfa',fontSize:10}}]});ch.push(c1,c2)}
-function movieCharts(){var da=[],ra=[];MYD.forEach(function(m){var w=0;if(cy==='all'){Object.values(m.yd).forEach(function(c){w+=c})}else if(m.yd[cy]){w=m.yd[cy]}if(w>0){da.push({n:m.n,min:m.rt*w,w:w});if(w>1)ra.push({n:m.n,w:w})}});da.sort(function(a,b){return b.min-a.min});da=da.slice(0,15).reverse();ra.sort(function(a,b){return b.w-a.w});ra=ra.slice(0,15).reverse();document.getElementById('mdh').textContent='Movies by Watch Time'+(cy!=='all'?' ('+cy+')':'');document.getElementById('mrh').textContent='Most Rewatched'+(cy!=='all'?' ('+cy+')':'');var c1=echarts.init(document.getElementById('mdc'));c1.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+p[0].name+'</b><br/>'+p[0].value+'min ('+Math.round(p[0].value/60)+'h)'}},grid:{left:gl(180),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return Math.round(v/60)+'h'}},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:da.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:da.map(function(d){return d.min}),itemStyle:{color:LG('#0f3460','#e94560')},barMaxWidth:18}]});var c2=echarts.init(document.getElementById('mrc'));if(ra.length===0){document.getElementById('mrc').innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No rewatches'+(cy!=='all'?' in '+cy:'')+'</div>';ch.push(c1);return}c2.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(180),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:ra.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:ra.map(function(d){return d.w}),itemStyle:{color:LG('#0f3460','#4ade80')},barMaxWidth:18,label:{show:true,position:'right',color:'#4ade80',fontSize:10,formatter:function(p){return p.value+'x'}}}]});ch.push(c1,c2)}
-function baseCharts(){var mf=cy==='all'?D.c.m:D.c.m.filter(function(m){return m.month.startsWith(cy)});var c1=echarts.init(document.getElementById('tlc'));c1.setOption({tooltip:{trigger:'axis',...tt},legend:{data:['Episodes','Movies'],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:mf.map(function(d){return d.month}),axisLabel:{color:'#666',interval:cy==='all'?11:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{name:'Episodes',type:'bar',stack:'t',data:mf.map(function(d){return d.episodes}),itemStyle:{color:'#60a5fa'},barMaxWidth:cy==='all'?5:30},{name:'Movies',type:'bar',stack:'t',data:mf.map(function(d){return d.movies}),itemStyle:{color:'#e94560'},barMaxWidth:cy==='all'?5:30}]});var gd=cg==='movie'?(D.c.gm||[]):cg==='show'?(D.c.gs||[]):(D.c.ga||[]);gd=gd.slice().reverse();document.getElementById('gnh').textContent='Genres'+(cg!=='all'?' ('+cg+'s)':'');var c2=echarts.init(document.getElementById('gnc'));c2.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(100),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:gd.map(function(d){return d.genre}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:gd.map(function(d){return d.count}),itemStyle:{color:LG('#0f3460','#e94560')},barMaxWidth:18}]});var nd=(cy!=='all'&&D.c.net_y&&D.c.net_y[cy]?D.c.net_y[cy]:(D.c.net||[])).slice(0,15).reverse();var c3=echarts.init(document.getElementById('netc'));c3.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(120),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:nd.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{name:'Shows',type:'bar',data:nd.map(function(d){return d.s||0}),itemStyle:{color:'#a78bfa'},barMaxWidth:18}]});var sd2=(cy!=='all'&&D.c.stu_y&&D.c.stu_y[cy]?D.c.stu_y[cy]:(D.c.stu||[])).slice(0,15).reverse();var c3b=echarts.init(document.getElementById('stuc'));c3b.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},legend:{data:['Movies','Shows'],right:10,top:0,textStyle:{color:'#999'}},grid:{left:gl(140),right:20,top:30,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:sd2.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{name:'Movies',type:'bar',stack:'t',data:sd2.map(function(d){return d.m||0}),itemStyle:{color:'#e94560'},barMaxWidth:18},{name:'Shows',type:'bar',stack:'t',data:sd2.map(function(d){return d.s||0}),itemStyle:{color:'#60a5fa'},barMaxWidth:18}]});var dwC=['#60a5fa','#a78bfa','#4ade80','#fb923c','#e94560','#60a5fa','#a78bfa'];var c4=echarts.init(document.getElementById('dwc'));c4.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:24},xAxis:{type:'category',data:D.c.dw.map(function(d){return d.day}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{type:'bar',data:D.c.dw.map(function(d,i){return{value:d.count,itemStyle:{color:dwC[i]}}}),barMaxWidth:50}]});var hodData=D.c.hod||{};if(cy!=='all'&&D.c.hod_y&&D.c.hod_y[cy])hodData=D.c.hod_y[cy];var hrs=[];for(var h=0;h<24;h++){hrs.push({h:h,v:hodData[String(h)]||0})}var c5=echarts.init(document.getElementById('hodc'));c5.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:24},xAxis:{type:'category',data:hrs.map(function(d){return(d.h<10?'0':'')+d.h}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{type:'bar',data:hrs.map(function(d){var p=d.h/24;var c=p<0.25?'#1e3a5f':p<0.5?'#fb923c':p<0.75?'#e94560':'#a78bfa';return{value:d.v,itemStyle:{color:c}}}),barMaxWidth:20}]});var yr=D.c.y.filter(function(d){return parseInt(d.year)>=2012}).map(function(d){return{year:d.year,episodes:d.year==='2016'?0:d.episodes,movies:d.year==='2016'?0:d.movies}});var c6=echarts.init(document.getElementById('yrc'));c6.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){if(p[0]&&p[0].axisValue==='2016')return'<b>2016</b><br/>Zeroed (outlier: 4,257)';return p.map(function(s){return s.marker+s.seriesName+': '+s.value}).join('<br/>')}},legend:{data:['Episodes','Movies'],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:24},xAxis:{type:'category',data:yr.map(function(d){return d.year}),axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{name:'Episodes',type:'bar',stack:'t',data:yr.map(function(d){return d.episodes}),itemStyle:{color:'#60a5fa'}},{name:'Movies',type:'bar',stack:'t',data:yr.map(function(d){return d.movies}),itemStyle:{color:'#e94560'}}]});var rt=document.getElementById('rtb');rt.innerHTML='';var recs=cy==='all'?(D.c.r||[]).slice(0,15):(D.c.r||[]).filter(function(r){return r.yr===cy}).slice(0,20);recs.forEach(function(r){var t=r.type==='episode'?r.title+' '+r.detail:r.title;rt.innerHTML+='<tr><td style="font-weight:600">'+t+'</td><td><span class="badge '+(r.type==='movie'?'b-m':'b-e')+'">'+r.type+'</span></td><td style="color:var(--t2)">'+r.watched_at+'</td></tr>'});
-var ctd=(cy!=='all'&&D.c.ctry_y&&D.c.ctry_y[cy]?D.c.ctry_y[cy]:(D.c.ctry||[])).slice(0,15).reverse();var c7=echarts.init(document.getElementById('ctryc'));c7.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:ctd.map(function(d){return(d.n||'').toUpperCase()}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:ctd.map(function(d){return d.count}),itemStyle:{color:LG('#0f3460','#4ade80')},barMaxWidth:18}]});
-var lnd=(cy!=='all'&&D.c.lang_y&&D.c.lang_y[cy]?D.c.lang_y[cy]:(D.c.lang||[])).slice(0,15).reverse();var c8=echarts.init(document.getElementById('langc'));c8.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:lnd.map(function(d){return(d.n||'').toUpperCase()}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:lnd.map(function(d){return d.count}),itemStyle:{color:LG('#0f3460','#60a5fa')},barMaxWidth:18}]});
-ch.push(c1,c2,c3,c3b,c4,c5,c6,c7,c8)}
+// Type filter helper: does this entry type match current filter?
+function tmatch(type){return ct==='all'||(ct==='movie'&&type==='movie')||(ct==='show'&&type!=='movie')}
+
+function stats(){
+  var el=document.getElementById('st');
+  if(cy==='all'&&ct==='all'){var s=D.c.s;el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+s.total_watches.toLocaleString()+'</div><div class="l">Total Watches</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.unique_movies+'</div><div class="l">Movies</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.movie_watches+'</div><div class="l">Movie Watches</div></div><div class="sc"><div class="v" style="color:var(--pu)">'+s.unique_shows+'</div><div class="l">Shows</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+s.episode_watches.toLocaleString()+'</div><div class="l">Episodes</div></div><div class="sc"><div class="v" style="color:var(--or)">'+s.total_runtime_days+'</div><div class="l">Days Watched</div></div>'}
+  else{var mw=0,ew=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){mw+=m.movies;ew+=m.episodes});
+    if(ct==='movie'){el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+mw.toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Movie Watches</div></div>'}
+    else if(ct==='show'){el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+ew.toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Episodes</div></div>'}
+    else{el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+(mw+ew).toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Total</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+mw+'</div><div class="l">Movie Watches</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+ew.toLocaleString()+'</div><div class="l">Episodes</div></div>'}}
+}
+
+function ptbl(id,pp){var tb=document.getElementById(id);tb.innerHTML='';var rk=0;pp.forEach(function(p){var m=p.m,s=p.s;if(cy!=='all'&&p.ti){m=0;s=0;p.ti.forEach(function(i){var t=TL[i];if(!t)return;if(sm(fby(t.eby))>0){if(t.type==='movie')m++;else s++}});if(m+s<2)return}rk++;var tot=m+s;var img=HS[p.n]?'<img class="hs" src="'+HS[p.n]+'" loading="lazy" onerror="this.style.display=\'none\'" alt="">':'<div class="hp">'+p.n.charAt(0)+'</div>';var tr=document.createElement('tr');tr.className='pr';tr.innerHTML='<td style="color:var(--t2);font-size:10px;width:24px">'+rk+'</td><td><div class="pn">'+img+'<span>'+p.n+'</span></div></td><td class="nm nm-a">'+m+'</td><td class="nm nm-p">'+s+'</td><td class="nm nm-o">'+tot+'</td>';tr.onclick=function(){var nx=tr.nextElementSibling;if(nx&&nx.classList.contains('dr')){nx.remove();return}document.querySelectorAll('.dr').forEach(function(r){r.remove()});if(!p.ti)return;var dr=document.createElement('tr');dr.className='dr';var h='<td colspan="5"><table>';p.ti.forEach(function(i){var t=TL[i];if(!t)return;var eb=cy==='all'?t.eby:fby(t.eby);var ct2=sm(eb);if(ct2===0&&cy!=='all')return;h+='<tr><td><span class="badge '+(t.type==='movie'?'b-m':'b-e')+'">'+t.type+'</span></td><td style="font-weight:600">'+t.t+'</td><td style="color:var(--t2)">'+(t.yr||'')+'</td><td class="nm '+(t.type==='show'?'nm-b':'nm-a')+'">'+(t.type==='show'?ct2+' eps':(ct2>1?ct2+'x':''))+'</td></tr>'});h+='</table></td>';dr.innerHTML=h;tr.after(dr)};tb.appendChild(tr)})}
+
+function showCharts(){
+  if(ct==='movie'){document.getElementById('sdc').parentElement.style.display='none';document.getElementById('sec').parentElement.style.display='none';return}
+  document.getElementById('sdc').parentElement.style.display='';document.getElementById('sec').parentElement.style.display='';
+  var dm={},em={};SYD.forEach(function(s){var e=0,m=0;if(cy==='all'){Object.values(s.yd).forEach(function(d){e+=d.e;m+=d.m})}else if(s.yd[cy]){e=s.yd[cy].e;m=s.yd[cy].m}if(e>0){dm[s.n]=m/60;em[s.n]=e}});var da=Object.entries(dm).sort(function(a,b){return b[1]-a[1]}).slice(0,20).reverse();var ea=Object.entries(em).sort(function(a,b){return b[1]-a[1]}).slice(0,20).reverse();document.getElementById('sdh').textContent='Top Shows by Duration'+(cy!=='all'?' ('+cy+')':'');document.getElementById('seh').textContent='Top Shows by Episodes'+(cy!=='all'?' ('+cy+')':'');var c1=echarts.init(document.getElementById('sdc'));c1.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+p[0].name+'</b><br/>'+p[0].value.toFixed(1)+'h'}},grid:{left:gl(155),right:mob?30:55,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return Math.round(v)+'h'}},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:da.map(function(d){return d[0]}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:da.map(function(d){return Math.round(d[1]*10)/10}),itemStyle:{color:LG('#0f3460','#fb923c')},barMaxWidth:18,label:{show:true,position:'right',color:'#fb923c',fontSize:10,formatter:function(p){return p.value+'h'}}}]});var c2=echarts.init(document.getElementById('sec'));c2.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(155),right:mob?30:55,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:ea.map(function(d){return d[0]}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:ea.map(function(d){return d[1]}),itemStyle:{color:LG('#0f3460','#a78bfa')},barMaxWidth:18,label:{show:true,position:'right',color:'#a78bfa',fontSize:10}}]});ch.push(c1,c2)
+}
+
+function movieCharts(){
+  if(ct==='show'){document.getElementById('mdc').parentElement.style.display='none';document.getElementById('mrc').parentElement.style.display='none';return}
+  document.getElementById('mdc').parentElement.style.display='';document.getElementById('mrc').parentElement.style.display='';
+  var da=[],ra=[];MYD.forEach(function(m){var w=0;if(cy==='all'){Object.values(m.yd).forEach(function(c){w+=c})}else if(m.yd[cy]){w=m.yd[cy]}if(w>0){da.push({n:m.n,min:m.rt*w,w:w});if(w>1)ra.push({n:m.n,w:w})}});da.sort(function(a,b){return b.min-a.min});da=da.slice(0,15).reverse();ra.sort(function(a,b){return b.w-a.w});ra=ra.slice(0,15).reverse();document.getElementById('mdh').textContent='Movies by Watch Time'+(cy!=='all'?' ('+cy+')':'');document.getElementById('mrh').textContent='Most Rewatched'+(cy!=='all'?' ('+cy+')':'');var c1=echarts.init(document.getElementById('mdc'));c1.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+p[0].name+'</b><br/>'+p[0].value+'min ('+Math.round(p[0].value/60)+'h)'}},grid:{left:gl(180),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return Math.round(v/60)+'h'}},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:da.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:da.map(function(d){return d.min}),itemStyle:{color:LG('#0f3460','#e94560')},barMaxWidth:18}]});var c2=echarts.init(document.getElementById('mrc'));if(ra.length===0){document.getElementById('mrc').innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No rewatches'+(cy!=='all'?' in '+cy:'')+'</div>';ch.push(c1);return}c2.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(180),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:ra.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:ra.map(function(d){return d.w}),itemStyle:{color:LG('#0f3460','#4ade80')},barMaxWidth:18,label:{show:true,position:'right',color:'#4ade80',fontSize:10,formatter:function(p){return p.value+'x'}}}]});ch.push(c1,c2)
+}
+
+function baseCharts(){
+  // Timeline - respects type filter
+  var mf=cy==='all'?D.c.m:D.c.m.filter(function(m){return m.month.startsWith(cy)});
+  var c1=echarts.init(document.getElementById('tlc'));
+  var tlSeries=[];
+  if(ct!=='movie')tlSeries.push({name:'Episodes',type:'bar',stack:'t',data:mf.map(function(d){return d.episodes}),itemStyle:{color:'#60a5fa'},barMaxWidth:cy==='all'?5:30});
+  if(ct!=='show')tlSeries.push({name:'Movies',type:'bar',stack:'t',data:mf.map(function(d){return d.movies}),itemStyle:{color:'#e94560'},barMaxWidth:cy==='all'?5:30});
+  c1.setOption({tooltip:{trigger:'axis',...tt},legend:{data:ct==='all'?['Episodes','Movies']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:mf.map(function(d){return d.month}),axisLabel:{color:'#666',interval:cy==='all'?11:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:tlSeries});
+
+  // Genres - respects type filter
+  var gd=ct==='movie'?(D.c.gm||[]):ct==='show'?(D.c.gs||[]):(D.c.ga||[]);
+  gd=gd.slice().reverse();
+  document.getElementById('gnh').textContent='Genres'+(ct!=='all'?' ('+ct+'s)':'');
+  var c2=echarts.init(document.getElementById('gnc'));
+  c2.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(100),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:gd.map(function(d){return d.genre}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:gd.map(function(d){return d.count}),itemStyle:{color:LG('#0f3460','#e94560')},barMaxWidth:18}]});
+
+  // Networks
+  var nd=(cy!=='all'&&D.c.net_y&&D.c.net_y[cy]?D.c.net_y[cy]:(D.c.net||[])).slice(0,15).reverse();
+  var c3=echarts.init(document.getElementById('netc'));
+  c3.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(120),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:nd.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:nd.map(function(d){return d.s||0}),itemStyle:{color:LG('#0f3460','#a78bfa')},barMaxWidth:18}]});
+
+  // Studios - stacked movie/show
+  var sd2=(cy!=='all'&&D.c.stu_y&&D.c.stu_y[cy]?D.c.stu_y[cy]:(D.c.stu||[])).slice(0,15).reverse();
+  var c3b=echarts.init(document.getElementById('stuc'));
+  var stuSeries=[];
+  if(ct!=='show')stuSeries.push({name:'Movies',type:'bar',stack:'t',data:sd2.map(function(d){return d.m||0}),itemStyle:{color:'#e94560'},barMaxWidth:18});
+  if(ct!=='movie')stuSeries.push({name:'Shows',type:'bar',stack:'t',data:sd2.map(function(d){return d.s||0}),itemStyle:{color:'#60a5fa'},barMaxWidth:18});
+  c3b.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},legend:{data:ct==='all'?['Movies','Shows']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:gl(140),right:20,top:ct==='all'?30:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:sd2.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:stuSeries});
+
+  // Day of week
+  var dwC=['#60a5fa','#a78bfa','#4ade80','#fb923c','#e94560','#60a5fa','#a78bfa'];
+  var c4=echarts.init(document.getElementById('dwc'));
+  c4.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:24},xAxis:{type:'category',data:D.c.dw.map(function(d){return d.day}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{type:'bar',data:D.c.dw.map(function(d,i){return{value:d.count,itemStyle:{color:dwC[i]}}}),barMaxWidth:50}]});
+
+  // Hour of day
+  var hodData=D.c.hod||{};if(cy!=='all'&&D.c.hod_y&&D.c.hod_y[cy])hodData=D.c.hod_y[cy];
+  var hrs=[];for(var h=0;h<24;h++){hrs.push({h:h,v:hodData[String(h)]||0})}
+  var c5=echarts.init(document.getElementById('hodc'));
+  c5.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:24},xAxis:{type:'category',data:hrs.map(function(d){return(d.h<10?'0':'')+d.h}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{type:'bar',data:hrs.map(function(d){var p=d.h/24;var c=p<0.25?'#1e3a5f':p<0.5?'#fb923c':p<0.75?'#e94560':'#a78bfa';return{value:d.v,itemStyle:{color:c}}}),barMaxWidth:20}]});
+
+  // Yearly
+  var yr=D.c.y.filter(function(d){return parseInt(d.year)>=2012}).map(function(d){return{year:d.year,episodes:d.year==='2016'?0:d.episodes,movies:d.year==='2016'?0:d.movies}});
+  var c6=echarts.init(document.getElementById('yrc'));
+  var yrSeries=[];
+  if(ct!=='movie')yrSeries.push({name:'Episodes',type:'bar',stack:'t',data:yr.map(function(d){return d.episodes}),itemStyle:{color:'#60a5fa'}});
+  if(ct!=='show')yrSeries.push({name:'Movies',type:'bar',stack:'t',data:yr.map(function(d){return d.movies}),itemStyle:{color:'#e94560'}});
+  c6.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){if(p[0]&&p[0].axisValue==='2016')return'<b>2016</b><br/>Zeroed (outlier: 4,257)';return p.map(function(s){return s.marker+s.seriesName+': '+s.value}).join('<br/>')}},legend:{data:ct==='all'?['Episodes','Movies']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:24},xAxis:{type:'category',data:yr.map(function(d){return d.year}),axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:yrSeries});
+
+  // Recently watched - filtered
+  var rt=document.getElementById('rtb');rt.innerHTML='';
+  var recs=(D.c.r||[]).filter(function(r){return(cy==='all'||r.yr===cy)&&tmatch(r.type)}).slice(0,20);
+  recs.forEach(function(r){var t=r.type==='episode'?r.title+' '+r.detail:r.title;rt.innerHTML+='<tr><td style="font-weight:600">'+t+'</td><td><span class="badge '+(r.type==='movie'?'b-m':'b-e')+'">'+r.type+'</span></td><td style="color:var(--t2)">'+r.watched_at+'</td></tr>'});
+
+  // Countries & Languages
+  var ctd=(cy!=='all'&&D.c.ctry_y&&D.c.ctry_y[cy]?D.c.ctry_y[cy]:(D.c.ctry||[])).slice(0,15).reverse();
+  var c7=echarts.init(document.getElementById('ctryc'));
+  c7.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:ctd.map(function(d){return(d.n||'').toUpperCase()}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:ctd.map(function(d){return d.count}),itemStyle:{color:LG('#0f3460','#4ade80')},barMaxWidth:18}]});
+  var lnd=(cy!=='all'&&D.c.lang_y&&D.c.lang_y[cy]?D.c.lang_y[cy]:(D.c.lang||[])).slice(0,15).reverse();
+  var c8=echarts.init(document.getElementById('langc'));
+  c8.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:lnd.map(function(d){return(d.n||'').toUpperCase()}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:lnd.map(function(d){return d.count}),itemStyle:{color:LG('#0f3460','#60a5fa')},barMaxWidth:18}]});
+
+  ch.push(c1,c2,c3,c3b,c4,c5,c6,c7,c8);
+}
+
 function renderPosters(){
   var PS=D.ps||{};var grid=document.getElementById('poster-grid');var sec=document.getElementById('poster-section');
-  // Get top shows sorted by episodes for current year
   var shows=[];SYD.forEach(function(s){var e=0;if(cy==='all'){Object.values(s.yd).forEach(function(d){e+=d.e})}else if(s.yd[cy]){e=s.yd[cy].e}if(e>0)shows.push({n:s.n,e:e})});
   shows.sort(function(a,b){return b.e-a.e});
-  // Find shows with posters
-  var items=[];shows.forEach(function(s){
-    // Find slug for this show by checking SYD names against poster keys
-    for(var slug in PS){if(PS[slug]&&items.length<20){
-      // Match by checking if show name relates to slug (approximate)
-      var sn=s.n.toLowerCase().replace(/[^a-z0-9]/g,'-');
-      if(slug.indexOf(sn.substring(0,10))>=0||sn.indexOf(slug.substring(0,10))>=0){items.push({n:s.n,img:PS[slug]});break}
-    }}
-  });
+  var items=[];shows.forEach(function(s){for(var slug in PS){if(PS[slug]&&items.length<20){var sn=s.n.toLowerCase().replace(/[^a-z0-9]/g,'-');if(slug.indexOf(sn.substring(0,10))>=0||sn.indexOf(slug.substring(0,10))>=0){items.push({n:s.n,img:PS[slug]});break}}}});
   if(items.length>0){sec.style.display='';grid.innerHTML='';items.forEach(function(i){grid.innerHTML+='<div class="poster-item"><img src="'+i.img+'" loading="lazy" alt=""><span>'+i.n+'</span></div>'})}
   else{sec.style.display='none'}
 }
-function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];stats();ptbl('atb',D.a);ptbl('xtb',D.x);showCharts();movieCharts();renderPosters();baseCharts()}
+
+function renderStatus(){
+  var total_people=D.a.length+D.x.length;
+  var hs_count=Object.keys(D.hs||{}).length;
+  var ps_count=Object.keys(D.ps||{}).length;
+  var el=document.getElementById('status');
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: __BUILD_TIME__</span>';
+}
+
+function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];stats();ptbl('atb',D.a);ptbl('xtb',D.x);showCharts();movieCharts();renderPosters();baseCharts();renderStatus()}
 window.addEventListener('resize',function(){mob=window.innerWidth<768;ch.forEach(function(c){try{c.resize()}catch(e){}})});
+window.addEventListener('hashchange',function(){readHash();render()});
 render();
 </script></body></html>
