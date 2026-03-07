@@ -835,13 +835,26 @@ data["lb"] = {
 from collections import Counter as Ctr2
 if concerts:
     ca = Ctr2(c["artist"] for c in concerts)
+    ca_songs = defaultdict(int)
+    ca_song_list = defaultdict(lambda: Ctr2())
+    for c in concerts:
+        ca_songs[c["artist"]] += c["song_count"]
+        for s in c.get("songs", []):
+            if s: ca_song_list[c["artist"]][s] += 1
     cv = Ctr2(f"{c['venue']}, {c['city']}" for c in concerts if c["venue"])
     cy2 = Ctr2(c["year"] for c in concerts)
+    cy2_songs = defaultdict(int)
+    for c in concerts: cy2_songs[c["year"]] += c["song_count"]
+    artist_detail = {}
+    for artist in ca:
+        top_songs = [(s,ct) for s,ct in ca_song_list[artist].most_common() if ct>=2]
+        artist_detail[artist] = {"songs":[{"n":s,"c":ct} for s,ct in ca_song_list[artist].most_common(20)],"top":[{"n":s,"c":ct} for s,ct in top_songs[:15]]}
     data["con"] = {
         "total": len(concerts), "songs": sum(c["song_count"] for c in concerts),
-        "artists": [{"n": a, "c": c} for a, c in ca.most_common(25)],
+        "artists": [{"n": a, "c": c, "s": ca_songs[a]} for a, c in ca.most_common(25)],
+        "adetail": artist_detail,
         "venues": [{"n": v, "c": c} for v, c in cv.most_common(25)],
-        "years": [{"yr": y, "c": c} for y, c in sorted(cy2.items())],
+        "years": [{"yr": y, "c": c, "s": cy2_songs.get(y,0)} for y, c in sorted(cy2.items())],
         "recent": [{"artist": c["artist"], "venue": c["venue"], "city": c["city"],
                     "date": c["date"], "yr": c["year"], "tour": c["tour"],
                     "songs": c["song_count"]} for c in concerts[:20]],
