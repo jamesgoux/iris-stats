@@ -38,7 +38,8 @@ def norm_movie(e):
             "genres": ", ".join(m.get("genres", [])), "trakt_slug": ids.get("slug", ""),
             "tmdb_id": ids.get("tmdb", ""),
             "show_title": "", "season": "", "episode_number": "", "network": "",
-            "country": m.get("country", ""), "language": m.get("language", "")}
+            "country": m.get("country", ""), "language": m.get("language", ""),
+            "trakt_rating": m.get("rating", "")}
 
 def norm_show(e):
     s = e.get("show", {}); ep = e.get("episode", {}); ids = s.get("ids", {})
@@ -49,7 +50,8 @@ def norm_show(e):
             "show_title": s.get("title", ""), "season": ep.get("season", ""),
             "episode_number": ep.get("number", ""), "network": s.get("network", ""),
             "country": s.get("country", ""), "language": s.get("language", ""),
-            "first_aired": ep.get("first_aired", "")}
+            "first_aired": ep.get("first_aired", ""),
+            "trakt_rating": s.get("rating", "")}
 
 def fetch_cast_and_studios(entries):
     show_slugs = set(); movie_slugs = set()
@@ -384,6 +386,29 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     el = [e for e in entries if e["type"] == "episode"]
     tr = sum(int(e["runtime"]) for e in entries if e["runtime"])
 
+    # Rating lists
+    # Highest/lowest rated movies by Trakt community
+    movie_ratings = {}
+    for e in entries:
+        if e["type"] == "movie" and e["title"] and e.get("trakt_rating"):
+            try:
+                r = float(e["trakt_rating"])
+                if r > 0 and e["title"] not in movie_ratings:
+                    movie_ratings[e["title"]] = {"t": e["title"], "yr": str(e["year"]) if e["year"] else "", "r": round(r, 1)}
+            except: pass
+    movies_by_community = sorted(movie_ratings.values(), key=lambda x: x["r"], reverse=True)
+
+    # Highest/lowest rated TV shows by Trakt community
+    show_ratings = {}
+    for e in entries:
+        if e["type"] == "episode" and e["show_title"] and e.get("trakt_rating"):
+            try:
+                r = float(e["trakt_rating"])
+                if r > 0 and e["show_title"] not in show_ratings:
+                    show_ratings[e["show_title"]] = {"t": e["show_title"], "yr": str(e["year"]) if e["year"] else "", "r": round(r, 1)}
+            except: pass
+    shows_by_community = sorted(show_ratings.values(), key=lambda x: x["r"], reverse=True)
+
     # Hour of day aggregate (all time)
     hod_all = Counter()
     for yr_data in hod.values():
@@ -481,6 +506,10 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "ttw_y": {y: v[:25] for y, v in ttw_by_year.items()},
             "vy": vintage_data,
             "vy_y": vintage_by_year,
+            "mch": movies_by_community[:20],
+            "mcl": movies_by_community[-10:][::-1] if len(movies_by_community) > 10 else [],
+            "sch": shows_by_community[:20],
+            "scl": shows_by_community[-10:][::-1] if len(shows_by_community) > 10 else [],
         }
     }
 
@@ -668,6 +697,12 @@ def categorize_tags(lb_data, tag_cats):
 
 tag_data = categorize_tags(lb, tag_cats)
 
+# Personal rating lists from Letterboxd
+my_rated = [{"t": e["title"], "yr": e.get("year"), "r": e["rating"]}
+            for e in lb.values() if e.get("rating")]
+my_rated_high = sorted(my_rated, key=lambda x: x["r"], reverse=True)[:20]
+my_rated_low = sorted(my_rated, key=lambda x: x["r"])[:10]
+
 data["lb"] = {
     "ratings": lb_ratings,
     "dist": [{"r": r, "c": c} for r, c in sorted(lb_rating_dist.items())],
@@ -675,6 +710,8 @@ data["lb"] = {
     "total": len(lb),
     "rated": sum(1 for e in lb.values() if e.get("rating")),
     "avg": round(sum(e["rating"] for e in lb.values() if e.get("rating")) / max(1, sum(1 for e in lb.values() if e.get("rating"))), 1),
+    "myh": my_rated_high,
+    "myl": my_rated_low,
 }
 
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)

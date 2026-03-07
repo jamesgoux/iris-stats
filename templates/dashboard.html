@@ -140,6 +140,16 @@ body{overflow-x:hidden}
 <div class="cd s-g"><h3><span class="i">👥</span>Watched With</h3><div id="pplc" style="height:280px"></div></div>
 </div>
 <div class="g2">
+<div class="cd s-g"><h3><span class="i">🏆</span>My Highest Rated Movies</h3><div class="stb" id="myh-list"></div></div>
+<div class="cd s-m"><h3><span class="i">💎</span>Highest Rated Movies (Community)</h3><div class="stb" id="mch-list"></div></div>
+</div>
+<div class="g2">
+<div class="cd s-s"><h3><span class="i">📺</span>Highest Rated TV (Trakt)</h3><div class="stb" id="sch-list"></div></div>
+<div class="cd s-g"><h3><span class="i">👎</span>Lowest Rated</h3><div class="stb" id="low-list"></div></div>
+</div>
+<div class="g2">
+</div>
+<div class="g2">
 <div class="cd s-g"><h3><span class="i">🏠</span>Where I Watch <span class="vtog" style="float:right"><button class="vb vb-on lb-loc" data-v="simple">Home/Theater</button><button class="vb lb-loc" data-v="detail">All Locations</button></span></h3><div id="locc" style="height:280px"></div></div>
 <div class="cd s-g"><h3><span class="i">📺</span>Streaming Services</h3><div id="strc" style="height:280px"></div></div>
 </div>
@@ -440,6 +450,31 @@ function renderLetterboxd(){
       series:[{type:'bar',data:dist.map(function(d){return{value:d.c,itemStyle:{color:parseFloat(d.r)>=4?'#4ade80':parseFloat(d.r)>=3?'#60a5fa':parseFloat(d.r)>=2?'#fb923c':'#e94560'}}}),barMaxWidth:30}]});
     ch.push(clb);
   }else{lbEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No Letterboxd data</div>'}
+
+  // Rating lists
+  function ratingList(elId, items, rLabel, rColor) {
+    var el=document.getElementById(elId);if(!el||!items||!items.length){if(el)el.innerHTML='<div style="text-align:center;color:var(--t2);padding:20px">No data</div>';return}
+    var h='<table><thead><tr><th>#</th><th>Title</th><th>Year</th><th>'+rLabel+'</th></tr></thead><tbody>';
+    items.forEach(function(item,i){
+      h+='<tr><td style="color:var(--t2);font-size:10px">'+(i+1)+'</td><td style="font-weight:600">'+item.t+'</td><td style="color:var(--t2)">'+(item.yr||'')+'</td><td class="nm" style="color:'+rColor+'">'+item.r+(rLabel.indexOf('★')>=0?'':'')+'</td></tr>'
+    });
+    h+='</tbody></table>';el.innerHTML=h;
+  }
+  ratingList('myh-list',lb.myh||[],'★','#4ade80');
+  ratingList('mch-list',D.c.mch||[],'Rating','#60a5fa');
+  ratingList('sch-list',D.c.sch||[],'Rating','#a78bfa');
+
+  // Lowest rated: combine all into one list
+  var lowItems=[];
+  (lb.myl||[]).forEach(function(i){lowItems.push({t:i.t,yr:i.yr,r:i.r+'★',src:'My rating',color:'#e94560'})});
+  (D.c.mcl||[]).forEach(function(i){lowItems.push({t:i.t,yr:i.yr,r:i.r,src:'Movie avg',color:'#fb923c'})});
+  (D.c.scl||[]).forEach(function(i){lowItems.push({t:i.t,yr:i.yr,r:i.r,src:'TV avg',color:'#fb923c'})});
+  var lowEl=document.getElementById('low-list');
+  if(lowItems.length){
+    var h='<table><thead><tr><th>#</th><th>Title</th><th>Source</th><th>Rating</th></tr></thead><tbody>';
+    lowItems.forEach(function(item,i){h+='<tr><td style="color:var(--t2);font-size:10px">'+(i+1)+'</td><td style="font-weight:600">'+item.t+'</td><td style="color:var(--t2);font-size:10px">'+item.src+'</td><td class="nm" style="color:'+item.color+'">'+item.r+'</td></tr>'});
+    h+='</tbody></table>';lowEl.innerHTML=h;
+  }
 
   // Helper: render pie or year-over-year bar for a tag category
   function renderTagChart(elId,catData,colors,label){
