@@ -588,6 +588,8 @@ def categorize_tags(lb_data, tag_cats):
     # All-time
     people_all = Counter()
     loc_all = Counter()
+    loc_detail_y = defaultdict(Counter)
+    loc_detail_all = Counter()
     streaming_all = Counter()
     device_all = Counter()
 
@@ -610,7 +612,7 @@ def categorize_tags(lb_data, tag_cats):
             people_y[yr]["solo"] += 1
             people_all["solo"] += 1
 
-        # Location
+        # Location (simple)
         has_loc = False
         for t in tags:
             if t in home_set or t == "quarantine":
@@ -621,6 +623,14 @@ def categorize_tags(lb_data, tag_cats):
                 loc_y[yr]["travel"] += 1; loc_all["travel"] += 1; has_loc = True; break
         if not has_loc:
             loc_y[yr]["other"] += 1; loc_all["other"] += 1
+        # Location detail (individual venues)
+        loc_found = False
+        for t in tags:
+            if t in home_set or t == "quarantine" or t in theater_set or t in travel_set:
+                display = t.replace("quarantine", "home (quarantine)")
+                loc_detail_y[yr][display] += 1; loc_detail_all[display] += 1; loc_found = True; break
+        if not loc_found:
+            loc_detail_y[yr]["other"] += 1; loc_detail_all["other"] += 1
 
         # Streaming
         stags = [t for t in tags if t in streaming_set]
@@ -648,6 +658,8 @@ def categorize_tags(lb_data, tag_cats):
                    "y": {y: [{"n": n, "c": c} for n, c in ct.most_common(15)] for y, ct in people_y.items()}},
         "loc": {"all": [{"n": n, "c": c} for n, c in loc_all.most_common()],
                 "y": {y: [{"n": n, "c": c} for n, c in ct.most_common()] for y, ct in loc_y.items()}},
+        "locd": {"all": [{"n": n, "c": c} for n, c in loc_detail_all.most_common(20)],
+                 "y": {y: [{"n": n, "c": c} for n, c in ct.most_common(15)] for y, ct in loc_detail_y.items()}},
         "stream": {"all": [{"n": n, "c": c} for n, c in streaming_all.most_common(15)],
                    "y": {y: [{"n": n, "c": c} for n, c in ct.most_common(10)] for y, ct in streaming_y.items()}},
         "dev": {"all": [{"n": n, "c": c} for n, c in device_all.most_common(15)],
