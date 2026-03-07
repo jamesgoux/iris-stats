@@ -149,6 +149,15 @@ body{overflow-x:hidden}
 <div class="g2">
 <div id="sec-rec" class="cd fw s-r"><h3><span class="i">👁️</span>Recently Watched</h3><table><thead><tr><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody id="rtb"></tbody></table></div>
 </div>
+<div class="cd fw s-g" style="margin-top:14px">
+<h3><span class="i">📤</span>Update Letterboxd Tags</h3>
+<p style="color:var(--t2);font-size:12px;margin-bottom:10px">Export your diary from <a href="https://letterboxd.com/settings/data/" target="_blank" style="color:var(--bl)">letterboxd.com/settings/data</a>, then drop diary.csv here to update tags instantly.</p>
+<div id="csv-drop" style="border:2px dashed rgba(255,255,255,.1);border-radius:8px;padding:30px;text-align:center;cursor:pointer;color:var(--t2);font-size:13px;transition:border-color .2s">
+<input type="file" id="csv-file" accept=".csv" style="display:none">
+Drop diary.csv here or <span style="color:var(--bl);text-decoration:underline">click to browse</span>
+</div>
+<div id="csv-status" style="margin-top:8px;font-size:11px;color:var(--t2)"></div>
+</div>
 <div class="status" id="status"></div>
 </div>
 <script>
@@ -495,4 +504,119 @@ function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];stat
 window.addEventListener('resize',function(){mob=window.innerWidth<768;ch.forEach(function(c){try{c.resize()}catch(e){}})});
 window.addEventListener('hashchange',function(){readHash();render()});
 render();
+
+// CSV Importer
+(function(){
+var drop=document.getElementById('csv-drop');
+var inp=document.getElementById('csv-file');
+var stat=document.getElementById('csv-status');
+
+drop.onclick=function(){inp.click()};
+drop.ondragover=function(e){e.preventDefault();drop.style.borderColor='var(--bl)'};
+drop.ondragleave=function(){drop.style.borderColor='rgba(255,255,255,.1)'};
+drop.ondrop=function(e){e.preventDefault();drop.style.borderColor='rgba(255,255,255,.1)';if(e.dataTransfer.files[0])processCSV(e.dataTransfer.files[0])};
+inp.onchange=function(){if(inp.files[0])processCSV(inp.files[0])};
+
+// Tag categories (embedded from tag_categories.json)
+var TC={"people":["bnc movie night","gemma was there","movie night","movie night noir","onshape movie night"],"home":["home (mdr)","home","moms","dads house","gassmans","lindsays","isabels","mdr-temp-house","quarantine","coolidge-virtual"],"theater":["a-list","amc assembly row","amc boston common","coolidge corner","cinemark playa","fenway regal","dolby cinema","moviepass","screening","the culver theater","amc century city"],"travel":["airplane","in-flight","airline","hotel","train"],"streaming":["apple tv+","netflix","itunes","hbo max","disney+","amazon prime","criterion channel","hulu","paramount+","plex","peacock","mubi"],"devices":["apple tv","android-tv","ps5","ps4","laptop","iphone","ipad","chromecast","download","blu-ray","dvd","3d","imax"]};
+// Also match "with X" as people
+function classifyTag(t){
+  var tl=t.toLowerCase().trim();
+  if(tl.startsWith('with ')||TC.people.indexOf(tl)>=0)return'people';
+  for(var i=0;i<TC.home.length;i++)if(tl===TC.home[i].toLowerCase())return'home';
+  for(var i=0;i<TC.theater.length;i++)if(tl===TC.theater[i].toLowerCase()||tl.indexOf('amc')>=0||tl.indexOf('cinemark')>=0||tl.indexOf('regal')>=0||tl.indexOf('theater')>=0||tl.indexOf('cinema')>=0||tl.indexOf('dolby')>=0||tl.indexOf('imax ')>=0||tl.indexOf('screening')>=0)return'theater';
+  for(var i=0;i<TC.travel.length;i++)if(tl===TC.travel[i].toLowerCase())return'travel';
+  for(var i=0;i<TC.streaming.length;i++)if(tl===TC.streaming[i].toLowerCase())return'streaming';
+  for(var i=0;i<TC.devices.length;i++)if(tl===TC.devices[i].toLowerCase())return'devices';
+  return'other';
+}
+
+function processCSV(file){
+  stat.textContent='Reading '+file.name+'...';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var text=e.target.result;
+    var lines=text.split('\n');
+    var headers=lines[0].split(',').map(function(h){return h.trim().replace(/"/g,'')});
+    var tagIdx=headers.indexOf('Tags');
+    var nameIdx=headers.indexOf('Name');
+    var yearIdx=headers.indexOf('Year');
+    var dateIdx=headers.indexOf('Watched Date');
+    if(dateIdx<0)dateIdx=headers.indexOf('Date');
+
+    if(tagIdx<0||nameIdx<0){stat.textContent='Error: CSV must have Name and Tags columns';return}
+
+    // Parse all rows
+    var entries={};var total=0;
+    for(var i=1;i<lines.length;i++){
+      var cols=parseCSVLine(lines[i]);
+      if(!cols||cols.length<=tagIdx)continue;
+      var name=cols[nameIdx]||'';var tags=cols[tagIdx]||'';
+      var yr=cols[yearIdx]||'';var date=dateIdx>=0?cols[dateIdx]:'';
+      if(!name)continue;total++;
+      var key=name+':'+yr;
+      if(!entries[key])entries[key]={title:name,year:yr,tags:[],dates:[]};
+      if(tags){tags.split(',').forEach(function(t){t=t.trim();if(t&&entries[key].tags.indexOf(t)<0)entries[key].tags.push(t)})}
+      if(date&&entries[key].dates.indexOf(date)<0)entries[key].dates.push(date);
+    }
+
+    // Build categorized data
+    var people={},loc={},locd={},stream={},dev={};
+    var years=new Set();
+    Object.values(entries).forEach(function(ent){
+      if(!ent.tags.length)return;
+      var date=ent.dates.length?ent.dates.sort().pop():'';
+      var eyr=date?date.substring(0,4):'';
+      if(!eyr)return;
+      years.add(eyr);
+
+      // Classify
+      var hasPpl=false,hasLoc=false,hasStr=false,hasDev=false;
+      ent.tags.forEach(function(t){
+        var cat=classifyTag(t);
+        if(cat==='people'){hasPpl=true;var d=t.toLowerCase().replace('with ','').trim();inc(people,eyr,d)}
+        else if(cat==='home'){hasLoc=true;inc(loc,eyr,'home');inc(locd,eyr,t.toLowerCase())}
+        else if(cat==='theater'){hasLoc=true;inc(loc,eyr,'theater');inc(locd,eyr,t.toLowerCase())}
+        else if(cat==='travel'){hasLoc=true;inc(loc,eyr,'travel');inc(locd,eyr,t.toLowerCase())}
+        else if(cat==='streaming'){hasStr=true;inc(stream,eyr,t.toLowerCase())}
+        else if(cat==='devices'){hasDev=true;inc(dev,eyr,t.toLowerCase())}
+      });
+      if(!hasPpl)inc(people,eyr,'solo');
+      if(!hasLoc){inc(loc,eyr,'other');inc(locd,eyr,'other')}
+      if(!hasStr)inc(stream,eyr,'other');
+      if(!hasDev)inc(dev,eyr,'other');
+    });
+
+    var yrsArr=Array.from(years).sort();
+
+    // Update D.lb.tags with new data
+    D.lb=D.lb||{};
+    D.lb.tags={years:yrsArr,people:buildCat(people,yrsArr),loc:buildCat(loc,yrsArr),locd:buildCat(locd,yrsArr),stream:buildCat(stream,yrsArr),dev:buildCat(dev,yrsArr)};
+
+    stat.innerHTML='<span style="color:var(--gr)">✓</span> Imported '+total+' entries, '+Object.keys(entries).length+' films. Charts updated! <br><span style="color:var(--t2)">To persist: push diary.csv to data/letterboxd_tags.csv in your GitHub repo.</span>';
+    renderLetterboxd();
+  };
+  reader.readAsText(file);
+}
+
+function inc(obj,yr,key){if(!obj[yr])obj[yr]={};obj[yr][key]=(obj[yr][key]||0)+1}
+function buildCat(obj,yrs){
+  var all={};Object.values(obj).forEach(function(yd){Object.entries(yd).forEach(function(e){all[e[0]]=(all[e[0]]||0)+e[1]})});
+  var allArr=Object.entries(all).sort(function(a,b){return b[1]-a[1]}).map(function(e){return{n:e[0],c:e[1]}});
+  var byY={};yrs.forEach(function(y){if(obj[y]){byY[y]=Object.entries(obj[y]).sort(function(a,b){return b[1]-a[1]}).map(function(e){return{n:e[0],c:e[1]}})}});
+  return{all:allArr.slice(0,20),y:byY};
+}
+
+function parseCSVLine(line){
+  var result=[];var current='';var inQuotes=false;
+  for(var i=0;i<line.length;i++){
+    var c=line[i];
+    if(c==='"'){inQuotes=!inQuotes}
+    else if(c===','&&!inQuotes){result.push(current.trim());current=''}
+    else{current+=c}
+  }
+  result.push(current.trim());
+  return result;
+}
+})();
 </script></body></html>
