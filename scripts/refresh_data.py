@@ -648,13 +648,34 @@ def categorize_tags(lb_data, tag_cats):
     streaming_all = Counter()
     device_all = Counter()
 
-    for key, entry in lb_data.items():
-        tags = [t.lower() for t in entry.get("tags", [])]
-        if not tags: continue
-        # Use most recent watch date for year
-        dates = entry.get("dates", [])
-        yr = max(dates)[:4] if dates else ""
-        if not yr: continue
+    # Build per-watch tag data from CSV (each row = one watch with its own tags+date)
+    watch_tags = []  # [{title, yr, tags}]
+    if os.path.exists("data/letterboxd_tags.csv"):
+        import csv
+        with open("data/letterboxd_tags.csv", newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                title = row.get("Name", "")
+                tags_str = row.get("Tags", "")
+                watched = row.get("Watched Date", "") or row.get("Date", "")
+                if not title or not watched: continue
+                tags = [t.strip().lower() for t in tags_str.split(",") if t.strip()] if tags_str else []
+                watch_tags.append({"title": title, "yr": watched[:4], "tags": tags})
+
+    # If we have per-watch data, use it; otherwise fall back to per-film
+    tag_source = watch_tags if watch_tags else []
+    if not tag_source:
+        for key, entry in lb_data.items():
+            tags = [t.lower() for t in entry.get("tags", [])]
+            if not tags: continue
+            dates = entry.get("dates", [])
+            yr = max(dates)[:4] if dates else ""
+            if yr: tag_source.append({"title": entry.get("title",""), "yr": yr, "tags": tags})
+
+    for wt in tag_source:
+        tags = wt["tags"]
+        yr = wt["yr"]
+        if not tags or not yr: continue
 
         # People
         ptags = [t for t in tags if t in people_set]
@@ -699,13 +720,12 @@ def categorize_tags(lb_data, tag_cats):
 
     # Build title lists per category value with watch years for click-to-see
     cat_titles = defaultdict(lambda: defaultdict(list))  # category -> value -> [{t, wy}]
-    for key, entry in lb_data.items():
-        tags = [t.lower() for t in entry.get("tags", [])]
+    for wt2 in tag_source:
+        tags = wt2["tags"]
         if not tags: continue
-        title = entry.get("title", "")
-        dates = entry.get("dates", [])
-        wys = sorted(set(d[:4] for d in dates if d))
-        item = {"t": title, "wy": wys}
+        title = wt2["title"]
+        yr2 = wt2["yr"]
+        item = {"t": title, "wy": [yr2]}
         for t in tags:
             if t in streaming_set:
                 cat_titles["stream"][t].append(item)
@@ -722,18 +742,20 @@ def categorize_tags(lb_data, tag_cats):
                 display = t.replace("with ", "").strip()
                 cat_titles["people"][display].append(item)
 
-    # Deduplicate by title
+    # Merge duplicate titles (combine watch years), keep all entries
     ct_out = {}
     for cat, vals in cat_titles.items():
         ct_out[cat] = {}
         for v, items in vals.items():
-            seen = set()
-            deduped = []
+            merged = {}
             for item in items:
-                if item["t"] not in seen:
-                    seen.add(item["t"])
-                    deduped.append(item)
-            ct_out[cat][v] = deduped[:50]
+                if item["t"] in merged:
+                    for y in item["wy"]:
+                        if y not in merged[item["t"]]["wy"]:
+                            merged[item["t"]]["wy"].append(y)
+                else:
+                    merged[item["t"]] = {"t": item["t"], "wy": list(item["wy"])}
+            ct_out[cat][v] = list(merged.values())
 
     years = sorted(set(list(people_y) + list(loc_y) + list(streaming_y) + list(device_y)))
 
