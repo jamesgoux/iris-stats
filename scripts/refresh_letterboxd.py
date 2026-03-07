@@ -81,22 +81,51 @@ def refresh_letterboxd():
             }
             new_count += 1
 
-    # Also load tags from CSV if it exists
+    # Import ALL entries from CSV (full history + tags)
     if os.path.exists("data/letterboxd_tags.csv"):
         import csv
+        csv_count = 0
         with open("data/letterboxd_tags.csv", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 title = row.get("Name", "")
                 year = row.get("Year", "")
-                tags = row.get("Tags", "")
-                if not title or not tags:
-                    continue
-                # Find matching entry
-                for key, entry in lb.items():
+                tags_str = row.get("Tags", "")
+                rating = row.get("Rating", "")
+                watched = row.get("Watched Date", "") or row.get("Date", "")
+                rewatch = row.get("Rewatch", "").lower() == "yes"
+                tags = [t.strip() for t in tags_str.split(",") if t.strip()] if tags_str else []
+
+                if not title: continue
+
+                # Find or create entry by title+year
+                key = f"{title}:{year}"
+                found = False
+                for k, entry in lb.items():
                     if entry["title"] == title and str(entry.get("year", "")) == str(year):
-                        entry["tags"] = [t.strip() for t in tags.split(",") if t.strip()]
-                        break
+                        if tags: entry["tags"] = tags
+                        if rating and not entry.get("rating"):
+                            entry["rating"] = float(rating)
+                        if watched and watched not in entry.get("dates", []):
+                            entry.setdefault("dates", []).append(watched)
+                            entry["watches"] = len(entry["dates"])
+                        found = True; break
+
+                if not found:
+                    lb[key] = {
+                        "title": title,
+                        "year": int(year) if year else None,
+                        "tmdb_id": None,
+                        "rating": float(rating) if rating else None,
+                        "liked": False,
+                        "rewatch": rewatch,
+                        "dates": [watched] if watched else [],
+                        "watches": 1,
+                        "tags": tags,
+                    }
+                    csv_count += 1
+
+        print(f"  CSV import: +{csv_count} new entries from diary.csv")
 
     os.makedirs("data", exist_ok=True)
     with open("data/letterboxd.json", "w") as f:
