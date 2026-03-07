@@ -43,18 +43,27 @@ def fetch_tmdb_image(tmdb_url):
 def refresh_headshots():
     hs = load_json("data/headshots.json")
     people = load_json("data/people.json")
+    directors = load_json("data/directors.json")
+    writers = load_json("data/writers.json")
     slug_recency = load_json("data/slug_recency.json")
 
-    if not people:
+    # Combine all people sources: actors + directors + writers
+    all_people = {}
+    for src in [people, directors, writers]:
+        for slug, info in src.items():
+            if slug not in all_people:
+                all_people[slug] = info
+
+    if not all_people:
         print("  No people data. Run refresh_data.py first."); return
 
     # Score each person by most recent title they appeared in
     def person_recency(slug):
-        titles = people.get(slug, {}).get("titles", [])
+        titles = all_people.get(slug, {}).get("titles", [])
         return max((slug_recency.get(t, 0) for t in titles), default=0)
 
     # People needing headshots, sorted by recency (newest first)
-    need = [(slug, info) for slug, info in people.items() if info["name"] not in hs]
+    need = [(slug, info) for slug, info in all_people.items() if info["name"] not in hs]
     need.sort(key=lambda x: person_recency(x[0]), reverse=True)
     need = need[:MAX_HEADSHOTS]
 
