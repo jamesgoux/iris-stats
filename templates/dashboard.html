@@ -51,6 +51,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .poster-item span{display:block;font-size:10px;color:var(--t2);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dr td{padding:4px 8px;background:rgba(15,52,96,.15)!important}
 .dr table{font-size:11px}.dr table td{padding:3px 6px;border:none}
+.vtog{float:right;display:inline-flex;gap:2px}
+.vb{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer}
+.vb:active,.vb-on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .chart-detail{background:rgba(15,52,96,.2);border-radius:8px;padding:10px;margin-top:8px;max-height:200px;overflow-y:auto;font-size:12px}
 .chart-detail .cd-item{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between}
 .chart-detail .cd-item:last-child{border:none}
@@ -120,7 +123,7 @@ body{overflow-x:hidden}
 </div>
 <div class="g3">
 <div class="g2">
-<div id="sec-vy" class="cd fw s-t"><h3><span class="i">📅</span>Content Release Years</h3><div id="vyc" style="height:300px"></div></div>
+<div id="sec-vy" class="cd fw s-t"><h3><span class="i">📅</span>Content Release Years <span class="vtog"><button class="vb vb-on" data-v="year">Year</button><button class="vb" data-v="decade">Decade</button><button class="vb" data-v="pie">New vs Old</button></span></h3><div id="vyc" style="height:300px"></div></div>
 </div>
 <div class="g3">
 <div id="sec-time" class="cd s-t"><h3><span class="i">📅</span>Day of Week</h3><div id="dwc" style="height:280px"></div></div>
@@ -239,14 +242,46 @@ function baseCharts(){
 
   addClick(c3b,document.getElementById('stuc'),'stu',sd2);
 
-  // Content vintage (release years)
+  // Content vintage (release years) - multi-view
   var vyd=cy!=='all'&&D.c.vy_y&&D.c.vy_y[cy]?D.c.vy_y[cy]:(D.c.vy||[]);
-  var c10=echarts.init(document.getElementById('vyc'));
-  var vySeries=[];
-  if(ct!=='movie')vySeries.push({name:'Shows',type:'bar',stack:'t',data:vyd.map(function(d){return d.s}),itemStyle:{color:'#60a5fa'},barMaxWidth:cy==='all'?4:12});
-  if(ct!=='show')vySeries.push({name:'Movies',type:'bar',stack:'t',data:vyd.map(function(d){return d.m}),itemStyle:{color:'#e94560'},barMaxWidth:cy==='all'?4:12});
-  c10.setOption({tooltip:{trigger:'axis',...tt},legend:{data:ct==='all'?['Shows','Movies']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:vyd.map(function(d){return d.yr}),axisLabel:{color:'#666',interval:cy==='all'?4:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:vySeries});
-  c10.on('click',function(p){showDetail(document.getElementById('vyc'),'vy',vyd[p.dataIndex]?vyd[p.dataIndex].yr:p.name)});
+  var vyEl=document.getElementById('vyc');
+  var c10=echarts.init(vyEl);
+  var vyMode=window._vyMode||'year';
+
+  function renderVintage(){
+    c10.clear();
+    if(vyMode==='pie'){
+      // New vs Old pie: current year vs everything else
+      var curYr=cy!=='all'?cy:new Date().getFullYear().toString();
+      var newC=0,oldC=0;
+      vyd.forEach(function(d){var t=(ct==='movie'?d.m:ct==='show'?d.s:d.m+d.s);if(d.yr===curYr)newC+=t;else oldC+=t});
+      c10.setOption({tooltip:{trigger:'item',...tt},series:[{type:'pie',radius:['40%','70%'],center:['50%','55%'],data:[{value:newC,name:curYr+' releases',itemStyle:{color:'#4ade80'}},{value:oldC,name:'Older releases',itemStyle:{color:'#60a5fa'}}],label:{color:'#ccc',fontSize:12,formatter:'{b}\n{d}%'},emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,.5)'}}}]});
+    }else if(vyMode==='decade'){
+      var decades={};vyd.forEach(function(d){var dec=d.yr.substring(0,3)+'0s';if(!decades[dec])decades[dec]={m:0,s:0};decades[dec].m+=d.m;decades[dec].s+=d.s});
+      var dkeys=Object.keys(decades).sort();
+      var dSeries=[];
+      if(ct!=='movie')dSeries.push({name:'Shows',type:'bar',stack:'t',data:dkeys.map(function(k){return decades[k].s}),itemStyle:{color:'#60a5fa'}});
+      if(ct!=='show')dSeries.push({name:'Movies',type:'bar',stack:'t',data:dkeys.map(function(k){return decades[k].m}),itemStyle:{color:'#e94560'}});
+      c10.setOption({tooltip:{trigger:'axis',...tt},legend:{data:ct==='all'?['Shows','Movies']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:dkeys,axisLabel:{color:'#ccc',fontSize:12},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:dSeries});
+    }else{
+      var vySeries=[];
+      if(ct!=='movie')vySeries.push({name:'Shows',type:'bar',stack:'t',data:vyd.map(function(d){return d.s}),itemStyle:{color:'#60a5fa'},barMaxWidth:cy==='all'?4:12});
+      if(ct!=='show')vySeries.push({name:'Movies',type:'bar',stack:'t',data:vyd.map(function(d){return d.m}),itemStyle:{color:'#e94560'},barMaxWidth:cy==='all'?4:12});
+      c10.setOption({tooltip:{trigger:'axis',...tt},legend:{data:ct==='all'?['Shows','Movies']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:vyd.map(function(d){return d.yr}),axisLabel:{color:'#666',interval:cy==='all'?4:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:vySeries});
+      c10.on('click',function(p){showDetail(vyEl,'vy',vyd[p.dataIndex]?vyd[p.dataIndex].yr:p.name)});
+    }
+  }
+  renderVintage();
+
+  // Toggle buttons
+  document.querySelectorAll('.vb').forEach(function(btn){
+    btn.onclick=function(){
+      document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('vb-on')});
+      btn.classList.add('vb-on');
+      window._vyMode=vyMode=btn.dataset.v;
+      renderVintage();
+    };
+  });
   ch.push(c10);
 
   // Day of week
