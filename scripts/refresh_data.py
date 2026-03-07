@@ -382,6 +382,19 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "yr": e["watched_at"][:4] if e["watched_at"] else ""
         })
 
+    # First watches: earliest entries
+    first_all = []
+    sorted_oldest = sorted(entries, key=lambda x: x["watched_at"])
+    for e in sorted_oldest[:200]:
+        if not e["watched_at"]: continue
+        first_all.append({
+            "type": e["type"],
+            "title": e["show_title"] or e["title"],
+            "detail": f"S{e['season']}E{e['episode_number']}" if e["type"] == "episode" else str(e["year"]),
+            "watched_at": e["watched_at"][:10],
+            "yr": e["watched_at"][:4] if e["watched_at"] else ""
+        })
+
     ml = [e for e in entries if e["type"] == "movie"]
     el = [e for e in entries if e["type"] == "episode"]
     tr = sum(int(e["runtime"]) for e in entries if e["runtime"])
@@ -509,6 +522,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "lang": [{"n": l, "count": n} for l, n in lang_counter.most_common(20)],
             "lang_y": {y: [{"n": l, "count": n} for l, n in ct.most_common(20)] for y, ct in lang_counter_y.items()},
             "r": recent_all,
+            "f": first_all,
             "ttw": ttw_all[:25],
             "ttw_y": {y: v[:25] for y, v in ttw_by_year.items()},
             "vy": vintage_data,
