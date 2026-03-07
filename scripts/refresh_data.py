@@ -265,7 +265,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
 
     # Build vintage data grouped by decade for cleaner display
     all_vy = sorted(set(list(vintage_movies) + list(vintage_shows)))
-    vintage_data = [{"yr": y, "m": vintage_movies.get(y, 0), "s": vintage_shows.get(y, 0)} for y in all_vy if int(y) >= 1980]
+    vintage_data = [{"yr": y, "m": vintage_movies.get(y, 0), "s": vintage_shows.get(y, 0)} for y in all_vy if int(y) >= 1920]
 
     # Also per watch-year
     vintage_by_wy = defaultdict(lambda: {"movies": Counter(), "shows": Counter(), "seen": set()})
@@ -284,7 +284,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     vintage_by_year = {}
     for wy, data in vintage_by_wy.items():
         all_y = sorted(set(list(data["movies"]) + list(data["shows"])))
-        vintage_by_year[wy] = [{"yr": y, "m": data["movies"].get(y, 0), "s": data["shows"].get(y, 0)} for y in all_y if int(y) >= 1980]
+        vintage_by_year[wy] = [{"yr": y, "m": data["movies"].get(y, 0), "s": data["shows"].get(y, 0)} for y in all_y if int(y) >= 1920]
 
     # Movie year data
     myd = defaultdict(lambda: {"name": "", "yr": "", "rt": 0, "yd": defaultdict(int)})
