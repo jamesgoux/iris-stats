@@ -141,8 +141,71 @@ def refresh_posters():
     save_json("data/posters.json", ps)
     print(f"  +{count} new posters, {len(ps)} total")
 
+# ============================================================
+# LOGOS (network/studio logos from TMDB)
+# ============================================================
+def refresh_logos():
+    logos = load_json("data/logos.json")
+    slug_recency = load_json("data/slug_recency.json")
+
+    # Get unique studios from studios.json
+    studios_raw = load_json("data/studios.json")
+    # Flatten: collect all studio names
+    all_studio_names = set()
+    for slug, names in studios_raw.items():
+        if isinstance(names, list):
+            all_studio_names.update(names)
+        else:
+            all_studio_names.add(names)
+
+    # Studios needing logos
+    need_stu = [n for n in all_studio_names if n not in logos][:100]
+
+    print(f"\n=== Logos: {len(logos)} cached, {len(need_stu)} studios to fetch ===")
+    if not need_stu:
+        print("  All up to date!"); return
+
+    count = 0
+    for i, name in enumerate(need_stu):
+        # Find TMDB ID via Trakt
+        # Search studios.json for a slug that has this studio, then look up via Trakt
+        found_slug = None
+        for slug, names in studios_raw.items():
+            ns = names if isinstance(names, list) else [names]
+            if name in ns:
+                found_slug = slug; break
+        if not found_slug: continue
+
+        try:
+            # Try as movie first, then show
+            for kind in ["movies", "shows"]:
+                r = requests.get(f"{BASE_URL}/{kind}/{found_slug}/studios", headers=HEADERS, timeout=5)
+                if r.status_code == 200:
+                    for s in r.json():
+                        if s["name"] == name:
+                            tmdb_id = s["ids"].get("tmdb")
+                            if tmdb_id:
+                                # Scrape TMDB company page for logo
+                                hash = fetch_tmdb_image(f"https://www.themoviedb.org/company/{tmdb_id}")
+                                if hash:
+                                    logos[name] = f"https://image.tmdb.org/t/p/h30/{hash}"
+                                    count += 1
+                            break
+                    if name in logos: break
+        except: pass
+
+        if (i+1) % 20 == 0:
+            print(f"  {i+1}/{len(need_stu)} processed, {count} found")
+            save_json("data/logos.json", logos)
+        time.sleep(0.15)
+
+    save_json("data/logos.json", logos)
+    print(f"  +{count} new logos, {len(logos)} total")
+
+
 # ---- Main ----
 print("=== Image Refresh ===")
 refresh_headshots()
 refresh_posters()
+refresh_logos()
 print("\nDone!")

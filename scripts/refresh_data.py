@@ -412,9 +412,13 @@ if os.path.exists("data/headshots.json"):
 ps = {}
 if os.path.exists("data/posters.json"):
     with open("data/posters.json") as f: ps = json.load(f)
+logos = {}
+if os.path.exists("data/logos.json"):
+    with open("data/logos.json") as f: logos = json.load(f)
 
 print(f"\n[3/3] Building dashboard ({len(entries)} entries, {len(people)} people, {len(hs)} headshots, {len(ps)} posters)...")
 data = build_data(entries, people, hs, ps, slug_studios, directors_raw, writers_raw)
+data["lg"] = logos  # studio/network logos
 
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:

@@ -120,7 +120,7 @@ body{overflow-x:hidden}
 </div>
 <script>
 var D=__DASHBOARD_DATA__;
-var HS=D.hs||{},TL=D.tl||[],SYD=D.syd||[],MYD=D.myd||[],SM=D.sm||{};
+var HS=D.hs||{},TL=D.tl||[],SYD=D.syd||[],MYD=D.myd||[],SM=D.sm||{},LO=D.lg||{};
 var ch=[],cy='all',ct='all';
 var mob=window.innerWidth<768;
 var tt={backgroundColor:'#1a1a2e',borderColor:'#333',textStyle:{color:'#eee'}};
@@ -201,7 +201,7 @@ function baseCharts(){
   // Networks
   var nd=(cy!=='all'&&D.c.net_y&&D.c.net_y[cy]?D.c.net_y[cy]:(D.c.net||[])).slice(0,15).reverse();
   var c3=echarts.init(document.getElementById('netc'));
-  c3.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(120),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:nd.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:nd.map(function(d){return d.s||0}),itemStyle:{color:LG('#0f3460','#a78bfa')},barMaxWidth:18}]});
+  c3.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var n=p[0].name;var img=LO[n]?'<img src="'+LO[n]+'" style="height:18px;vertical-align:middle;margin-right:4px">':'';return img+'<b>'+n+'</b><br/>'+p[0].value+' titles'}},grid:{left:gl(120),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:nd.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:nd.map(function(d){return d.s||0}),itemStyle:{color:LG('#0f3460','#a78bfa')},barMaxWidth:18,label:{show:true,position:'insideRight',color:'#fff',fontSize:9,formatter:function(p){return LO[p.name]?'':''}}}]});
 
   addClick(c3,document.getElementById('netc'),'net',nd);
 
@@ -211,7 +211,7 @@ function baseCharts(){
   var stuSeries=[];
   if(ct!=='show')stuSeries.push({name:'Movies',type:'bar',stack:'t',data:sd2.map(function(d){return d.m||0}),itemStyle:{color:'#e94560'},barMaxWidth:18});
   if(ct!=='movie')stuSeries.push({name:'Shows',type:'bar',stack:'t',data:sd2.map(function(d){return d.s||0}),itemStyle:{color:'#60a5fa'},barMaxWidth:18});
-  c3b.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},legend:{data:ct==='all'?['Movies','Shows']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:gl(140),right:20,top:ct==='all'?30:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:sd2.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:stuSeries});
+  c3b.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var n=p[0].name;var img=LO[n]?'<img src="'+LO[n]+'" style="height:18px;vertical-align:middle;margin-right:4px">':'';var vals=p.map(function(s){return s.marker+s.seriesName+': '+s.value}).join('<br/>');return img+'<b>'+n+'</b><br/>'+vals}},legend:{data:ct==='all'?['Movies','Shows']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:gl(140),right:20,top:ct==='all'?30:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:sd2.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},series:stuSeries});
 
   addClick(c3b,document.getElementById('stuc'),'stu',sd2);
 
