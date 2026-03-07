@@ -513,10 +513,10 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "ttw_y": {y: v[:25] for y, v in ttw_by_year.items()},
             "vy": vintage_data,
             "vy_y": vintage_by_year,
-            "mch": movies_by_community[:20],
-            "mcl": movies_by_community[-10:][::-1] if len(movies_by_community) > 10 else [],
-            "sch": shows_by_community[:20],
-            "scl": shows_by_community[-10:][::-1] if len(shows_by_community) > 10 else [],
+            "mch": movies_by_community,
+            "mcl": list(reversed(movies_by_community)) if movies_by_community else [],
+            "sch": shows_by_community,
+            "scl": list(reversed(shows_by_community)) if shows_by_community else [],
         }
     }
 
@@ -708,8 +708,8 @@ tag_data = categorize_tags(lb, tag_cats)
 my_rated = [{"t": e["title"], "yr": e.get("year"), "r": e["rating"],
              "wy": sorted(set(d[:4] for d in e.get("dates",[]) if d))}
             for e in lb.values() if e.get("rating")]
-my_rated_high = sorted(my_rated, key=lambda x: x["r"], reverse=True)[:20]
-my_rated_low = sorted(my_rated, key=lambda x: x["r"])[:10]
+my_rated_high = sorted(my_rated, key=lambda x: x["r"], reverse=True)
+my_rated_low = sorted(my_rated, key=lambda x: x["r"])
 
 data["lb"] = {
     "ratings": lb_ratings,
