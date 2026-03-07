@@ -687,23 +687,15 @@ def categorize_tags(lb_data, tag_cats):
         if not loc_found:
             loc_detail_y[yr]["other"] += 1; loc_detail_all["other"] += 1
 
-        # Streaming
+        # Streaming — only count if a streaming tag is present
         stags = [t for t in tags if t in streaming_set]
         for t in stags:
             streaming_y[yr][t] += 1; streaming_all[t] += 1
-        if not stags:
-            # Check if physical media or theatrical
-            if any(t in device_set for t in tags):
-                pass  # covered by devices
-            else:
-                streaming_y[yr]["other"] += 1; streaming_all["other"] += 1
 
-        # Devices
+        # Devices — only count if a device tag is present
         dtags = [t for t in tags if t in device_set]
         for t in dtags:
             device_y[yr][t] += 1; device_all[t] += 1
-        if not dtags:
-            device_y[yr]["other"] += 1; device_all["other"] += 1
 
     years = sorted(set(list(people_y) + list(loc_y) + list(streaming_y) + list(device_y)))
 
