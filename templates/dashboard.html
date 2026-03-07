@@ -26,8 +26,13 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
 .fw{grid-column:1/-1}
-.cd{background:var(--sf);border-radius:10px;padding:16px;border:1px solid rgba(255,255,255,.06);min-height:0}
+.cd{background:var(--sf);border-radius:10px;padding:16px;border:1px solid rgba(255,255,255,.06);min-height:0;border-left:3px solid transparent}
 .cd h3{font-size:14px;font-weight:600;margin-bottom:10px;color:var(--t2)}
+.cd h3 .i{margin-right:6px}
+.s-a{border-left-color:#e94560}.s-s{border-left-color:#a78bfa}.s-m{border-left-color:#e94560}
+.s-g{border-left-color:#fb923c}.s-n{border-left-color:#60a5fa}.s-u{border-left-color:#a78bfa}
+.s-t{border-left-color:#4ade80}.s-e{border-left-color:#4ade80}.s-c{border-left-color:#fb923c}
+.s-r{border-left-color:#60a5fa}
 .stb{max-height:300px;overflow-y:auto}.stb::-webkit-scrollbar{width:5px}.stb::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:7px 8px;color:var(--t2);font-weight:500;border-bottom:1px solid rgba(255,255,255,.1);font-size:10px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;background:var(--sf);z-index:1}
@@ -75,41 +80,41 @@ body{overflow-x:hidden}
 <div class="dash">
 <div class="sg" id="st"></div>
 <div class="g2">
-<div class="cd"><h3>Most Watched Actors</h3><div class="stb"><table><thead><tr><th>#</th><th>Actor</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="atb"></tbody></table></div></div>
-<div class="cd"><h3>Most Watched Actresses</h3><div class="stb"><table><thead><tr><th>#</th><th>Actress</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="xtb"></tbody></table></div></div>
+<div class="cd s-a"><h3><span class="i">🎭</span>Most Watched Actors</h3><div class="stb"><table><thead><tr><th>#</th><th>Actor</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="atb"></tbody></table></div></div>
+<div class="cd s-a"><h3><span class="i">🎭</span>Most Watched Actresses</h3><div class="stb"><table><thead><tr><th>#</th><th>Actress</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="xtb"></tbody></table></div></div>
 </div>
 <div class="g2">
-<div class="cd"><h3>Most Watched Directors</h3><div class="stb"><table><thead><tr><th>#</th><th>Director</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="dtb"></tbody></table></div></div>
-<div class="cd"><h3>Most Watched Writers</h3><div class="stb"><table><thead><tr><th>#</th><th>Writer</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="wtb"></tbody></table></div></div>
+<div class="cd s-c"><h3><span class="i">🎬</span>Most Watched Directors</h3><div class="stb"><table><thead><tr><th>#</th><th>Director</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="dtb"></tbody></table></div></div>
+<div class="cd s-c"><h3><span class="i">✍️</span>Most Watched Writers</h3><div class="stb"><table><thead><tr><th>#</th><th>Writer</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="wtb"></tbody></table></div></div>
 </div>
 <div class="g2">
-<div class="cd"><h3 id="sdh">Top Shows by Duration</h3><div id="sdc" style="height:520px"></div></div>
-<div class="cd"><h3 id="seh">Top Shows by Episodes</h3><div id="sec" style="height:520px"></div></div>
+<div class="cd s-s"><h3 id="sdh"><span class="i">📺</span>Top Shows by Duration</h3><div id="sdc" style="height:520px"></div></div>
+<div class="cd s-s"><h3 id="seh"><span class="i">📺</span>Top Shows by Episodes</h3><div id="sec" style="height:520px"></div></div>
 </div>
 <div class="g2">
 <div class="cd fw" id="poster-section" style="display:none"><h3>Top Shows</h3><div id="poster-grid" style="display:flex;flex-wrap:wrap;gap:10px;overflow-x:auto"></div></div>
-<div class="cd"><h3 id="mdh">Movies by Watch Time</h3><div id="mdc" style="height:340px"></div></div>
-<div class="cd"><h3 id="mrh">Most Rewatched</h3><div id="mrc" style="height:340px"></div></div>
+<div class="cd s-m"><h3 id="mdh"><span class="i">🎞️</span>Movies by Watch Time</h3><div id="mdc" style="height:340px"></div></div>
+<div class="cd s-m"><h3 id="mrh"><span class="i">🔁</span>Most Rewatched</h3><div id="mrc" style="height:340px"></div></div>
 </div>
 <div class="g2">
-<div class="cd fw"><h3>Monthly Activity</h3><div id="tlc" style="height:280px"></div></div>
+<div class="cd fw s-t"><h3><span class="i">📊</span>Monthly Activity</h3><div id="tlc" style="height:280px"></div></div>
 </div>
 <div class="g3">
-<div class="cd"><h3 id="gnh">Genres</h3><div id="gnc" style="height:360px"></div></div>
-<div class="cd"><h3>Top Networks</h3><div id="netc" style="height:360px"></div></div>
-<div class="cd"><h3>Top Studios</h3><div id="stuc" style="height:360px"></div></div>
+<div class="cd s-g"><h3 id="gnh"><span class="i">🎯</span>Genres</h3><div id="gnc" style="height:360px"></div></div>
+<div class="cd s-n"><h3><span class="i">📡</span>Top Networks</h3><div id="netc" style="height:360px"></div></div>
+<div class="cd s-u"><h3><span class="i">🏢</span>Top Studios</h3><div id="stuc" style="height:360px"></div></div>
 </div>
 <div class="g2">
-<div class="cd"><h3>Countries</h3><div id="ctryc" style="height:320px"></div></div>
-<div class="cd"><h3>Languages</h3><div id="langc" style="height:320px"></div></div>
+<div class="cd s-e"><h3><span class="i">🌍</span>Countries</h3><div id="ctryc" style="height:320px"></div></div>
+<div class="cd s-e"><h3><span class="i">💬</span>Languages</h3><div id="langc" style="height:320px"></div></div>
 </div>
 <div class="g3">
-<div class="cd"><h3>Day of Week</h3><div id="dwc" style="height:280px"></div></div>
-<div class="cd"><h3>Time of Day</h3><div id="hodc" style="height:280px"></div></div>
-<div class="cd"><h3>Yearly Watch Count</h3><div id="yrc" style="height:280px"></div></div>
+<div class="cd s-t"><h3><span class="i">📅</span>Day of Week</h3><div id="dwc" style="height:280px"></div></div>
+<div class="cd s-t"><h3><span class="i">🕐</span>Time of Day</h3><div id="hodc" style="height:280px"></div></div>
+<div class="cd s-t"><h3><span class="i">📈</span>Yearly Watch Count</h3><div id="yrc" style="height:280px"></div></div>
 </div>
 <div class="g2">
-<div class="cd fw"><h3>Recently Watched</h3><table><thead><tr><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody id="rtb"></tbody></table></div>
+<div class="cd fw s-r"><h3><span class="i">👁️</span>Recently Watched</h3><table><thead><tr><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody id="rtb"></tbody></table></div>
 </div>
 <div class="status" id="status"></div>
 </div>
