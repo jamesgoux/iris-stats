@@ -845,10 +845,17 @@ if concerts:
     cy2 = Ctr2(c["year"] for c in concerts)
     cy2_songs = defaultdict(int)
     for c in concerts: cy2_songs[c["year"]] += c["song_count"]
+    # Album breakdown per artist
+    ca_albums = defaultdict(Counter)
+    for c in concerts:
+        sa = c.get("song_albums", {})
+        for song, album in sa.items():
+            if album: ca_albums[c["artist"]][album] += 1
     artist_detail = {}
     for artist in ca:
         top_songs = [(s,ct) for s,ct in ca_song_list[artist].most_common() if ct>=2]
-        artist_detail[artist] = {"songs":[{"n":s,"c":ct} for s,ct in ca_song_list[artist].most_common(20)],"top":[{"n":s,"c":ct} for s,ct in top_songs[:15]]}
+        albums = [{"n":a,"c":ct} for a,ct in ca_albums[artist].most_common()]
+        artist_detail[artist] = {"songs":[{"n":s,"c":ct} for s,ct in ca_song_list[artist].most_common(20)],"top":[{"n":s,"c":ct} for s,ct in top_songs[:15]],"albums":albums}
     data["con"] = {
         "total": len(concerts), "songs": sum(c["song_count"] for c in concerts),
         "artists": [{"n": a, "c": c, "s": ca_songs[a]} for a, c in ca.most_common(25)],

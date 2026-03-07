@@ -73,6 +73,65 @@ def normalize(concerts):
         })
     return entries
 
+def lookup_albums(concerts):
+    """Use MusicBrainz to find album for each song. Cached in data/song_albums.json."""
+    MB_HEADERS = {"User-Agent": "Iris/1.0 (github.com/jamesgoux/trakt-dashboard)", "Accept": "application/json"}
+    cache = {}
+    if os.path.exists("data/song_albums.json"):
+        with open("data/song_albums.json") as f:
+            cache = json.load(f)
+
+    need = []
+    for c in concerts:
+        artist = c["artist"]
+        for song in c.get("songs", []):
+            key = f"{artist}||{song}"
+            if song and key not in cache:
+                need.append((artist, song, key))
+
+    if not need:
+        print(f"  Albums: all {len(cache)} cached")
+        return cache
+
+    print(f"  Albums: {len(cache)} cached, {len(need)} to look up")
+    count = 0
+    for i, (artist, song, key) in enumerate(need[:100]):  # cap at 100 per run
+        try:
+            r = requests.get("https://musicbrainz.org/ws/2/recording",
+                params={"query": f'recording:"{song}" AND artist:"{artist}"', "fmt": "json", "limit": 5},
+                headers=MB_HEADERS, timeout=10)
+            if r.status_code == 200:
+                best_album = None
+                for rec in r.json().get("recordings", []):
+                    if rec.get("score", 0) < 80:
+                        continue
+                    for rel in rec.get("releases", []):
+                        rg = rel.get("release-group", {})
+                        if rg.get("primary-type") == "Album" and not rg.get("secondary-types"):
+                            best_album = rel.get("title", "")
+                            break
+                    if best_album:
+                        break
+                cache[key] = best_album or "Unknown"
+                if best_album:
+                    count += 1
+            elif r.status_code == 503:
+                time.sleep(2)
+        except:
+            pass
+        if (i + 1) % 20 == 0:
+            print(f"    {i+1}/{min(len(need),100)}, {count} found")
+            os.makedirs("data", exist_ok=True)
+            with open("data/song_albums.json", "w") as f:
+                json.dump(cache, f, separators=(",", ":"))
+        time.sleep(1.1)  # MusicBrainz rate limit: 1 req/sec
+
+    os.makedirs("data", exist_ok=True)
+    with open("data/song_albums.json", "w") as f:
+        json.dump(cache, f, separators=(",", ":"))
+    print(f"  +{count} albums found, {len(cache)} total")
+    return cache
+
 print("=== Setlist.fm Concert Refresh ===")
 
 # Load existing
@@ -96,6 +155,18 @@ for entry in normalize(raw):
     existing[entry["id"]] = entry
 
 concerts = sorted(existing.values(), key=lambda x: x["date"], reverse=True)
+
+# Look up albums for songs
+album_cache = lookup_albums(concerts)
+
+# Add album info to concert songs
+for c in concerts:
+    c["song_albums"] = {}
+    for song in c.get("songs", []):
+        key = f"{c['artist']}||{song}"
+        album = album_cache.get(key)
+        if album and album != "Unknown":
+            c["song_albums"][song] = album
 
 os.makedirs("data", exist_ok=True)
 with open("data/setlist.json", "w") as f:
