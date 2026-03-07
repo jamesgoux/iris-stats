@@ -564,10 +564,102 @@ for key, entry in lb.items():
     for tag in entry.get("tags", []):
         lb_tags[tag] += 1
 
+# Load tag categories
+tag_cats = {}
+if os.path.exists("data/tag_categories.json"):
+    with open("data/tag_categories.json") as f:
+        tag_cats = json.load(f)
+
+# Build categorized tag data by year
+def categorize_tags(lb_data, tag_cats):
+    people_set = set(t.lower() for t in tag_cats.get("people", []))
+    home_set = set(t.lower() for t in tag_cats.get("home", []))
+    theater_set = set(t.lower() for t in tag_cats.get("theater", []))
+    travel_set = set(t.lower() for t in tag_cats.get("travel", []))
+    streaming_set = set(t.lower() for t in tag_cats.get("streaming", []))
+    device_set = set(t.lower() for t in tag_cats.get("devices", []))
+
+    # Per-year counts for each category
+    from collections import defaultdict, Counter
+    people_y = defaultdict(Counter)
+    loc_y = defaultdict(Counter)  # home/theater/travel/other
+    streaming_y = defaultdict(Counter)
+    device_y = defaultdict(Counter)
+    # All-time
+    people_all = Counter()
+    loc_all = Counter()
+    streaming_all = Counter()
+    device_all = Counter()
+
+    for key, entry in lb_data.items():
+        tags = [t.lower() for t in entry.get("tags", [])]
+        if not tags: continue
+        # Use most recent watch date for year
+        dates = entry.get("dates", [])
+        yr = max(dates)[:4] if dates else ""
+        if not yr: continue
+
+        # People
+        ptags = [t for t in tags if t in people_set]
+        for t in ptags:
+            # Clean "with " prefix for display
+            display = t.replace("with ", "").strip()
+            people_y[yr][display] += 1
+            people_all[display] += 1
+        if not ptags:
+            people_y[yr]["solo"] += 1
+            people_all["solo"] += 1
+
+        # Location
+        has_loc = False
+        for t in tags:
+            if t in home_set or t == "quarantine":
+                loc_y[yr]["home"] += 1; loc_all["home"] += 1; has_loc = True; break
+            elif t in theater_set:
+                loc_y[yr]["theater"] += 1; loc_all["theater"] += 1; has_loc = True; break
+            elif t in travel_set:
+                loc_y[yr]["travel"] += 1; loc_all["travel"] += 1; has_loc = True; break
+        if not has_loc:
+            loc_y[yr]["other"] += 1; loc_all["other"] += 1
+
+        # Streaming
+        stags = [t for t in tags if t in streaming_set]
+        for t in stags:
+            streaming_y[yr][t] += 1; streaming_all[t] += 1
+        if not stags:
+            # Check if physical media or theatrical
+            if any(t in device_set for t in tags):
+                pass  # covered by devices
+            else:
+                streaming_y[yr]["other"] += 1; streaming_all["other"] += 1
+
+        # Devices
+        dtags = [t for t in tags if t in device_set]
+        for t in dtags:
+            device_y[yr][t] += 1; device_all[t] += 1
+        if not dtags:
+            device_y[yr]["other"] += 1; device_all["other"] += 1
+
+    years = sorted(set(list(people_y) + list(loc_y) + list(streaming_y) + list(device_y)))
+
+    return {
+        "years": years,
+        "people": {"all": [{"n": n, "c": c} for n, c in people_all.most_common(20)],
+                   "y": {y: [{"n": n, "c": c} for n, c in ct.most_common(15)] for y, ct in people_y.items()}},
+        "loc": {"all": [{"n": n, "c": c} for n, c in loc_all.most_common()],
+                "y": {y: [{"n": n, "c": c} for n, c in ct.most_common()] for y, ct in loc_y.items()}},
+        "stream": {"all": [{"n": n, "c": c} for n, c in streaming_all.most_common(15)],
+                   "y": {y: [{"n": n, "c": c} for n, c in ct.most_common(10)] for y, ct in streaming_y.items()}},
+        "dev": {"all": [{"n": n, "c": c} for n, c in device_all.most_common(15)],
+                "y": {y: [{"n": n, "c": c} for n, c in ct.most_common(10)] for y, ct in device_y.items()}},
+    }
+
+tag_data = categorize_tags(lb, tag_cats)
+
 data["lb"] = {
     "ratings": lb_ratings,
     "dist": [{"r": r, "c": c} for r, c in sorted(lb_rating_dist.items())],
-    "tags": [{"t": t, "c": c} for t, c in lb_tags.most_common(30)],
+    "tags": tag_data,
     "total": len(lb),
     "rated": sum(1 for e in lb.values() if e.get("rating")),
     "avg": round(sum(e["rating"] for e in lb.values() if e.get("rating")) / max(1, sum(1 for e in lb.values() if e.get("rating"))), 1),
