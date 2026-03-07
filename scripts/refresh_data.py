@@ -177,6 +177,7 @@ def build_data(entries, people, headshots, posters, slug_studios):
     monthly = defaultdict(lambda: {"movies": 0, "episodes": 0})
     yearly = defaultdict(lambda: {"movies": 0, "episodes": 0, "total": 0})
     genre_movie = Counter(); genre_show = Counter()
+    genre_movie_y = defaultdict(Counter); genre_show_y = defaultdict(Counter)
     dwc = Counter(); dwn = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
     hod = defaultdict(lambda: defaultdict(int))  # hour of day by year
     net_movies = Counter()  # count unique titles, not episodes
@@ -205,8 +206,8 @@ def build_data(entries, people, headshots, posters, slug_studios):
         if e["genres"]:
             for g in e["genres"].split(", "):
                 gs = g.strip()
-                if e["type"] == "movie": genre_movie[gs] += 1
-                else: genre_show[gs] += 1
+                if e["type"] == "movie": genre_movie[gs] += 1; genre_movie_y[y][gs] += 1
+                else: genre_show[gs] += 1; genre_show_y[y][gs] += 1
         # Networks: count unique titles (slug), not episodes
         slug = e["trakt_slug"]
         net_key = (slug, y)
@@ -290,6 +291,9 @@ def build_data(entries, people, headshots, posters, slug_studios):
             "gs": [{"genre": g, "count": c} for g, c in genre_show.most_common(20)],
             "ga": [{"genre": g, "count": genre_movie[g] + genre_show[g]}
                    for g, _ in (genre_movie + genre_show).most_common(20)],
+            "gm_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_movie_y.items()},
+            "gs_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_show_y.items()},
+            "ga_y": {y: [{"genre": g, "count": (genre_movie_y[y][g] + genre_show_y[y][g])} for g, _ in (genre_movie_y[y] + genre_show_y[y]).most_common(20)] for y in set(list(genre_movie_y) + list(genre_show_y))},
             "dw": [{"day": d, "count": dwc.get(d, 0)} for d in dwn],
             "hod": {str(h): hod_all.get(h, 0) for h in range(24)},
             "hod_y": hod_by_year,

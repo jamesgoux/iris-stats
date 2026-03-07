@@ -168,10 +168,15 @@ function baseCharts(){
   if(ct!=='show')tlSeries.push({name:'Movies',type:'bar',stack:'t',data:mf.map(function(d){return d.movies}),itemStyle:{color:'#e94560'},barMaxWidth:cy==='all'?5:30});
   c1.setOption({tooltip:{trigger:'axis',...tt},legend:{data:ct==='all'?['Episodes','Movies']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:mf.map(function(d){return d.month}),axisLabel:{color:'#666',interval:cy==='all'?11:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:tlSeries});
 
-  // Genres - respects type filter
-  var gd=ct==='movie'?(D.c.gm||[]):ct==='show'?(D.c.gs||[]):(D.c.ga||[]);
+  // Genres - respects type AND year filter
+  var gd;
+  if(cy!=='all'){
+    gd=ct==='movie'?(D.c.gm_y&&D.c.gm_y[cy]||[]):ct==='show'?(D.c.gs_y&&D.c.gs_y[cy]||[]):(D.c.ga_y&&D.c.ga_y[cy]||[]);
+  }else{
+    gd=ct==='movie'?(D.c.gm||[]):ct==='show'?(D.c.gs||[]):(D.c.ga||[]);
+  }
   gd=gd.slice().reverse();
-  document.getElementById('gnh').textContent='Genres'+(ct!=='all'?' ('+ct+'s)':'');
+  document.getElementById('gnh').textContent='Genres'+(ct!=='all'?' ('+ct+'s)':'')+(cy!=='all'?' ('+cy+')':'');
   var c2=echarts.init(document.getElementById('gnc'));
   c2.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...tt},grid:{left:gl(100),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:gd.map(function(d){return d.genre}),axisLabel:{color:'#ccc',fontSize:11},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:gd.map(function(d){return d.count}),itemStyle:{color:LG('#0f3460','#e94560')},barMaxWidth:18}]});
 
