@@ -183,9 +183,9 @@ body{overflow-x:hidden}
 <!-- THEATER -->
 <div class="g2" id="th-wrap" style="display:none">
 <div id="sec-th" class="cd s-g"><h3><span class="i">🎭</span>Theater Ratings</h3><div id="thc" style="height:280px"></div></div>
-<div class="cd s-g"><h3><span class="i">🏷️</span>Tags</h3><div id="th-tags"></div></div>
-<div class="cd s-g"><h3><span class="i">🏛️</span>Top Theaters</h3><div id="th-venues"></div></div>
-<div class="cd s-g"><h3><span class="i">👥</span>Companions</h3><div id="th-companions"></div></div>
+<div class="cd s-g"><h3><span class="i">🏷️</span>Tags</h3><div id="th-tags" style="height:280px"></div></div>
+<div class="cd s-g"><h3><span class="i">🏛️</span>Top Theaters</h3><div id="th-venues" style="height:280px"></div></div>
+<div class="cd s-g"><h3><span class="i">👥</span>Companions</h3><div id="th-companions" style="height:280px"></div></div>
 </div>
 <div class="cd fw s-g" style="margin-top:14px">
 <h3><span class="i">📤</span>Import Data</h3>
@@ -734,17 +734,6 @@ function renderConcerts(){
   if(wrap2){var vEl=document.getElementById('con-venues');var venues=con.venues||[];if(venues.length){var h2='<table><thead><tr><th>#</th><th>Venue</th><th>Shows</th></tr></thead><tbody>';venues.forEach(function(v,i){h2+='<tr><td style="color:var(--t2);font-size:10px">'+(i+1)+'</td><td style="font-weight:600">'+v.n+'</td><td class="nm nm-o">'+v.c+'</td></tr>'});h2+='</tbody></table>';vEl.innerHTML=h2}}
 }
 
-function _thX(containerId,type,idx){
-  var el=document.getElementById(containerId);if(!el)return;
-  var item=(window._thD||{})[type];if(!item||!item[idx])return;
-  var d=item[idx];var shows=d.shows;if(!shows||!shows.length)return;
-  var key=d.n;var ex=el.querySelector('.chart-detail');
-  if(ex){var same=ex.dataset.val===key;ex.remove();if(same)return}
-  var div=document.createElement('div');div.className='chart-detail';div.dataset.val=key;
-  var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+key+' ('+shows.length+')</b>';
-  shows.forEach(function(s){h+='<div class="cd-item"><span>'+s+'</span></div>'});
-  div.innerHTML=h;el.appendChild(div);
-}
 function renderTheater(){
   var th=D.th;var wrap=document.getElementById('th-wrap');
   if(!th||!th.total){wrap.style.display='none';return}
@@ -771,27 +760,55 @@ function renderTheater(){
     });
     ch.push(tChart);
   }else{document.getElementById('thc').innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">'+th.total+' shows (no ratings)</div>'}
-  // Store theater data globally for inline onclick handlers
-  window._thD={tags:th.tags||[],venues:th.theaters||[],people:th.people||[]};
-  // Tags — rounded pill cloud (clickable)
-  var tagsEl=document.getElementById('th-tags');
+  // Helper: show detail panel on chart click (same pattern as ratings)
+  function thDetail(elId,data,idx){
+    var d=data[idx];if(!d||!d.shows||!d.shows.length)return;
+    var el=document.getElementById(elId);
+    var ex=el.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===d.n)return}
+    var div=document.createElement('div');div.className='chart-detail';div.dataset.val=d.n;
+    var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+d.n+' ('+d.shows.length+')</b>';
+    d.shows.forEach(function(s){h+='<div class="cd-item"><span>'+s+'</span></div>'});
+    div.innerHTML=h;el.parentElement.appendChild(div);
+  }
+  // Tags — ECharts horizontal bar (clickable)
   var tags=th.tags||[];
   if(tags.length){
-    var maxT=tags[0].c;var th2='<div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;align-items:center;justify-content:center">';
-    tags.forEach(function(t,idx){var size=Math.max(11,Math.min(22,11+Math.round(t.c/maxT*11)));var op=(.35+t.c/maxT*.65).toFixed(2);
-      th2+='<span onclick="_thX(\'th-tags\',\'tags\','+idx+')" style="cursor:pointer;display:inline-block;font-size:'+size+'px;color:rgba(217,70,239,'+op+');background:rgba(217,70,239,'+(.06+t.c/maxT*.1).toFixed(2)+');border:1px solid rgba(217,70,239,'+(.1+t.c/maxT*.15).toFixed(2)+');border-radius:999px;padding:4px 14px;line-height:1.3;white-space:nowrap">'+t.n+' <span style="opacity:.6;font-size:'+(size-2)+'px">'+t.c+'</span></span>'});
-    th2+='</div>';tagsEl.innerHTML=th2;
-  }else{tagsEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:20px">No tags yet</div>'}
-  // Top Theaters (clickable rows)
-  var venuesEl=document.getElementById('th-venues');
+    var tagSlice=tags.slice(0,15).reverse();
+    var tagChart=echarts.init(document.getElementById('th-tags'));
+    tagChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value}},
+      grid:{left:gl(110),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:tagSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:tagSlice.map(function(d){return d.c}),itemStyle:{color:LG('#4a1a6b','#d946ef')},barMaxWidth:18,label:{show:true,position:'right',color:'#d946ef',fontSize:10}}]});
+    tagChart.on('click',function(p){thDetail('th-tags',tagSlice,p.dataIndex)});
+    ch.push(tagChart);
+  }else{document.getElementById('th-tags').innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No tags yet</div>'}
+  // Top Theaters — ECharts horizontal bar (clickable)
   var theaters=th.theaters||[];
-  if(theaters.length){var vh='<table><tbody>';theaters.slice(0,10).forEach(function(t,i){vh+='<tr onclick="_thX(\'th-venues\',\'venues\','+i+')" style="cursor:pointer"><td style="color:var(--t2);font-size:10px;padding-right:8px">'+(i+1)+'</td><td style="font-weight:600">'+t.n+'</td><td class="nm nm-o">'+t.c+'</td></tr>'});vh+='</tbody></table>';venuesEl.innerHTML=vh;
-  }else{venuesEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:20px">No theater data</div>'}
-  // Companions (clickable rows)
-  var compEl=document.getElementById('th-companions');
+  if(theaters.length){
+    var venSlice=theaters.slice(0,10).reverse();
+    var venChart=echarts.init(document.getElementById('th-venues'));
+    venChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' shows'}},
+      grid:{left:gl(140),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:venSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:venSlice.map(function(d){return d.c}),itemStyle:{color:LG('#4a1a6b','#a78bfa')},barMaxWidth:18,label:{show:true,position:'right',color:'#a78bfa',fontSize:10}}]});
+    venChart.on('click',function(p){thDetail('th-venues',venSlice,p.dataIndex)});
+    ch.push(venChart);
+  }else{document.getElementById('th-venues').innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No theater data</div>'}
+  // Companions — ECharts horizontal bar (clickable)
   var people=th.people||[];
-  if(people.length){var ph='<table><tbody>';people.slice(0,10).forEach(function(p,i){ph+='<tr onclick="_thX(\'th-companions\',\'people\','+i+')" style="cursor:pointer"><td style="color:var(--t2);font-size:10px;padding-right:8px">'+(i+1)+'</td><td style="font-weight:600">'+p.n+'</td><td class="nm nm-p">'+p.c+'</td></tr>'});ph+='</tbody></table>';compEl.innerHTML=ph;
-  }else{compEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:20px">No companion data</div>'}
+  if(people.length){
+    var pplSlice=people.slice(0,10).reverse();
+    var pplChart=echarts.init(document.getElementById('th-companions'));
+    pplChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' shows'}},
+      grid:{left:gl(90),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:pplSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:pplSlice.map(function(d){return d.c}),itemStyle:{color:LG('#4a1a6b','#f472b6')},barMaxWidth:18,label:{show:true,position:'right',color:'#f472b6',fontSize:10}}]});
+    pplChart.on('click',function(p){thDetail('th-companions',pplSlice,p.dataIndex)});
+    ch.push(pplChart);
+  }else{document.getElementById('th-companions').innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No companion data</div>'}
 }
 
 function renderStatus(){
