@@ -466,34 +466,46 @@ function baseCharts(){
   });
   ch.push(c10);
 
-  // Episodes Watched — stacked bar by show
-  var epc=D.c.epc||{};var epl=(D.c.epl||[]).concat(['Other']);
-  var epMonths=Object.keys(epc).sort();
-  if(cy!=='all')epMonths=epMonths.filter(function(m){return m.startsWith(cy)});
+  // Episodes Watched — yearly (all time) or monthly (filtered year), single bar
+  var epc=D.c.epc||{};
   var epEl=document.getElementById('epcc');
-  if(ct==='movie'||epMonths.length===0){epEl.parentElement.style.display='none'}
+  if(ct==='movie'){epEl.parentElement.style.display='none'}
   else{
     epEl.parentElement.style.display='';
-    var epColors=['#60a5fa','#e94560','#a78bfa','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24','#94a3b8'];
-    var epSeries=epl.map(function(show,i){return{name:show,type:'bar',stack:'ep',data:epMonths.map(function(m){return(epc[m]||{})[show]||0}),itemStyle:{color:epColors[i%epColors.length]},barMaxWidth:cy==='all'?5:20}});
+    // Aggregate: yearly when all-time, monthly when year selected
+    var epBuckets={};var epDetail={};
+    Object.keys(epc).sort().forEach(function(m){
+      var bucket=isYear?m:m.substring(0,4);
+      if(isYear&&!m.startsWith(cy))return;
+      if(!epBuckets[bucket])epBuckets[bucket]=0;
+      if(!epDetail[bucket])epDetail[bucket]={};
+      epBuckets[bucket]+=Object.values(epc[m]).reduce(function(s,v){return s+v},0);
+      Object.entries(epc[m]).forEach(function(e){epDetail[bucket][e[0]]=(epDetail[bucket][e[0]]||0)+e[1]});
+    });
+    var epKeys=Object.keys(epBuckets).sort();
+    if(epKeys.length===0){epEl.parentElement.style.display='none'}
+    else{
     var epChart=echarts.init(epEl);
-    epChart.setOption({tooltip:{trigger:'axis',...tt},legend:{data:epl,top:0,textStyle:{color:'#999',fontSize:9},type:'scroll'},
-      grid:{left:40,right:10,top:35,bottom:30},
-      xAxis:{type:'category',data:epMonths,axisLabel:{color:'#666',interval:cy==='all'?11:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},
-      yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:epSeries});
-    // Click to see episode detail for that month
+    var epTotal=epKeys.reduce(function(s,k){return s+epBuckets[k]},0);
+    epChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+tp(p).value.toLocaleString()+' episodes'}},
+      grid:{left:50,right:20,top:30,bottom:isYear?30:24},
+      title:{text:epTotal.toLocaleString()+' episodes'+(isYear?' ('+cy+')':''),left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+      xAxis:{type:'category',data:epKeys,axisLabel:{color:'#666',fontSize:10,rotate:isYear?45:0},axisLine:{lineStyle:{color:'#333'}}},
+      yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      series:[{type:'bar',data:epKeys.map(function(k){return epBuckets[k]}),itemStyle:{color:LG('#0f3460','#60a5fa')},barMaxWidth:isYear?20:30,label:{show:!isYear||epKeys.length<=12,position:'top',color:'#999',fontSize:10}}]});
     epChart.on('click',function(p){
-      var month=epMonths[p.dataIndex];if(!month)return;
-      var shows=epc[month]||{};
-      var items=Object.entries(shows).sort(function(a,b){return b[1]-a[1]}).map(function(e){return{t:e[0],type:'show',c:e[1]}});
+      var key=epKeys[p.dataIndex];if(!key)return;
+      var shows=epDetail[key]||{};
+      var items=Object.entries(shows).sort(function(a,b){return b[1]-a[1]}).slice(0,20).map(function(e){return{t:e[0],type:'show',c:e[1]}});
       if(!items.length)return;
-      var ex=epEl.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===month)return}
-      var div=document.createElement('div');div.className='chart-detail';div.dataset.val=month;
-      var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+month+' episodes</b>';
+      var ex=epEl.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===key)return}
+      var div=document.createElement('div');div.className='chart-detail';div.dataset.val=key;
+      var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+key+' episodes</b>';
       items.forEach(function(t){h+='<div class="cd-item"><span><span class="badge b-e">show</span> '+t.t+'</span><span class="nm nm-b">'+t.c+' eps</span></div>'});
       div.innerHTML=h;epEl.parentElement.appendChild(div);
     });
     ch.push(epChart);
+    }
   }
 
   // Day of week
