@@ -1273,20 +1273,40 @@ if gr_books:
 
 # Scrobbles from Last.fm
 exact_sc_days = set()
+LASTFM_KEY = os.environ.get("LASTFM_API_KEY", "")
+LASTFM_USER = os.environ.get("LASTFM_USER", "")
+if LASTFM_KEY and LASTFM_USER:
+    # Fetch exact daily scrobbles for last 35 days via API
+    import urllib.request as urlreq
+    print("  Fetching daily scrobbles for lifeline...")
+    for days_ago in range(35):
+        try:
+            day_start = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) - timedelta(days=days_ago)
+            day_end = day_start + timedelta(days=1)
+            d = day_start.strftime("%Y-%m-%d")
+            fr = int(day_start.timestamp()); to = int(day_end.timestamp())
+            url = f"https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={LASTFM_USER}&api_key={LASTFM_KEY}&format=json&limit=200&from={fr}&to={to}"
+            req = urlreq.Request(url, headers={"User-Agent": "Iris/1.0"})
+            with urlreq.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read())
+            tracks = data.get("recenttracks", {}).get("track", [])
+            for t in tracks:
+                if not t.get("date"): continue
+                try:
+                    ts_parsed = datetime.strptime(t["date"]["#text"], "%d %b %Y, %H:%M")
+                    ts = ts_parsed.strftime("%H:%M")
+                except:
+                    ts = "00:00"
+                ll_counts[d]["sc"] += 1
+                ll_events[d].append({"t": ts, "n": t["artist"]["#text"] + " — " + t["name"], "ty": "sc"})
+            exact_sc_days.add(d)
+            import time as tm; tm.sleep(0.2)
+        except: pass
+
+# Approximate older days from stored Last.fm data
 if os.path.exists("data/lastfm.json"):
     with open("data/lastfm.json") as f:
         lfm_data = json.load(f)
-    # Exact from recent tracks (have timestamps and track names)
-    for tr in lfm_data.get("recent", []):
-        if tr.get("d"):
-            try:
-                parsed = datetime.strptime(tr["d"], "%d %b %Y, %H:%M")
-                d = parsed.strftime("%Y-%m-%d")
-                ts = parsed.strftime("%H:%M")
-                ll_counts[d]["sc"] += 1
-                exact_sc_days.add(d)
-                ll_events[d].append({"t": ts, "n": tr.get("a","") + " — " + tr.get("n",""), "ty": "sc"})
-            except: pass
     # Approximate from weekly totals
     for w in lfm_data.get("weekly", []):
         if w.get("week") and w.get("c"):
@@ -1298,7 +1318,7 @@ if os.path.exists("data/lastfm.json"):
                     if d not in exact_sc_days:
                         ll_counts[d]["sc"] += daily
             except: pass
-    # Approximate from monthly for older data
+    # Approximate from monthly for oldest data
     weekly_dates = set()
     for w in lfm_data.get("weekly", []):
         if w.get("week"):
