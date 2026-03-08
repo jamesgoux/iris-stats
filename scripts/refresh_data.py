@@ -819,12 +819,18 @@ def categorize_tags(lb_data, tag_cats):
                 cat_titles["stream"][t].append(item)
             if t in device_set:
                 cat_titles["dev"][t].append(item)
+            is_loc = False
             if t in home_set or t == "quarantine":
                 cat_titles["loc"]["home"].append(item)
+                is_loc = True
             if t in theater_set:
                 cat_titles["loc"]["theater"].append(item)
+                is_loc = True
             if t in travel_set:
                 cat_titles["loc"]["travel"].append(item)
+                is_loc = True
+            if is_loc:
+                cat_titles["locd"][t.lower()].append(item)
             # People: track titles per person
             if t.startswith("with ") or t in people_set:
                 display = t.replace("with ", "").strip()
