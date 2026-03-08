@@ -554,6 +554,8 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
                   "total_runtime_days": round(tr/60/24, 1)},
             "m": [{"month": m, **d} for m, d in sorted(monthly.items())],
             "y": [{"year": y, **d} for y, d in sorted(yearly.items())],
+            "con_y": {},  # placeholder, filled below
+            "th_y": {},   # placeholder, filled below
             "gm": [{"genre": g, "count": c} for g, c in genre_movie.most_common(20)],
             "gs": [{"genre": g, "count": c} for g, c in genre_show.most_common(20)],
             "ga": [{"genre": g, "count": genre_movie[g] + genre_show[g]}
@@ -942,6 +944,22 @@ if theater:
         "recent": [{"show":t["show"],"date":t["date"],"yr":t["year"],"theater":t["theater"],
                     "location":t["location"],"rating":t["rating"]} for t in sorted(theater,key=lambda x:x["date"],reverse=True)[:15]],
     }
+
+# Add concert + theater monthly/yearly counts to chart data
+if concerts:
+    con_monthly = defaultdict(int)
+    for e in unique_events.values():
+        if e["date"]: con_monthly[e["date"][:7]] += 1
+    data["c"]["con_m"] = dict(con_monthly)
+    data["c"]["con_y"] = dict(cy2)
+
+if theater:
+    th_monthly = defaultdict(int)
+    for t in theater:
+        if t["date"]: th_monthly[t["date"][:7]] += 1
+    data["c"]["th_m"] = dict(th_monthly)
+    data["c"]["th_y"] = {t["year"]: c for t, c in zip(sorted(th_years.items()), [c for _, c in sorted(th_years.items())])}
+    data["c"]["th_y"] = dict(th_years)
 
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:
