@@ -179,6 +179,7 @@ body{overflow-x:hidden}
 <div class="g2" id="con-wrap" style="display:none">
 <div id="sec-con" class="cd s-con"><h3><span class="i">🎸</span>Concerts <span class="vtog" style="float:right"><button class="vb vb-on con-tog" data-v="shows">By Shows</button><button class="vb con-tog" data-v="sets">By Sets</button><button class="vb con-tog" data-v="songs">By Songs</button></span></h3><div id="conc" style="height:280px"></div></div>
 <div class="cd s-con"><h3><span class="i">🎤</span>Most Seen Artists</h3><div class="stb" id="con-artists" style="font-size:12px"></div></div>
+<div class="cd s-con"><h3><span class="i">🏟️</span>Venues</h3><div id="con-ven-chart" style="height:280px"></div></div>
 </div>
 <!-- THEATER -->
 <div class="g2" id="th-wrap" style="display:none">
@@ -765,11 +766,29 @@ function renderConcerts(){
       h2+='<table style="font-size:11px">';if(detail.top&&detail.top.length){h2+='<tr><td colspan="2" style="font-weight:600;color:var(--or);padding:4px 6px">Most Performed (2+)</td></tr>';detail.top.forEach(function(s){h2+='<tr><td style="padding:2px 6px">'+s.n+'</td><td class="nm" style="padding:2px 6px">'+s.c+'x</td></tr>'})}else if(detail.songs&&detail.songs.length){h2+='<tr><td colspan="2" style="font-weight:600;color:var(--bl);padding:4px 6px">Setlist</td></tr>';detail.songs.slice(0,10).forEach(function(s){h2+='<tr><td style="padding:2px 6px">'+s.n+'</td><td class="nm" style="padding:2px 6px">'+s.c+'x</td></tr>'})}h2+='</table></td>';dr.innerHTML=h2;tr.after(dr);
       if(detail.albums&&detail.albums.length){var pieEl=document.getElementById('album-pie-'+idx);if(pieEl){var ac2=echarts.init(pieEl);var acols=['#e94560','#60a5fa','#a78bfa','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24'];ac2.setOption({tooltip:{trigger:'item',...tt,formatter:'{b}: {c} songs ({d}%)'},series:[{type:'pie',radius:['30%','65%'],center:['50%','50%'],data:detail.albums.map(function(a,j){return{value:a.c,name:a.n,itemStyle:{color:acols[j%acols.length]}}}),label:{color:'#ccc',fontSize:9,formatter:'{b}\n{d}%'},emphasis:{itemStyle:{shadowBlur:10}}}]})}}}})
   }else{aEl.innerHTML=''}
-  // Recompute venues from filtered entries
-  if(wrap2){var vEl=document.getElementById('con-venues');
-    var venCounts={};filtered.forEach(function(e){var vk=e.venue+(e.city?', '+e.city:'');venCounts[vk]=(venCounts[vk]||0)+1});
-    var venues=Object.entries(venCounts).sort(function(a,b){return b[1]-a[1]}).map(function(e){return{n:e[0],c:e[1]}});
-    if(venues.length){var h2='<table><thead><tr><th>#</th><th>Venue</th><th>Shows</th></tr></thead><tbody>';venues.forEach(function(v,i){h2+='<tr><td style="color:var(--t2);font-size:10px">'+(i+1)+'</td><td style="font-weight:600">'+v.n+'</td><td class="nm nm-o">'+v.c+'</td></tr>'});h2+='</tbody></table>';vEl.innerHTML=h2}else{vEl.innerHTML=''}}
+  // Venues — ECharts horizontal bar, clickable to show artists
+  var venCounts={};var venArtists={};
+  filtered.forEach(function(e){var vk=e.venue+(e.city?', '+e.city:'');venCounts[vk]=(venCounts[vk]||0)+1;if(!venArtists[vk])venArtists[vk]=[];if(venArtists[vk].indexOf(e.artist)<0)venArtists[vk].push(e.artist)});
+  var venues=Object.entries(venCounts).sort(function(a,b){return b[1]-a[1]}).map(function(e){return{n:e[0],c:e[1],artists:venArtists[e[0]]||[]}});
+  var venEl=document.getElementById('con-ven-chart');
+  if(venues.length){
+    var venSlice=venues.slice(0,10).reverse();
+    var venChart=echarts.init(venEl);
+    venChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' shows'}},
+      grid:{left:gl(140),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:venSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:venSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#fb923c')},barMaxWidth:18,label:{show:true,position:'right',color:'#fb923c',fontSize:10}}]});
+    venChart.on('click',function(p){
+      var v=venSlice[p.dataIndex];if(!v||!v.artists||!v.artists.length)return;
+      var ex=venEl.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===v.n)return}
+      var div=document.createElement('div');div.className='chart-detail';div.dataset.val=v.n;
+      var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+v.n+' ('+v.artists.length+' artists)</b>';
+      v.artists.forEach(function(a){h+='<div class="cd-item"><span>'+a+'</span></div>'});
+      div.innerHTML=h;venEl.parentElement.appendChild(div);
+    });
+    ch.push(venChart);
+  }else{venEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No venue data</div>'}
 }
 
 function renderTheater(){
