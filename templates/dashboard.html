@@ -477,6 +477,7 @@ function baseCharts(){
     Object.keys(epc).sort().forEach(function(m){
       var bucket=isYear?m:m.substring(0,4);
       if(isYear&&!m.startsWith(cy))return;
+      if(!isYear&&bucket==='2016')return;
       if(!epBuckets[bucket])epBuckets[bucket]=0;
       if(!epDetail[bucket])epDetail[bucket]={};
       epBuckets[bucket]+=Object.values(epc[m]).reduce(function(s,v){return s+v},0);
