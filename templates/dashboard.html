@@ -86,12 +86,16 @@ body{overflow-x:hidden}
 <div class="fctrls">
 <div class="fbtn"><label>Type</label><select id="gs"><option value="all">Both</option><option value="movie">Movies</option><option value="show">Shows</option></select></div>
 <div class="fbtn"><label>Year</label><select id="ys"><option value="all">All Time</option></select></div>
-<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-tl">📈 Timeline</option><option value="sec-time">🕐 Day & Time</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option><option value="sec-con">🎸 Concerts</option><option value="sec-th">🎭 Theater</option></select></div>
+<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-tl">📈 Timeline</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-time">🕐 Day & Time</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option><option value="sec-con">🎸 Concerts</option><option value="sec-th">🎭 Theater</option></select></div>
 <button class="rbtn" onclick="location.reload()">&#x21bb;</button>
 </div>
 </div>
 <div class="dash">
 <div class="sg" id="st"></div>
+<!-- TIMELINE: Yearly / Monthly -->
+<div class="g2">
+<div id="sec-tl" class="cd fw s-t"><h3 id="tlh"><span class="i">📈</span>Yearly Watch Count</h3><div id="yrc" style="height:280px"></div><div id="tlc" style="height:280px;display:none"></div></div>
+</div>
 <div class="g2">
 <div id="sec-act" class="cd s-a"><h3><span class="i">🎭</span>Most Watched Actors</h3><div class="stb"><table><thead><tr><th>#</th><th>Actor</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="atb"></tbody></table></div></div>
 <div class="cd s-a"><h3><span class="i">🎭</span>Most Watched Actresses</h3><div class="stb"><table><thead><tr><th>#</th><th>Actress</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="xtb"></tbody></table></div></div>
@@ -118,10 +122,6 @@ body{overflow-x:hidden}
 <div class="g2">
 <div id="sec-mov" class="cd s-m"><h3 id="mdh"><span class="i">🎞️</span>Movies by Watch Time</h3><div id="mdc" style="height:340px"></div></div>
 <div class="cd s-m" id="mrc-card"><h3 id="mrh"><span class="i">🔁</span>Most Rewatched</h3><div id="mrc" style="height:340px"></div></div>
-</div>
-<!-- TIME SECTION: Monthly/Yearly + Day/Time -->
-<div class="g2">
-<div id="sec-tl" class="cd fw s-t"><h3 id="tlh"><span class="i">📈</span>Yearly Watch Count</h3><div id="yrc" style="height:280px"></div><div id="tlc" style="height:280px;display:none"></div></div>
 </div>
 <div class="g2">
 <div id="sec-time" class="cd s-t"><h3><span class="i">📅</span>Day of Week</h3><div id="dwc" style="height:280px"></div></div>

@@ -486,10 +486,11 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     for v in show_ratings.values(): v["wy"] = sorted(v["wy"])
     shows_by_community = sorted(show_ratings.values(), key=lambda x: x["r"], reverse=True)
 
-    # Hour of day aggregate (all time) — split by movie/episode
+    # Hour of day aggregate (all time) — split by movie/episode, skip 2016 outlier
     hod_movies = Counter()
     hod_episodes = Counter()
-    for yr_data in hod.values():
+    for y, yr_data in hod.items():
+        if y == "2016": continue  # bulk-import outlier skews 1am
         for k, c in yr_data.items():
             h, typ = k.rsplit("_", 1)
             if typ == "movie": hod_movies[int(h)] += c
