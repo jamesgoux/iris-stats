@@ -1304,6 +1304,7 @@ if LASTFM_KEY and LASTFM_USER:
         except: pass
 
 # Approximate older days from stored Last.fm data
+today_str = datetime.now().strftime("%Y-%m-%d")
 if os.path.exists("data/lastfm.json"):
     with open("data/lastfm.json") as f:
         lfm_data = json.load(f)
@@ -1315,6 +1316,7 @@ if os.path.exists("data/lastfm.json"):
                 daily = max(1, w["c"] // 7)
                 for i in range(7):
                     d = (wk_start + timedelta(days=i)).strftime("%Y-%m-%d")
+                    if d > today_str: continue
                     if d not in exact_sc_days:
                         ll_counts[d]["sc"] += daily
             except: pass
@@ -1334,6 +1336,7 @@ if os.path.exists("data/lastfm.json"):
                 try:
                     d = f"{mo}-{day:02d}"
                     datetime.strptime(d, "%Y-%m-%d")
+                    if d > today_str: continue
                     if d not in exact_sc_days and d not in weekly_dates:
                         ll_counts[d]["sc"] += daily
                 except: pass
