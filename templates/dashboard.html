@@ -364,12 +364,12 @@ function renderLifeline(){
     xAxis:{type:'category',data:days.map(function(d){return d.substring(5)}),axisLabel:{color:'#666',fontSize:8,rotate:45,interval:0},axisLine:{lineStyle:{color:'#444'}}},
     yAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return Math.abs(v)}},splitLine:{lineStyle:{color:'#222'}}},
     series:[
-      {name:'Episodes',type:'bar',stack:'pos',data:posData.ep,itemStyle:{color:'#a78bfa'},barMaxWidth:bw},
-      {name:'Movies',type:'bar',stack:'pos',data:posData.mv,itemStyle:{color:'#e94560'},barMaxWidth:bw},
-      {name:'Books',type:'bar',stack:'pos',data:posData.bk,itemStyle:{color:'#22d3ee'},barMaxWidth:bw},
-      {name:'Scrobbles',type:'bar',stack:'neg',data:negData.sc,itemStyle:{color:'#1db954'},barMaxWidth:bw},
-      {name:'Concerts',type:'bar',stack:'neg',data:negData.co,itemStyle:{color:'#fb923c'},barMaxWidth:bw},
-      {name:'Plays',type:'bar',stack:'neg',data:negData.th,itemStyle:{color:'#d946ef'},barMaxWidth:bw}
+      {name:'Episodes',type:'bar',stack:'ll',data:posData.ep,itemStyle:{color:'#a78bfa'},barMaxWidth:bw},
+      {name:'Movies',type:'bar',stack:'ll',data:posData.mv,itemStyle:{color:'#e94560'},barMaxWidth:bw},
+      {name:'Books',type:'bar',stack:'ll',data:posData.bk,itemStyle:{color:'#22d3ee'},barMaxWidth:bw},
+      {name:'Scrobbles',type:'bar',stack:'ll',data:negData.sc,itemStyle:{color:'#1db954'},barMaxWidth:bw},
+      {name:'Concerts',type:'bar',stack:'ll',data:negData.co,itemStyle:{color:'#fb923c'},barMaxWidth:bw},
+      {name:'Plays',type:'bar',stack:'ll',data:negData.th,itemStyle:{color:'#d946ef'},barMaxWidth:bw}
     ]});
   // Click to show day detail
   llChart.on('click',function(p){
