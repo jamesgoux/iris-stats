@@ -399,8 +399,11 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             lang_counter_y[y][lang] += 1
         try:
             dt = datetime.fromisoformat(e["watched_at"].replace("Z", "+00:00"))
-            dwc[dwn[dt.weekday()]] += 1
-            hod[y][dt.hour] += 1
+            # Convert UTC to Pacific time (UTC-8 PST / UTC-7 PDT)
+            from zoneinfo import ZoneInfo
+            dt_local = dt.astimezone(ZoneInfo("America/Los_Angeles"))
+            dwc[dwn[dt_local.weekday()]] += 1
+            hod[y][dt_local.hour] += 1
         except: pass
 
     # Recent: keep 200 most recent for filtering
