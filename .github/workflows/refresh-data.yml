@@ -24,6 +24,11 @@ jobs:
       - name: Refresh Letterboxd
         run: python scripts/refresh_letterboxd.py
 
+      - name: Refresh Goodreads
+        env:
+          GOODREADS_USER_ID: ${{ secrets.GOODREADS_USER_ID }}
+        run: python scripts/refresh_goodreads.py
+
       - name: Refresh Concerts
         env:
           SETLIST_FM_API_KEY: ${{ secrets.SETLIST_FM_API_KEY }}

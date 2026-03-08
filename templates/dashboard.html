@@ -35,7 +35,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .s-a{border-left-color:#e94560}.s-s{border-left-color:#a78bfa}.s-m{border-left-color:#e94560}
 .s-g{border-left-color:#fb923c}.s-n{border-left-color:#60a5fa}.s-u{border-left-color:#a78bfa}
 .s-t{border-left-color:#4ade80}.s-e{border-left-color:#4ade80}.s-c{border-left-color:#fb923c}.s-con{border-left-color:#fb923c}.s-th{border-left-color:#d946ef}
-.s-r{border-left-color:#60a5fa}
+.s-r{border-left-color:#60a5fa}.s-gr{border-left-color:#22d3ee}
 .stb{max-height:300px;overflow-y:auto}.stb::-webkit-scrollbar{width:5px}.stb::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:7px 8px;color:var(--t2);font-weight:500;border-bottom:1px solid rgba(255,255,255,.1);font-size:10px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;background:var(--sf);z-index:1}
@@ -87,7 +87,7 @@ body{overflow-x:hidden}
 <div class="fctrls">
 <div class="fbtn"><label>Type</label><select id="gs"><option value="all">Both</option><option value="movie">Movies</option><option value="show">Shows</option></select></div>
 <div class="fbtn"><label>Year</label><select id="ys"><option value="all">All Time</option></select></div>
-<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-tl">📈 Timeline</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-eps">📺 Episodes</option><option value="sec-time">🕐 Day & Time</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option><option value="sec-con">🎸 Concerts</option><option value="sec-th">🎭 Theater</option></select></div>
+<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-tl">📈 Timeline</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-eps">📺 Episodes</option><option value="sec-time">🕐 Day & Time</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option><option value="sec-gr">📚 Books</option><option value="sec-con">🎸 Concerts</option><option value="sec-th">🎭 Theater</option></select></div>
 <button class="rbtn" onclick="location.reload()">&#x21bb;</button>
 </div>
 </div>
@@ -174,6 +174,17 @@ body{overflow-x:hidden}
 <div class="g2">
 <div class="cd s-r" id="sec-first"><h3><span class="i">🌅</span>First Watches</h3><table><thead><tr><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody id="ftb"></tbody></table></div>
 <div id="sec-rec" class="cd s-r"><h3><span class="i">👁️</span>Last Watches</h3><table><thead><tr><th>Title</th><th>Type</th><th>Date</th></tr></thead><tbody id="rtb"></tbody></table></div>
+</div>
+<!-- BOOKS (Goodreads) -->
+<div class="g2" id="gr-wrap" style="display:none">
+<div id="sec-gr" class="cd s-gr"><h3><span class="i">📚</span>Books Read <span class="vtog" style="float:right"><button class="vb vb-on gr-tog" data-v="books">By Books</button><button class="vb gr-tog" data-v="pages">By Pages</button></span></h3><div id="grc" style="height:280px"></div></div>
+<div class="cd s-gr"><h3><span class="i">📖</span>Time to Read</h3><div id="gr-ttr" style="height:280px"></div></div>
+<div class="cd s-gr"><h3><span class="i">✍️</span>Most Read Authors</h3><div id="gr-auth" style="height:280px"></div></div>
+<div class="cd s-gr"><h3><span class="i">⭐</span>Book Ratings</h3><div id="gr-dist" style="height:280px"></div></div>
+<div class="cd s-gr"><h3><span class="i">📏</span>Longest Books</h3><div id="gr-long"></div></div>
+<div class="cd s-gr"><h3><span class="i">📕</span>Shortest Books</h3><div id="gr-short"></div></div>
+<div class="cd s-gr"><h3><span class="i">🏆</span>Highest Rated</h3><div id="gr-high"></div></div>
+<div class="cd s-gr"><h3><span class="i">👎</span>Lowest Rated</h3><div id="gr-low"></div></div>
 </div>
 <!-- CONCERTS (bottom) -->
 <div class="g2" id="con-wrap" style="display:none">
@@ -271,7 +282,7 @@ function movieCharts(){
 
 function legendIsolate(ec,legs){var hd=false;ec.on('legendselectchanged',function(p){if(hd)return;hd=true;var s=p.selected,n=p.name,c=0;for(var k in s)if(s[k])c++;if(c===0){ec.dispatchAction({type:'legendAllSelect'})}else if(c<legs.length){for(var k in s){if(k===n&&!s[k])ec.dispatchAction({type:'legendSelect',name:k});if(k!==n&&s[k])ec.dispatchAction({type:'legendUnSelect',name:k})}}hd=false})}
 // Helper: get allowed types from chart legend state
-function _legTypes(chart){var map={Seasons:'show',Episodes:'show',Movies:'movie',Concerts:'concert',Theater:'theater'};var opt=chart.getOption();var sel=(opt.legend&&opt.legend[0]&&opt.legend[0].selected)||{};var any=false,allow={};for(var k in map){if(sel[k]===false)any=true;else allow[map[k]]=true}if(!any){allow={show:true,movie:true,concert:true,theater:true}}return allow}
+function _legTypes(chart){var map={Seasons:'show',Episodes:'show',Movies:'movie',Books:'book',Concerts:'concert',Theater:'theater'};var opt=chart.getOption();var sel=(opt.legend&&opt.legend[0]&&opt.legend[0].selected)||{};var any=false,allow={};for(var k in map){if(sel[k]===false)any=true;else allow[map[k]]=true}if(!any){allow={show:true,movie:true,concert:true,theater:true}}return allow}
 // Helper: build grouped detail HTML — top 5 each when multi-medium, top 20 when single
 function _detailHtml(header,items){var typeOrder=['show','movie','concert','theater'];var labels={show:'📺 Shows',movie:'🎞️ Movies',concert:'🎸 Concerts',theater:'🎭 Theater'};var grouped={};items.forEach(function(t){if(!grouped[t.type])grouped[t.type]=[];grouped[t.type].push(t)});for(var k in grouped)grouped[k].sort(function(a,b){return b.c-a.c});var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+header+'</b>';var types=typeOrder.filter(function(tp){return grouped[tp]&&grouped[tp].length});function _row(t){var badge=t.type==='movie'?'b-m':t.type==='concert'?'b-c':t.type==='theater'?'b-th':'b-e';var label=t.type==='show'?t.c+' eps':(t.type==='concert'||t.type==='theater'?'':(t.c>1?t.c+'x':''));return'<div class="cd-item"><span><span class="badge '+badge+'">'+t.type+'</span> '+t.t+'</span><span class="nm '+(t.type==='show'?'nm-b':t.type==='concert'?'nm-o':t.type==='theater'?'nm-p':'nm-a')+'">'+label+'</span></div>'}if(types.length>1){types.forEach(function(tp){var all=grouped[tp],cap=5,shown=all.slice(0,cap);h+='<div style="margin-top:6px;font-size:10px;font-weight:600;color:var(--t2)">'+labels[tp]+' (top '+shown.length+' of '+all.length+')</div>';shown.forEach(function(t){h+=_row(t)})})}else{var single=items.sort(function(a,b){return b.c-a.c}).slice(0,20);single.forEach(function(t){h+=_row(t)})}return h}
 function baseCharts(){
@@ -292,9 +303,12 @@ function baseCharts(){
   if(ct!=='movie')tlSeries.push({name:'Seasons',type:'bar',stack:'t',data:mf.map(function(d){return d.seasons||0}),itemStyle:{color:'#60a5fa'},barMaxWidth:30});
   if(ct!=='show')tlSeries.push({name:'Movies',type:'bar',stack:'t',data:mf.map(function(d){return d.movies}),itemStyle:{color:'#e94560'},barMaxWidth:30});
   var conM=D.c.con_m||{};var thM=D.c.th_m||{};
+  var grM=D.c.gr_m||{};
+  if(Object.keys(grM).length)tlSeries.push({name:'Books',type:'bar',stack:'t',data:mf.map(function(d){return grM[d.month]||0}),itemStyle:{color:'#22d3ee'},barMaxWidth:30});
+  var conM=D.c.con_m||{};var thM=D.c.th_m||{};
   if(Object.keys(conM).length)tlSeries.push({name:'Concerts',type:'bar',stack:'t',data:mf.map(function(d){return conM[d.month]||0}),itemStyle:{color:'#fb923c'},barMaxWidth:30});
   if(Object.keys(thM).length)tlSeries.push({name:'Theater',type:'bar',stack:'t',data:mf.map(function(d){return thM[d.month]||0}),itemStyle:{color:'#d946ef'},barMaxWidth:30});
-  var tlLeg=['Seasons','Movies'];if(Object.keys(conM).length)tlLeg.push('Concerts');if(Object.keys(thM).length)tlLeg.push('Theater');
+  var tlLeg=['Seasons','Movies'];if(Object.keys(grM).length)tlLeg.push('Books');if(Object.keys(conM).length)tlLeg.push('Concerts');if(Object.keys(thM).length)tlLeg.push('Theater');
   c1.setOption({tooltip:{trigger:'axis',...tt},legend:{data:ct==='all'?tlLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:mf.map(function(d){return d.month}),axisLabel:{color:'#666',interval:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:tlSeries});
   if(ct==='all'&&tlLeg.length>1)legendIsolate(c1,tlLeg);
   c1.on('click',function(p){
@@ -506,10 +520,12 @@ function baseCharts(){
   var yrSeries=[];
   if(ct!=='movie')yrSeries.push({name:'Seasons',type:'bar',stack:'t',data:yr.map(function(d){return d.seasons}),itemStyle:{color:'#60a5fa'}});
   if(ct!=='show')yrSeries.push({name:'Movies',type:'bar',stack:'t',data:yr.map(function(d){return d.movies}),itemStyle:{color:'#e94560'}});
+  var grY=D.c.gr_y||{};
+  if(Object.keys(grY).length)yrSeries.push({name:'Books',type:'bar',stack:'t',data:yr.map(function(d){return grY[d.year]||0}),itemStyle:{color:'#22d3ee'}});
   var conY=D.c.con_y||{};var thY=D.c.th_y||{};
   if(Object.keys(conY).length)yrSeries.push({name:'Concerts',type:'bar',stack:'t',data:yr.map(function(d){return conY[d.year]||0}),itemStyle:{color:'#fb923c'}});
   if(Object.keys(thY).length)yrSeries.push({name:'Theater',type:'bar',stack:'t',data:yr.map(function(d){return thY[d.year]||0}),itemStyle:{color:'#d946ef'}});
-  var yrLeg=['Seasons','Movies'];if(Object.keys(conY).length)yrLeg.push('Concerts');if(Object.keys(thY).length)yrLeg.push('Theater');
+  var yrLeg=['Seasons','Movies'];if(Object.keys(grY).length)yrLeg.push('Books');if(Object.keys(conY).length)yrLeg.push('Concerts');if(Object.keys(thY).length)yrLeg.push('Theater');
   c6.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){if(p[0]&&tp(p).axisValue==='2016')return'<b>2016</b><br/>Zeroed (outlier: 4,257)';return p.map(function(s){return s.marker+s.seriesName+': '+s.value}).join('<br/>')}},legend:{data:ct==='all'?yrLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:24},xAxis:{type:'category',data:yr.map(function(d){return d.year}),axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:yrSeries});
   if(ct==='all'&&yrLeg.length>1)legendIsolate(c6,yrLeg);
   c6.on('click',function(p){
@@ -799,6 +815,102 @@ function renderLetterboxd(){
   });
 }
 
+function renderGoodreads(){
+  var gr=D.gr;var wrap=document.getElementById('gr-wrap');
+  if(!gr||!gr.total){wrap.style.display='none';return}
+  wrap.style.display='';
+  // Filter by year
+  var allBooks=gr.all||[];
+  var filtered=cy==='all'?allBooks:allBooks.filter(function(b){return b.yr===cy});
+  if(filtered.length===0&&cy!=='all'){wrap.style.display='none';return}
+
+  // Books per year chart
+  window._grMode=window._grMode||'books';var mode=window._grMode;
+  var yrs=gr.years||[];if(cy!=='all')yrs=yrs.filter(function(y){return y.yr===cy});
+  var grChart=echarts.init(document.getElementById('grc'));
+  var mLabel=mode==='pages'?' pages':' books';
+  var mColor=mode==='pages'?'#a78bfa':'#22d3ee';
+  var grTotal=gr.total+' books, '+gr.total_pages.toLocaleString()+' pages';
+  if(yrs.length){
+    grChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+tp(p).value.toLocaleString()+mLabel}},
+      grid:{left:50,right:20,top:30,bottom:24},title:{text:grTotal,left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+      xAxis:{type:'category',data:yrs.map(function(y){return y.yr}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},
+      yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      series:[{type:'bar',data:yrs.map(function(y){return mode==='pages'?y.p:y.c}),itemStyle:{color:LG('#0f3460',mColor)},barMaxWidth:30,label:{show:true,position:'top',color:'#999',fontSize:10}}]});
+    ch.push(grChart);
+  }
+  document.querySelectorAll('.gr-tog').forEach(function(btn){btn.onclick=function(){
+    document.querySelectorAll('.gr-tog').forEach(function(b){b.classList.remove('vb-on')});btn.classList.add('vb-on');
+    window._grMode=btn.dataset.v;renderGoodreads()}});
+
+  // Time to read
+  var ttr=gr.ttr||[];if(cy!=='all')ttr=ttr.filter(function(t){return filtered.some(function(b){return b.t===t.t})});
+  var ttrSlice=ttr.slice(0,12).reverse();
+  var ttrEl=document.getElementById('gr-ttr');
+  if(ttrSlice.length){
+    var ttrChart=echarts.init(ttrEl);
+    ttrChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var d=ttrSlice.find(function(x){return x.t===tp(p).name});return d?'<b>'+d.t+'</b><br/>'+d.d+' days ('+d.p+' pages)':''}},
+      grid:{left:gl(130),right:30,top:20,bottom:8},
+      title:{text:'Avg: '+(gr.ttr_avg||0)+' days',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+      xAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return v+'d'}},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:ttrSlice.map(function(d){return d.t}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:ttrSlice.map(function(d){return d.d}),itemStyle:{color:function(p){var v=p.value;return v<7?'#4ade80':v<30?'#22d3ee':v<90?'#fb923c':'#e94560'}},barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10,formatter:function(p){return p.value+'d'}}}]});
+    ch.push(ttrChart);
+  }else{ttrEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No time-to-read data</div>'}
+
+  // Most read authors
+  var authors=gr.authors||[];
+  var authSlice=authors.slice(0,10).reverse();
+  var authEl=document.getElementById('gr-auth');
+  if(authSlice.length){
+    var authChart=echarts.init(authEl);
+    authChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' books'}},
+      grid:{left:gl(120),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:authSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:authSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#22d3ee')},barMaxWidth:18,label:{show:true,position:'right',color:'#22d3ee',fontSize:10}}]});
+    authChart.on('click',function(p){
+      var author=authSlice[p.dataIndex];if(!author)return;
+      var books=filtered.filter(function(b){return b.a===author.n});
+      if(!books.length)return;
+      var ex=authEl.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===author.n)return}
+      var div=document.createElement('div');div.className='chart-detail';div.dataset.val=author.n;
+      var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+author.n+' ('+books.length+')</b>';
+      books.forEach(function(b){h+='<div class="cd-item"><span>'+b.t+'</span><span class="nm" style="color:#22d3ee">'+(b.p?b.p+'p':'')+(b.r?' '+b.r+'★':'')+'</span></div>'});
+      div.innerHTML=h;authEl.parentElement.appendChild(div);
+    });
+    ch.push(authChart);
+  }
+
+  // Rating distribution
+  var dist=gr.dist||[];
+  var distEl=document.getElementById('gr-dist');
+  if(dist.length){
+    var distChart=echarts.init(distEl);
+    distChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return tp(p).name+': '+tp(p).value+' books'}},
+      grid:{left:50,right:20,top:30,bottom:24},
+      title:{text:gr.rated+' rated, '+gr.avg+'★ avg',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+      xAxis:{type:'category',data:dist.map(function(d){return d.r+'★'}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},
+      yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      series:[{type:'bar',data:dist.map(function(d){return{value:d.c,itemStyle:{color:parseInt(d.r)>=4?'#22d3ee':parseInt(d.r)>=3?'#a78bfa':'#e94560'}}}),barMaxWidth:40,label:{show:true,position:'top',color:'#999',fontSize:10}}]});
+    ch.push(distChart);
+  }
+
+  // Helper for book lists
+  function bookList(elId,items,showField){
+    var el=document.getElementById(elId);
+    if(!items||!items.length){el.innerHTML='<div style="text-align:center;color:var(--t2);padding:20px">No data</div>';return}
+    var h='';items.forEach(function(b,i){
+      var val=showField==='p'?(b.p+' pages'):showField==='r'?(b.r+'★'):'';
+      h+='<div class="cd-item" style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--t2);font-size:10px;margin-right:6px">'+(i+1)+'</span><span style="font-weight:600;font-size:12px">'+b.t+'</span><span style="color:var(--t2);font-size:11px;margin-left:4px">— '+b.a+'</span><span class="nm" style="color:#22d3ee;font-size:11px">'+val+'</span></div>'});
+    el.innerHTML=h;
+  }
+  bookList('gr-long',gr.longest,'p');
+  bookList('gr-short',gr.shortest,'p');
+  bookList('gr-high',gr.highest,'r');
+  bookList('gr-low',gr.lowest,'r');
+}
+
 function renderConcerts(){
   var con=D.con;var wrap=document.getElementById('con-wrap');var wrap2=document.getElementById('con-wrap2');
   if(!con||!con.total){wrap.style.display='none';if(wrap2)wrap2.style.display='none';return}
@@ -960,7 +1072,7 @@ function renderStatus(){
   el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: __BUILD_TIME__</span>';
 }
 
-function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];stats();ptbl('atb',D.a);ptbl('xtb',D.x);ptbl('dtb',D.d||[]);ptbl('wtb',D.w||[]);movieCharts();renderPosters();baseCharts();renderLetterboxd();renderConcerts();renderTheater();renderStatus()}
+function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];stats();ptbl('atb',D.a);ptbl('xtb',D.x);ptbl('dtb',D.d||[]);ptbl('wtb',D.w||[]);movieCharts();renderPosters();baseCharts();renderLetterboxd();renderGoodreads();renderConcerts();renderTheater();renderStatus()}
 var _rzt,_lastW=window.innerWidth;
 function _rz(){clearTimeout(_rzt);_rzt=setTimeout(function(){mob=window.innerWidth<768;ch.forEach(function(c){try{c.resize()}catch(e){}})},200)}
 window.addEventListener('resize',function(){

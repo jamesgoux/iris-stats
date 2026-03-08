@@ -1093,6 +1093,108 @@ if theater:
             mt[m].append({"t": t["show"], "type": "theater", "c": 1})
 data["c"]["mt"] = mt
 
+# Goodreads data
+gr_books = []
+if os.path.exists("data/goodreads.json"):
+    with open("data/goodreads.json") as f:
+        gr_books = json.load(f)
+if gr_books:
+    # Books per year
+    gr_year = Counter()
+    gr_pages_year = Counter()
+    for b in gr_books:
+        yr = b.get("year_read", "")
+        if yr:
+            gr_year[yr] += 1
+            gr_pages_year[yr] += b.get("pages", 0)
+    gr_years = [{"yr": y, "c": gr_year[y], "p": gr_pages_year[y]} for y in sorted(gr_year.keys())]
+
+    # Time to read (date_added → date_read)
+    gr_ttr = []
+    for b in gr_books:
+        if b.get("date_added") and b.get("date_read") and b["date_added"] < b["date_read"]:
+            try:
+                da = datetime.strptime(b["date_added"], "%Y-%m-%d")
+                dr = datetime.strptime(b["date_read"], "%Y-%m-%d")
+                days = (dr - da).days
+                if 0 < days < 3650:  # filter out unreasonable values
+                    gr_ttr.append({"t": b["title"], "a": b["author"], "d": days, "p": b.get("pages", 0)})
+            except:
+                pass
+    gr_ttr.sort(key=lambda x: x["d"])
+
+    # Most read authors
+    gr_authors = Counter()
+    gr_author_pages = Counter()
+    for b in gr_books:
+        if b.get("author"):
+            gr_authors[b["author"]] += 1
+            gr_author_pages[b["author"]] += b.get("pages", 0)
+    gr_top_authors = [{"n": a, "c": c, "p": gr_author_pages[a]} for a, c in gr_authors.most_common(15)]
+
+    # Page counts: longest and shortest
+    gr_with_pages = [b for b in gr_books if b.get("pages", 0) > 0]
+    gr_longest = sorted(gr_with_pages, key=lambda x: x["pages"], reverse=True)[:10]
+    gr_shortest = sorted(gr_with_pages, key=lambda x: x["pages"])[:10]
+
+    # Rating distribution + highest/lowest rated
+    gr_rated = [b for b in gr_books if b.get("user_rating", 0) > 0]
+    gr_rating_dist = Counter()
+    for b in gr_rated:
+        gr_rating_dist[str(b["user_rating"])] += 1
+    gr_dist = [{"r": r, "c": gr_rating_dist[r]} for r in sorted(gr_rating_dist.keys())]
+    gr_highest = sorted(gr_rated, key=lambda x: (x["user_rating"], x.get("pages", 0)), reverse=True)[:10]
+    gr_lowest = sorted(gr_rated, key=lambda x: (x["user_rating"], -x.get("pages", 0)))[:10]
+
+    # Reading pace: pages per day for books with both dates and pages
+    gr_pace = []
+    for b in gr_books:
+        if b.get("date_added") and b.get("date_read") and b.get("pages", 0) > 0:
+            try:
+                da = datetime.strptime(b["date_added"], "%Y-%m-%d")
+                dr = datetime.strptime(b["date_read"], "%Y-%m-%d")
+                days = max((dr - da).days, 1)
+                if days < 3650:
+                    gr_pace.append({"t": b["title"], "ppd": round(b["pages"] / days, 1), "p": b["pages"], "d": days})
+            except:
+                pass
+    gr_pace.sort(key=lambda x: x["ppd"], reverse=True)
+
+    # Monthly book counts for timeline
+    gr_monthly = Counter()
+    for b in gr_books:
+        if b.get("date_read"):
+            gr_monthly[b["date_read"][:7]] += 1
+    gr_month_counts = dict(gr_monthly)
+
+    data["gr"] = {
+        "total": len(gr_books),
+        "total_pages": sum(b.get("pages", 0) for b in gr_books),
+        "rated": len(gr_rated),
+        "avg": round(sum(b["user_rating"] for b in gr_rated) / len(gr_rated), 1) if gr_rated else 0,
+        "years": gr_years,
+        "ttr": gr_ttr[:20],
+        "ttr_avg": round(sum(t["d"] for t in gr_ttr) / len(gr_ttr)) if gr_ttr else 0,
+        "authors": gr_top_authors,
+        "longest": [{"t": b["title"], "a": b["author"], "p": b["pages"]} for b in gr_longest],
+        "shortest": [{"t": b["title"], "a": b["author"], "p": b["pages"]} for b in gr_shortest],
+        "dist": gr_dist,
+        "highest": [{"t": b["title"], "a": b["author"], "r": b["user_rating"], "p": b.get("pages", 0)} for b in gr_highest],
+        "lowest": [{"t": b["title"], "a": b["author"], "r": b["user_rating"], "p": b.get("pages", 0)} for b in gr_lowest],
+        "pace": gr_pace[:15],
+        "month_counts": gr_month_counts,
+        "all": [{"t": b["title"], "a": b["author"], "p": b.get("pages", 0), "r": b.get("user_rating", 0),
+                 "yr": b.get("year_read", ""), "dr": b.get("date_read", ""), "da": b.get("date_added", ""),
+                 "img": b.get("image", "")} for b in gr_books],
+    }
+    # Add books to monthly timeline counts
+    data["c"]["gr_m"] = gr_month_counts
+    gr_yearly = {}
+    for yr, c in gr_year.items():
+        gr_yearly[yr] = c
+    data["c"]["gr_y"] = gr_yearly
+    print(f"  Goodreads: {len(gr_books)} books, {len(gr_rated)} rated")
+
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:
     template = f.read()
