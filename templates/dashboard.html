@@ -297,10 +297,10 @@ function stats(){
   else{
     // Row 1: Watches, Days, Movies, Shows, Episodes, Books
     h2=sc(s.total_watches.toLocaleString(),'👁️ Watches','var(--gr)')+sc(s.total_runtime_days,'⏱️ Days','var(--or)')+sc(s.unique_movies,'🎞️ Movies','var(--ac)')+sc(s.unique_shows,'📺 Shows','var(--pu)')+sc(s.episode_watches.toLocaleString(),'🔢 Episodes','var(--pu)');
-    if(D.gr&&D.gr.total){var grB=cy==='all'?D.gr.total:(D.gr.all||[]).filter(function(b){return b.yr===cy}).length;h2+=sc(grB,'📚 Books','#22d3ee')}
+    if(D.gr&&D.gr.total){var grAll=D.gr.all||[];var grF=cy==='all'?grAll:grAll.filter(function(b){return b.yr===cy});h2+=sc(grF.length,'📚 Books','#22d3ee')+sc(grF.reduce(function(s,b){return s+b.p},0).toLocaleString(),'📖 Pages','#22d3ee')}
     // Row 2: Scrobbles, Artists, Albums, Concerts, Sets, Plays
     if(D.lfm&&D.lfm.total){var lfmY=cy!=='all'&&D.lfm.yearly?(D.lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:D.lfm.total,a:D.lfm.artists,al:D.lfm.albums};h2+=sc((lfmY.s||0).toLocaleString(),'🎧 Scrobbles','#1db954')+sc((lfmY.a||0).toLocaleString(),'🎤 Artists','#1db954')+sc((lfmY.al||0).toLocaleString(),'💿 Albums','#1db954')}
-    if(D.con&&D.con.total){var conR=D.con.recent||[];var conF=cy==='all'?conR:conR.filter(function(e){return e.yr===cy});var conEv={};conF.forEach(function(e){conEv[e.date+'|'+e.venue]=true});var conUA=conF.map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;h2+=sc(Object.keys(conEv).length,'🎸 Concerts','#fb923c')+sc(conF.length,'🎤 Sets','#fb923c')+sc(conUA,'🎙️ Artists','#fb923c')}
+    if(D.con&&D.con.total){var conR=D.con.recent||[];var conF=cy==='all'?conR:conR.filter(function(e){return e.yr===cy});var conEv={};conF.forEach(function(e){conEv[e.date+'|'+e.venue]=true});var conUA=conF.map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;var conSongs=conF.reduce(function(s,e){return s+e.songs},0);h2+=sc(Object.keys(conEv).length,'🎸 Concerts','#fb923c')+sc(conF.length,'🎤 Sets','#fb923c')+sc(conUA,'🎙️ Artists','#fb923c')+sc(conSongs,'🎵 Songs','#fb923c')}
     if(D.th&&D.th.total){var thF=cy==='all'?(D.th.all||[]):(D.th.all||[]).filter(function(e){return e.y===cy});h2+=sc(thF.length,'🎭 Plays','#d946ef')}
   }
   el.innerHTML=h2;
