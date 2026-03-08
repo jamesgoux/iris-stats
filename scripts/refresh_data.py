@@ -995,6 +995,22 @@ if theater:
     data["c"]["th_m"] = dict(th_monthly)
     data["c"]["th_y"] = dict(th_years)
 
+# Merge concert + theater titles into monthly title lists (mt)
+mt = data["c"].get("mt", {})
+if concerts:
+    for e in unique_events.values():
+        if e["date"]:
+            m = e["date"][:7]
+            if m not in mt: mt[m] = []
+            mt[m].append({"t": " / ".join(e["artists"]), "type": "concert", "c": 1})
+if theater:
+    for t in theater:
+        if t["date"]:
+            m = t["date"][:7]
+            if m not in mt: mt[m] = []
+            mt[m].append({"t": t["show"], "type": "theater", "c": 1})
+data["c"]["mt"] = mt
+
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:
     template = f.read()
