@@ -190,7 +190,7 @@ body{overflow-x:hidden}
 </div>
 <!-- MUSIC (Last.fm) -->
 <div class="g2 med-s" data-med="all music" id="lfm-wrap" style="display:none">
-<div id="sec-lfm" class="cd s-lfm"><h3><span class="i">🎧</span>Listening Activity</h3><div id="lfm-weekly" style="height:280px"></div></div>
+<div id="sec-lfm" class="cd s-lfm"><h3><span class="i">🎧</span>Listening Activity <span class="vtog" style="float:right"><button class="vb vb-on lfm-met" data-v="s">Scrobbles</button><button class="vb lfm-met" data-v="a">Artists</button><button class="vb lfm-met" data-v="al">Albums</button></span></h3><div id="lfm-weekly" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">🎤</span>Top Artists <span class="vtog" style="float:right"><button class="vb vb-on lfm-per" data-v="overall">All Time</button><button class="vb lfm-per" data-v="12month">Year</button><button class="vb lfm-per" data-v="1month">Month</button></span></h3><div id="lfm-artists" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">🎵</span>Top Tracks</h3><div id="lfm-tracks" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">💿</span>Top Albums</h3><div id="lfm-albums" style="height:280px"></div></div>
@@ -273,7 +273,7 @@ function tmatch(type){return ct==='all'||(ct==='movie'&&type==='movie')||(ct==='
 function stats(){
   var el=document.getElementById('st');
   if(cy==='all'&&ct==='all'){var s=D.c.s;var h2='<div class="sc"><div class="v" style="color:var(--gr)">'+s.total_watches.toLocaleString()+'</div><div class="l">👁️ Watches</div></div><div class="sc"><div class="v" style="color:var(--or)">'+s.total_runtime_days+'</div><div class="l">⏱️ Days</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.unique_movies+'</div><div class="l">🎞️ Movies</div></div><div class="sc"><div class="v" style="color:var(--pu)">'+s.unique_shows+'</div><div class="l">📺 Shows</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+s.episode_watches.toLocaleString()+'</div><div class="l">🔢 Episodes</div></div>';
-    if(D.con&&D.con.total)h2+='<div class="sc"><div class="v" style="color:#fb923c">'+D.con.total+'</div><div class="l">🎸 Concerts</div></div><div class="sc"><div class="v" style="color:#fb923c">'+(D.con.sets||0)+'</div><div class="l">🎤 Sets</div></div>';
+    if(D.con&&D.con.total){var conArtists=(D.con.recent||[]).map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;h2+='<div class="sc"><div class="v" style="color:#fb923c">'+D.con.total+'</div><div class="l">🎸 Concerts</div></div><div class="sc"><div class="v" style="color:#fb923c">'+(D.con.sets||0)+'</div><div class="l">🎤 Sets</div></div><div class="sc"><div class="v" style="color:#fb923c">'+conArtists+'</div><div class="l">🎙️ Artists</div></div>'}
     if(D.gr&&D.gr.total)h2+='<div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total+'</div><div class="l">📚 Books</div></div><div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total_pages.toLocaleString()+'</div><div class="l">📖 Pages</div></div>';
     if(D.lfm&&D.lfm.total)h2+='<div class="sc"><div class="v" style="color:#1db954">'+D.lfm.total.toLocaleString()+'</div><div class="l">🎧 Scrobbles</div></div><div class="sc"><div class="v" style="color:#1db954">'+(D.lfm.artists||0).toLocaleString()+'</div><div class="l">🎤 Artists</div></div><div class="sc"><div class="v" style="color:#1db954">'+(D.lfm.albums||0).toLocaleString()+'</div><div class="l">💿 Albums</div></div>';
     if(D.th&&D.th.total)h2+='<div class="sc"><div class="v" style="color:#d946ef">'+D.th.total+'</div><div class="l">🎭 Plays</div></div>';
@@ -290,7 +290,8 @@ function stats(){
     var con=D.con||{};var allC=con.recent||[];var fc=cy==='all'?allC:allC.filter(function(e){return e.yr===cy});
     var events={};fc.forEach(function(e){events[e.date+'|'+e.venue]=true});
     var songs=fc.reduce(function(s,e){return s+e.songs},0);
-    el.innerHTML='<div class="sc"><div class="v" style="color:#fb923c">'+Object.keys(events).length+'</div><div class="l">🎸 Concerts</div></div><div class="sc"><div class="v" style="color:#fb923c">'+fc.length+'</div><div class="l">🎤 Sets</div></div><div class="sc"><div class="v" style="color:#fb923c">'+songs+'</div><div class="l">🎵 Songs</div></div>'}
+    var uniqA=fc.map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;
+    el.innerHTML='<div class="sc"><div class="v" style="color:#fb923c">'+Object.keys(events).length+'</div><div class="l">🎸 Concerts</div></div><div class="sc"><div class="v" style="color:#fb923c">'+fc.length+'</div><div class="l">🎤 Sets</div></div><div class="sc"><div class="v" style="color:#fb923c">'+uniqA+'</div><div class="l">🎙️ Artists</div></div><div class="sc"><div class="v" style="color:#fb923c">'+songs+'</div><div class="l">🎵 Songs</div></div>'}
   else if(ct==='theater'){
     var th=D.th||{};var allT=th.all||[];var ft=cy==='all'?allT:allT.filter(function(e){return e.y===cy});
     var rated2=ft.filter(function(e){return e.r});var avg2=rated2.length?Math.round(rated2.reduce(function(s,e){return s+e.r},0)/rated2.length*10)/10:0;
@@ -992,19 +993,36 @@ function renderLastfm(){
   window._lfmPer=window._lfmPer||'overall';
   var per=window._lfmPer;
 
-  // Weekly listening activity
-  var weekly=lfm.weekly||[];
+  // Listening activity — yearly (all time) or monthly/weekly (year filtered)
+  window._lfmMet=window._lfmMet||'s';var met=window._lfmMet;
+  var metLabels={s:'Scrobbles',a:'Artists',al:'Albums'};
+  var metColors={s:'#1db954',a:'#60a5fa',al:'#fb923c'};
   var wEl=document.getElementById('lfm-weekly');
-  if(weekly.length){
+  var isYr=cy!=='all';
+  var lfmYearly=lfm.yearly||[];var lfmMonthly=lfm.monthly||[];var lfmWeekly=lfm.weekly||[];
+  var buckets,keys,vals;
+  if(!isYr){
+    // Yearly view
+    buckets=lfmYearly;keys=buckets.map(function(d){return d.yr});vals=buckets.map(function(d){return d[met]||0});
+  }else{
+    // Monthly for selected year
+    var moFiltered=lfmMonthly.filter(function(d){return d.m.startsWith(cy)});
+    buckets=moFiltered;keys=buckets.map(function(d){return d.m});vals=buckets.map(function(d){return d[met]||0});
+  }
+  var totalVal=vals.reduce(function(a,b){return a+b},0);
+  if(keys.length){
     var wChart=echarts.init(wEl);
-    wChart.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+tp(p).value+' scrobbles'}},
-      grid:{left:50,right:20,top:30,bottom:30},
-      title:{text:lfm.total.toLocaleString()+' scrobbles',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
-      xAxis:{type:'category',data:weekly.map(function(w){return w.week}),axisLabel:{color:'#666',interval:Math.floor(weekly.length/6),rotate:45,fontSize:9},axisLine:{lineStyle:{color:'#333'}}},
+    wChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+tp(p).value.toLocaleString()+' '+metLabels[met].toLowerCase()}},
+      grid:{left:50,right:20,top:30,bottom:isYr?30:24},
+      title:{text:totalVal.toLocaleString()+' '+metLabels[met].toLowerCase()+(isYr?' ('+cy+')':''),left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+      xAxis:{type:'category',data:keys,axisLabel:{color:'#666',fontSize:isYr?9:10,rotate:isYr?45:0},axisLine:{lineStyle:{color:'#333'}}},
       yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
-      series:[{type:'bar',data:weekly.map(function(w){return w.c}),itemStyle:{color:LG('#0f3460','#1db954')},barMaxWidth:10}]});
+      series:[{type:'bar',data:vals,itemStyle:{color:LG('#0f3460',metColors[met])},barMaxWidth:isYr?15:30,label:{show:!isYr||keys.length<=12,position:'top',color:'#999',fontSize:9}}]});
     ch.push(wChart);
   }
+  document.querySelectorAll('.lfm-met').forEach(function(btn){btn.onclick=function(){
+    document.querySelectorAll('.lfm-met').forEach(function(b){b.classList.remove('vb-on')});btn.classList.add('vb-on');
+    window._lfmMet=btn.dataset.v;renderLastfm()}});
 
   // Top Artists — period toggle
   var perData=lfm.top_artists||[];

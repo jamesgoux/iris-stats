@@ -76,26 +76,59 @@ for a in top_artists[0]["artists"][:15]:  # top 15 all-time artists
 top_genres = sorted(genre_counter.items(), key=lambda x: x[1], reverse=True)[:15]
 genres = [{"n": g, "c": c} for g, c in top_genres]
 
-# Weekly scrobble chart (recent weeks)
-print("  Fetching weekly charts...")
+# Weekly chart list — aggregate into yearly and monthly buckets
+from datetime import datetime
+from collections import defaultdict
+print("  Fetching weekly charts (all time)...")
 weekly = []
+yearly_scrobbles = defaultdict(int)
+yearly_artists = defaultdict(set)
+yearly_albums = defaultdict(set)
+monthly_scrobbles = defaultdict(int)
+monthly_artists = defaultdict(set)
+monthly_albums = defaultdict(set)
 try:
     charts_data = api("user.getweeklychartlist")
     chart_list = charts_data.get("weeklychartlist", {}).get("chart", [])
-    # Get last 52 weeks (1 year)
-    recent_charts = chart_list[-52:] if len(chart_list) > 52 else chart_list
-    for ch in recent_charts:
+    # Fetch all weeks for yearly aggregation, recent 52 for weekly display
+    for i, ch in enumerate(chart_list):
         try:
-            wk = api("user.getweeklyartistchart", **{"from": ch["from"], "to": ch["to"]})
-            total = sum(int(a.get("playcount", 0)) for a in wk.get("weeklyartistchart", {}).get("artist", []))
-            from datetime import datetime
             dt = datetime.fromtimestamp(int(ch["from"]))
-            weekly.append({"week": dt.strftime("%Y-%m-%d"), "c": total})
-            time.sleep(0.2)
+            yr = dt.strftime("%Y")
+            mo = dt.strftime("%Y-%m")
+            wk = api("user.getweeklyartistchart", **{"from": ch["from"], "to": ch["to"]})
+            artists_in_week = wk.get("weeklyartistchart", {}).get("artist", [])
+            week_total = sum(int(a.get("playcount", 0)) for a in artists_in_week)
+            yearly_scrobbles[yr] += week_total
+            monthly_scrobbles[mo] += week_total
+            for a in artists_in_week:
+                yearly_artists[yr].add(a["name"])
+                monthly_artists[mo].add(a["name"])
+            # Also get album chart for this week
+            try:
+                wka = api("user.getweeklyalbumchart", **{"from": ch["from"], "to": ch["to"]})
+                for al in wka.get("weeklyalbumchart", {}).get("album", []):
+                    yearly_albums[yr].add(al["artist"]["#text"] + " — " + al["name"])
+                    monthly_albums[mo].add(al["artist"]["#text"] + " — " + al["name"])
+            except:
+                pass
+            # Keep recent 52 for weekly chart
+            if i >= len(chart_list) - 52:
+                weekly.append({"week": dt.strftime("%Y-%m-%d"), "c": week_total})
+            if i % 50 == 0:
+                print(f"    Week {i+1}/{len(chart_list)} ({yr})...")
+            time.sleep(0.25)
         except:
             pass
 except Exception as e:
     print(f"  Weekly chart error: {e}")
+
+# Build yearly/monthly summary arrays
+lfm_yearly = sorted([{"yr": y, "s": yearly_scrobbles[y], "a": len(yearly_artists[y]), "al": len(yearly_albums[y])}
+                      for y in yearly_scrobbles], key=lambda x: x["yr"])
+lfm_monthly = sorted([{"m": m, "s": monthly_scrobbles[m], "a": len(monthly_artists[m]), "al": len(monthly_albums[m])}
+                       for m in monthly_scrobbles], key=lambda x: x["m"])
+print(f"  Years: {len(lfm_yearly)}, Months: {len(lfm_monthly)}")
 
 # Recent tracks (last 200 for activity display)
 print("  Fetching recent tracks...")
@@ -123,6 +156,8 @@ output = {
     "top_tracks": top_tracks,
     "top_albums": top_albums,
     "genres": genres,
+    "yearly": lfm_yearly,
+    "monthly": lfm_monthly,
     "weekly": weekly,
     "recent": recent[:100],
 }
