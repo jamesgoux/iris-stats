@@ -49,7 +49,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .pn{display:flex;align-items:center;gap:10px}
 .hs{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#222;flex-shrink:0}
 .hp{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a1a2e,#0f3460);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--t2);font-weight:700;flex-shrink:0}
-.poster-item{text-align:center;flex-shrink:0;width:100px}
+.poster-item{text-align:center;flex-shrink:0;width:100px;transition:transform .5s ease,opacity .3s ease}
 .poster-item img{width:100px;height:150px;object-fit:cover;border-radius:6px;background:#222}
 .poster-item span{display:block;font-size:10px;color:var(--t2);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .poster-ph{width:100px;height:150px}
@@ -107,7 +107,7 @@ body{overflow-x:hidden}
 </div>
 <!-- TOP SHOWS POSTERS -->
 <div class="g2">
-<div id="sec-shows" class="cd fw s-s"><h3><span class="i">📺</span>Top Shows <span class="vtog" style="float:right"><button class="vb" id="ss-eps" onclick="window._showSort='eps';document.getElementById('ss-eps').classList.add('vb-on');document.getElementById('ss-dur').classList.remove('vb-on');renderPosters()">By Episodes</button><button class="vb vb-on" id="ss-dur" onclick="window._showSort='dur';document.getElementById('ss-dur').classList.add('vb-on');document.getElementById('ss-eps').classList.remove('vb-on');renderPosters()">By Duration</button></span></h3><div id="poster-grid" style="display:flex;flex-wrap:wrap;gap:10px;overflow-x:auto;padding:4px 0"></div></div>
+<div id="sec-shows" class="cd fw s-s"><h3><span class="i">📺</span>Top Shows <span class="vtog" style="float:right"><button class="vb" id="ss-eps" onclick="window._showSort='eps';document.getElementById('ss-eps').classList.add('vb-on');document.getElementById('ss-dur').classList.remove('vb-on');renderPosters(true)">By Episodes</button><button class="vb vb-on" id="ss-dur" onclick="window._showSort='dur';document.getElementById('ss-dur').classList.add('vb-on');document.getElementById('ss-eps').classList.remove('vb-on');renderPosters(true)">By Duration</button></span></h3><div id="poster-grid" style="display:flex;flex-wrap:wrap;gap:10px;overflow-x:auto;padding:4px 0"></div></div>
 </div>
 <!-- TTW + CATCH-UP (same row) -->
 <div class="g2">
@@ -541,7 +541,7 @@ function baseCharts(){
   ch.push(c2,c3,c3b,c4,c5,c7,c8);
 }
 
-function renderPosters(){
+function renderPosters(animate){
   var PS=D.ps||{};var grid=document.getElementById('poster-grid');
   window._showSort=window._showSort||'dur';
   var shows=[];SYD.forEach(function(s){
@@ -552,15 +552,59 @@ function renderPosters(){
   });
   shows.sort(function(a,b){return window._showSort==='dur'?(b.h-a.h):(b.e-a.e)});
   var top=shows.slice(0,20);
-  var gh='';
-  top.forEach(function(s,i){
-    var slug=s.n.toLowerCase().replace(/[^a-z0-9]/g,'-');
-    var img=null;
-    for(var k in PS){if(k.indexOf(slug.substring(0,10))>=0||slug.indexOf(k.substring(0,10))>=0){img=PS[k];break}}
-    var label=window._showSort==='dur'?s.h+'h':s.e+' eps';
-    gh+='<div class="poster-item">'+(img?'<img src="'+img+'" loading="lazy" alt="">':'<div class="poster-ph" style="background:#222;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:10px">'+s.n.substring(0,15)+'</div>')+'<span>'+(i+1)+'. '+s.n+'</span><span style="font-size:9px;color:var(--t2)">'+label+'</span></div>';
-  });
-  grid.innerHTML=gh;
+  function slug(n){return n.toLowerCase().replace(/[^a-z0-9]/g,'-')}
+  function findImg(s){var sl=slug(s);for(var k in PS){if(k.indexOf(sl.substring(0,10))>=0||sl.indexOf(k.substring(0,10))>=0)return PS[k]}return null}
+  // FLIP animate if existing children match (toggle sort)
+  var existing=grid.querySelectorAll('.poster-item');
+  if(animate&&existing.length>0){
+    // Record first positions
+    var firstRects={};existing.forEach(function(el){firstRects[el.dataset.key]=el.getBoundingClientRect()});
+    // Rebuild order + update labels
+    var byKey={};existing.forEach(function(el){byKey[el.dataset.key]=el});
+    var frag=document.createDocumentFragment();
+    top.forEach(function(s,i){
+      var key=slug(s.n);var el=byKey[key];
+      var label=window._showSort==='dur'?s.h+'h':s.e+' eps';
+      if(el){
+        el.querySelector('span').textContent=(i+1)+'. '+s.n;
+        var spans=el.querySelectorAll('span');if(spans[1])spans[1].textContent=label;
+        frag.appendChild(el);delete byKey[key];
+      }else{
+        var div=document.createElement('div');div.className='poster-item';div.dataset.key=key;
+        var img=findImg(s.n);
+        div.innerHTML=(img?'<img src="'+img+'" loading="lazy" alt="">':'<div class="poster-ph" style="background:#222;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:10px">'+s.n.substring(0,15)+'</div>')+'<span>'+(i+1)+'. '+s.n+'</span><span style="font-size:9px;color:var(--t2)">'+label+'</span>';
+        div.style.opacity='0';frag.appendChild(div);
+      }
+    });
+    // Remove items no longer in top
+    for(var k in byKey)byKey[k].remove();
+    grid.appendChild(frag);
+    // Animate: invert + play
+    var items=grid.querySelectorAll('.poster-item');
+    items.forEach(function(el){
+      var key=el.dataset.key;var first=firstRects[key];
+      if(first){
+        var last=el.getBoundingClientRect();
+        var dx=first.left-last.left;var dy=first.top-last.top;
+        if(dx||dy){
+          el.style.transition='none';el.style.transform='translate('+dx+'px,'+dy+'px)';
+          el.offsetHeight;// force reflow
+          el.style.transition='transform .5s ease,opacity .3s ease';el.style.transform='';
+        }
+      }else{
+        el.offsetHeight;el.style.opacity='1';
+      }
+    });
+  }else{
+    // Full rebuild (first render or year change)
+    var gh='';
+    top.forEach(function(s,i){
+      var key=slug(s.n);var img=findImg(s.n);
+      var label=window._showSort==='dur'?s.h+'h':s.e+' eps';
+      gh+='<div class="poster-item" data-key="'+key+'">'+(img?'<img src="'+img+'" loading="lazy" alt="">':'<div class="poster-ph" style="background:#222;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:10px">'+s.n.substring(0,15)+'</div>')+'<span>'+(i+1)+'. '+s.n+'</span><span style="font-size:9px;color:var(--t2)">'+label+'</span></div>';
+    });
+    grid.innerHTML=gh;
+  }
 }
 
 function renderLetterboxd(){
