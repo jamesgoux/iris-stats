@@ -154,22 +154,39 @@ lfm_monthly = sorted([{"m": m, "s": monthly_scrobbles[m],
                        for m in monthly_scrobbles], key=lambda x: x["m"])
 print(f"  Years: {len(lfm_yearly)}, Months: {len(lfm_monthly)}")
 
-# Recent tracks (last 200 for activity display)
-print("  Fetching recent tracks...")
+# Recent tracks — paginate to get ~30 days of scrobbles
+print("  Fetching recent tracks (paginated)...")
 recent = []
 try:
-    data = api("user.getrecenttracks", limit=200)
-    for t in data.get("recenttracks", {}).get("track", []):
-        if not t.get("date"):
-            continue
-        recent.append({
-            "n": t["name"],
-            "a": t["artist"]["#text"],
-            "al": t.get("album", {}).get("#text", ""),
-            "d": t["date"]["#text"],
-        })
+    for page in range(1, 20):  # up to ~4000 tracks
+        data = api("user.getrecenttracks", limit=200, page=page)
+        tracks = data.get("recenttracks", {}).get("track", [])
+        if not tracks:
+            break
+        for t in tracks:
+            if not t.get("date"):
+                continue
+            recent.append({
+                "n": t["name"],
+                "a": t["artist"]["#text"],
+                "al": t.get("album", {}).get("#text", ""),
+                "d": t["date"]["#text"],
+            })
+        print(f"    Page {page}: {len(tracks)} tracks (total: {len(recent)})")
+        # Stop if we have 30+ days of data
+        if len(recent) > 100:
+            oldest = recent[-1]["d"]
+            try:
+                from datetime import datetime as dt2, timedelta as td2
+                oldest_date = dt2.strptime(oldest, "%d %b %Y, %H:%M")
+                if (dt2.now() - oldest_date).days >= 35:
+                    break
+            except:
+                pass
+        time.sleep(0.3)
 except Exception as e:
     print(f"  Recent tracks error: {e}")
+print(f"  Total recent tracks: {len(recent)}")
 
 output = {
     "total": total_scrobbles,
@@ -185,7 +202,7 @@ output = {
     "monthly": lfm_monthly,
     "weekly": weekly,
     "wd": weekly_details,
-    "recent": recent[:100],
+    "recent": recent,
 }
 
 with open("data/lastfm.json", "w") as f:

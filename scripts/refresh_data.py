@@ -1347,7 +1347,7 @@ for d in sorted(ll_counts.keys()):
         lifeline_all[d] = {
             "ep": c["ep"], "mv": c["mv"], "bk": c["bk"],
             "sc": c["sc"], "co": c["co"], "th": c["th"],
-            "e": evts[:30]  # chronological events, capped at 30
+            "e": evts[:80]  # chronological events
         }
 data["ll"] = lifeline_all
 
