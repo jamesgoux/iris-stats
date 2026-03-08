@@ -501,7 +501,7 @@ function baseCharts(){
   // Episodes Watched — yearly (all), monthly (year, default), or weekly (year, toggle)
   var epc=D.c.epc||{};
   var epEl=document.getElementById('epcc');
-  if(ct==='movie'){epEl.parentElement.parentElement.style.display='none'}
+  if(ct!=='all'&&ct!=='show'){epEl.parentElement.parentElement.style.display='none'}
   else{
     epEl.parentElement.parentElement.style.display='';
     window._epRes=window._epRes||'monthly';var epRes=window._epRes;
