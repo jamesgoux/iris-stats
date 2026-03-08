@@ -145,7 +145,7 @@ body{overflow-x:hidden}
 </div>
 <!-- RELEASE YEARS -->
 <div class="g2">
-<div id="sec-vy" class="cd fw s-t"><h3><span class="i">📅</span>Content Release Years</h3><div class="vtog" style="margin:-6px 0 8px 0"><button class="vb vb-on" data-v="year">Year</button><button class="vb" data-v="decade">Decade</button><button class="vb" data-v="pie">New vs Old</button></div><div id="vyc" style="height:300px"></div></div>
+<div id="sec-vy" class="cd fw s-t"><h3><span class="i">📅</span>Content Release Years</h3><div class="vtog" style="margin:-6px 0 8px 0"><button class="vb vb-on vy-tog" data-v="year">Year</button><button class="vb vy-tog" data-v="decade">Decade</button><button class="vb vy-tog" data-v="pie">New vs Old</button></div><div id="vyc" style="height:300px"></div></div>
 </div>
 <!-- HOW I WATCH (own section) -->
 <div class="g2">
@@ -442,10 +442,10 @@ function baseCharts(){
   }
   renderVintage();
 
-  // Toggle buttons
-  document.querySelectorAll('.vb').forEach(function(btn){
+  // Vintage toggle buttons (scoped to .vy-tog only)
+  document.querySelectorAll('.vy-tog').forEach(function(btn){
     btn.onclick=function(){
-      document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('vb-on')});
+      document.querySelectorAll('.vy-tog').forEach(function(b){b.classList.remove('vb-on')});
       btn.classList.add('vb-on');
       window._vyMode=vyMode=btn.dataset.v;
       renderVintage();
