@@ -1146,12 +1146,23 @@ if gr_books:
     gr_highest = sorted(gr_rated, key=lambda x: (x["user_rating"], x.get("pages", 0)), reverse=True)[:10]
     gr_lowest = sorted(gr_rated, key=lambda x: (x["user_rating"], -x.get("pages", 0)))[:10]
 
-    # Shelves/genres
-    gr_shelves = Counter()
+    # Shelves/genres — merge user shelves + scraped community genres
+    gr_community_genres = {}
+    if os.path.exists("data/book_genres.json"):
+        with open("data/book_genres.json") as f:
+            gr_community_genres = json.load(f)
+    gr_shelves = Counter()  # user shelves
+    gr_genres = Counter()   # community genres
     for b in gr_books:
         for s in b.get("shelves", []):
             gr_shelves[s] += 1
-    gr_genre_list = [{"n": g, "c": c} for g, c in gr_shelves.most_common(15)]
+        cg = gr_community_genres.get(b["book_id"], [])
+        for g in cg:
+            gr_genres[g] += 1
+        # Store merged genres per book for click filtering
+        b["_genres"] = list(dict.fromkeys(b.get("shelves", []) + cg))
+    gr_shelf_list = [{"n": g, "c": c} for g, c in gr_shelves.most_common(15)]
+    gr_genre_list = [{"n": g, "c": c} for g, c in gr_genres.most_common(15)]
 
     # Reading pace: pages per day for books with both dates and pages
     gr_pace = []
@@ -1189,11 +1200,12 @@ if gr_books:
         "highest": [{"t": b["title"], "a": b["author"], "r": b["user_rating"], "p": b.get("pages", 0)} for b in gr_highest],
         "lowest": [{"t": b["title"], "a": b["author"], "r": b["user_rating"], "p": b.get("pages", 0)} for b in gr_lowest],
         "pace": gr_pace[:15],
+        "shelves": gr_shelf_list,
         "genres": gr_genre_list,
         "month_counts": gr_month_counts,
         "all": [{"t": b["title"], "a": b["author"], "p": b.get("pages", 0), "r": b.get("user_rating", 0),
                  "yr": b.get("year_read", ""), "dr": b.get("date_read", ""), "da": b.get("date_added", ""),
-                 "sh": b.get("shelves", []), "img": b.get("image", "")} for b in gr_books],
+                 "sh": b.get("shelves", []), "gn": b.get("_genres", []), "img": b.get("image", "")} for b in gr_books],
     }
     # Add books to monthly timeline counts
     data["c"]["gr_m"] = gr_month_counts

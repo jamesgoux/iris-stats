@@ -27,6 +27,9 @@ jobs:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
         run: python scripts/refresh_headshots.py
 
+      - name: Backfill book genres
+        run: python scripts/refresh_book_genres.py
+
       - name: Rebuild dashboard (full refresh with cast+studios)
         env:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}

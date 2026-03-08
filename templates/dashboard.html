@@ -183,7 +183,8 @@ body{overflow-x:hidden}
 <div class="cd s-gr"><h3><span class="i">⭐</span>Book Ratings</h3><div id="gr-dist" style="height:280px"></div></div>
 <div class="cd s-gr"><h3><span class="i">📏</span>Longest Books</h3><div id="gr-long"></div></div>
 <div class="cd s-gr"><h3><span class="i">📕</span>Shortest Books</h3><div id="gr-short"></div></div>
-<div class="cd s-gr"><h3><span class="i">🏷️</span>Genres & Shelves</h3><div id="gr-genres" style="height:280px"></div></div>
+<div class="cd s-gr"><h3><span class="i">🏷️</span>Genres (Community)</h3><div id="gr-genres" style="height:280px"></div></div>
+<div class="cd s-gr"><h3><span class="i">📂</span>My Shelves</h3><div id="gr-shelves" style="height:280px"></div></div>
 <div class="cd s-gr"><h3><span class="i">🏆</span>Highest Rated</h3><div id="gr-high"></div></div>
 <div class="cd s-gr"><h3><span class="i">👎</span>Lowest Rated</h3><div id="gr-low"></div></div>
 </div>
@@ -926,30 +927,32 @@ function renderGoodreads(){
   bookList('gr-long',gr.longest,'p');
   bookList('gr-short',gr.shortest,'p');
 
-  // Genres/Shelves — horizontal bar, clickable to show books
-  var genres=gr.genres||[];
-  var genEl=document.getElementById('gr-genres');
-  if(genres.length){
-    var genSlice=genres.slice(0,12).reverse();
-    var genChart=echarts.init(genEl);
-    var genColors=['#22d3ee','#60a5fa','#a78bfa','#e94560','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24','#34d399','#818cf8','#f87171'];
-    genChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' books'}},
-      grid:{left:gl(110),right:30,top:8,bottom:8},
+  // Helper: render a genre/shelf bar chart
+  function grBarChart(elId,data,field,color,label){
+    var el=document.getElementById(elId);
+    if(!data||!data.length){el.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No '+label+' data</div>';return}
+    var slice=data.slice(0,12).reverse();
+    var c=echarts.init(el);
+    var cols=['#22d3ee','#60a5fa','#a78bfa','#e94560','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24','#34d399','#818cf8','#f87171'];
+    c.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' books'}},
+      grid:{left:gl(120),right:30,top:8,bottom:8},
       xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
-      yAxis:{type:'category',data:genSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
-      series:[{type:'bar',data:genSlice.map(function(d,i){return{value:d.c,itemStyle:{color:genColors[i%genColors.length]}}}),barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10}}]});
-    genChart.on('click',function(p){
-      var g=genSlice[p.dataIndex];if(!g)return;
-      var books=filtered.filter(function(b){return(b.sh||[]).indexOf(g.n)>=0});
+      yAxis:{type:'category',data:slice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:slice.map(function(d,i){return{value:d.c,itemStyle:{color:cols[i%cols.length]}}}),barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10}}]});
+    c.on('click',function(p){
+      var g=slice[p.dataIndex];if(!g)return;
+      var books=filtered.filter(function(b){return(b[field]||[]).indexOf(g.n)>=0});
       if(!books.length)return;
-      var ex=genEl.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===g.n)return}
+      var ex=el.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===g.n)return}
       var div=document.createElement('div');div.className='chart-detail';div.dataset.val=g.n;
       var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+g.n+' ('+books.length+')</b>';
       books.forEach(function(b){h+='<div class="cd-item"><span>'+b.t+'</span><span style="color:var(--t2);font-size:11px;margin-left:4px">— '+b.a+'</span></div>'});
-      div.innerHTML=h;genEl.parentElement.appendChild(div);
+      div.innerHTML=h;el.parentElement.appendChild(div);
     });
-    ch.push(genChart);
-  }else{genEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No shelf data</div>'}
+    ch.push(c);
+  }
+  grBarChart('gr-genres',gr.genres||[],'gn','#22d3ee','genre');
+  grBarChart('gr-shelves',gr.shelves||[],'sh','#a78bfa','shelf')
 
   bookList('gr-high',gr.highest,'r');
   bookList('gr-low',gr.lowest,'r');
