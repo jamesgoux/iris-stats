@@ -507,6 +507,8 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     ml = [e for e in entries if e["type"] == "movie"]
     el = [e for e in entries if e["type"] == "episode"]
     tr = sum(int(e["runtime"]) for e in entries if e["runtime"])
+    tr_movies = sum(int(e["runtime"]) for e in ml if e["runtime"])
+    tr_shows = sum(int(e["runtime"]) for e in el if e["runtime"])
 
     # Rating lists — include watch years so JS can filter
     movie_ratings = {}
@@ -620,7 +622,9 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "s": {"total_watches": len(entries), "movie_watches": len(ml), "episode_watches": len(el),
                   "unique_movies": len(set(e["title"] for e in ml)),
                   "unique_shows": len(set(e["show_title"] for e in el if e["show_title"])),
-                  "total_runtime_days": round(tr/60/24, 1)},
+                  "total_runtime_days": round(tr/60/24, 1),
+                  "movie_runtime_days": round(tr_movies/60/24, 1),
+                  "show_runtime_days": round(tr_shows/60/24, 1)},
             "m": [{"month": m, **d} for m, d in sorted(monthly.items())],
             "y": [{"year": y, **d} for y, d in sorted(yearly.items())],
             "con_y": {},  # placeholder, filled below
