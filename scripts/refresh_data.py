@@ -1191,7 +1191,7 @@ if gr_books:
         "rated": len(gr_rated),
         "avg": round(sum(b["user_rating"] for b in gr_rated) / len(gr_rated), 1) if gr_rated else 0,
         "years": gr_years,
-        "ttr": gr_ttr[:20],
+        "ttr": gr_ttr,
         "ttr_avg": round(sum(t["d"] for t in gr_ttr) / len(gr_ttr)) if gr_ttr else 0,
         "authors": gr_top_authors,
         "longest": [{"t": b["title"], "a": b["author"], "p": b["pages"]} for b in gr_longest],

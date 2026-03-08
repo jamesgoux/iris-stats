@@ -178,7 +178,7 @@ body{overflow-x:hidden}
 <!-- BOOKS (Goodreads) -->
 <div class="g2" id="gr-wrap" style="display:none">
 <div id="sec-gr" class="cd s-gr"><h3><span class="i">📚</span>Books Read <span class="vtog" style="float:right"><button class="vb vb-on gr-tog" data-v="books">By Books</button><button class="vb gr-tog" data-v="pages">By Pages</button></span></h3><div id="grc" style="height:280px"></div></div>
-<div class="cd s-gr"><h3><span class="i">📖</span>Time to Read</h3><div id="gr-ttr" style="height:280px"></div></div>
+<div class="cd s-gr"><h3><span class="i">📖</span>Time to Read</h3><div style="max-height:500px;overflow-y:auto"><div id="gr-ttr" style="height:280px"></div></div></div>
 <div class="cd s-gr"><h3><span class="i">✍️</span>Most Read Authors</h3><div id="gr-auth" style="height:280px"></div></div>
 <div class="cd s-gr"><h3><span class="i">⭐</span>Book Ratings</h3><div id="gr-dist" style="height:280px"></div></div>
 <div class="cd s-gr"><h3><span class="i">📏</span>Longest Books</h3><div id="gr-long"></div></div>
@@ -263,15 +263,15 @@ function tmatch(type){return ct==='all'||(ct==='movie'&&type==='movie')||(ct==='
 
 function stats(){
   var el=document.getElementById('st');
-  if(cy==='all'&&ct==='all'){var s=D.c.s;var h2='<div class="sc"><div class="v" style="color:var(--gr)">'+s.total_watches.toLocaleString()+'</div><div class="l">👁️ Total Watches</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.unique_movies+'</div><div class="l">🎞️ Movies</div></div><div class="sc"><div class="v" style="color:var(--pu)">'+s.unique_shows+'</div><div class="l">📺 Shows</div></div><div class="sc"><div class="v" style="color:var(--or)">'+s.total_runtime_days+'</div><div class="l">⏱️ Days Watched</div></div>';
-    if(D.gr&&D.gr.total)h2+='<div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total+'</div><div class="l">📚 Books</div></div><div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total_pages.toLocaleString()+'</div><div class="l">📖 Pages</div></div>';
-    if(D.con&&D.con.total)h2+='<div class="sc"><div class="v" style="color:#fb923c">'+D.con.total+'</div><div class="l">🎸 Concerts</div></div>';
-    if(D.th&&D.th.total)h2+='<div class="sc"><div class="v" style="color:#d946ef">'+D.th.total+'</div><div class="l">🎭 Plays</div></div>';
+  if(cy==='all'&&ct==='all'){var s=D.c.s;var h2='<div class="sc"><div class="v" style="color:var(--gr)">'+s.total_watches.toLocaleString()+'</div><div class="l">Watches</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.unique_movies+'</div><div class="l">Movies</div></div><div class="sc"><div class="v" style="color:var(--pu)">'+s.unique_shows+'</div><div class="l">Shows</div></div><div class="sc"><div class="v" style="color:var(--or)">'+s.total_runtime_days+'</div><div class="l">Days</div></div>';
+    if(D.gr&&D.gr.total)h2+='<div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total+'</div><div class="l">Books</div></div><div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total_pages.toLocaleString()+'</div><div class="l">Pages</div></div>';
+    if(D.con&&D.con.total)h2+='<div class="sc"><div class="v" style="color:#fb923c">'+D.con.total+'</div><div class="l">Concerts</div></div>';
+    if(D.th&&D.th.total)h2+='<div class="sc"><div class="v" style="color:#d946ef">'+D.th.total+'</div><div class="l">Plays</div></div>';
     el.innerHTML=h2}
   else{var mw=0,ew=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){mw+=m.movies;ew+=m.episodes});
-    if(ct==='movie'){el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+mw.toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Movie Watches</div></div>'}
+    if(ct==='movie'){el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+mw.toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Movies</div></div>'}
     else if(ct==='show'){el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+ew.toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Episodes</div></div>'}
-    else{el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+(mw+ew).toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Total</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+mw+'</div><div class="l">Movie Watches</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+ew.toLocaleString()+'</div><div class="l">Episodes</div></div>'}}
+    else{el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+(mw+ew).toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Total</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+mw+'</div><div class="l">Movies</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+ew.toLocaleString()+'</div><div class="l">Episodes</div></div>'}}
 }
 
 function ptbl(id,pp){var tb=document.getElementById(id);tb.innerHTML='';
@@ -862,18 +862,20 @@ function renderGoodreads(){
     document.querySelectorAll('.gr-tog').forEach(function(b){b.classList.remove('vb-on')});btn.classList.add('vb-on');
     window._grMode=btn.dataset.v;renderGoodreads()}});
 
-  // Time to read
+  // Time to read — show all books, dynamic height, truncate long titles
   var ttr=gr.ttr||[];if(cy!=='all')ttr=ttr.filter(function(t){return filtered.some(function(b){return b.t===t.t})});
-  var ttrSlice=ttr.slice(0,12).reverse();
+  var ttrAll=ttr.slice().reverse();
   var ttrEl=document.getElementById('gr-ttr');
-  if(ttrSlice.length){
+  if(ttrAll.length){
+    var ttrH=Math.max(280,ttrAll.length*22+40);
+    ttrEl.style.height=ttrH+'px';
     var ttrChart=echarts.init(ttrEl);
-    ttrChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var d=ttrSlice.find(function(x){return x.t===tp(p).name});return d?'<b>'+d.t+'</b><br/>'+d.d+' days ('+d.p+' pages)':''}},
-      grid:{left:gl(130),right:30,top:20,bottom:8},
-      title:{text:'Avg: '+(gr.ttr_avg||0)+' days',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+    ttrChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var d=ttrAll.find(function(x){return tp(p).name.indexOf(x.t.substring(0,20))>=0});return d?'<b>'+d.t+'</b><br/>'+d.d+' days ('+d.p+' pages)':''}},
+      grid:{left:gl(150),right:50,top:20,bottom:8},
+      title:{text:ttrAll.length+' books, avg '+(gr.ttr_avg||0)+' days',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
       xAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return v+'d'}},splitLine:{lineStyle:{color:'#222'}}},
-      yAxis:{type:'category',data:ttrSlice.map(function(d){return d.t}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
-      series:[{type:'bar',data:ttrSlice.map(function(d){return d.d}),itemStyle:{color:function(p){var v=p.value;return v<7?'#4ade80':v<30?'#22d3ee':v<90?'#fb923c':'#e94560'}},barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10,formatter:function(p){return p.value+'d'}}}]});
+      yAxis:{type:'category',data:ttrAll.map(function(d){return d.t}),axisLabel:{color:'#ccc',fontSize:9,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:ttrAll.map(function(d){return d.d}),itemStyle:{color:function(p){var v=p.value;return v<7?'#4ade80':v<30?'#22d3ee':v<90?'#fb923c':'#e94560'}},barMaxWidth:14,label:{show:true,position:'right',color:'#ccc',fontSize:9,formatter:function(p){return p.value<365?p.value+'d':Math.round(p.value/365*10)/10+'y'}}}]});
     ch.push(ttrChart);
   }else{ttrEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No time-to-read data</div>'}
 
