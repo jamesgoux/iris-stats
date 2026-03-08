@@ -766,10 +766,10 @@ function renderConcerts(){
       h2+='<table style="font-size:11px">';if(detail.top&&detail.top.length){h2+='<tr><td colspan="2" style="font-weight:600;color:var(--or);padding:4px 6px">Most Performed (2+)</td></tr>';detail.top.forEach(function(s){h2+='<tr><td style="padding:2px 6px">'+s.n+'</td><td class="nm" style="padding:2px 6px">'+s.c+'x</td></tr>'})}else if(detail.songs&&detail.songs.length){h2+='<tr><td colspan="2" style="font-weight:600;color:var(--bl);padding:4px 6px">Setlist</td></tr>';detail.songs.slice(0,10).forEach(function(s){h2+='<tr><td style="padding:2px 6px">'+s.n+'</td><td class="nm" style="padding:2px 6px">'+s.c+'x</td></tr>'})}h2+='</table></td>';dr.innerHTML=h2;tr.after(dr);
       if(detail.albums&&detail.albums.length){var pieEl=document.getElementById('album-pie-'+idx);if(pieEl){var ac2=echarts.init(pieEl);var acols=['#e94560','#60a5fa','#a78bfa','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24'];ac2.setOption({tooltip:{trigger:'item',...tt,formatter:'{b}: {c} songs ({d}%)'},series:[{type:'pie',radius:['30%','65%'],center:['50%','50%'],data:detail.albums.map(function(a,j){return{value:a.c,name:a.n,itemStyle:{color:acols[j%acols.length]}}}),label:{color:'#ccc',fontSize:9,formatter:'{b}\n{d}%'},emphasis:{itemStyle:{shadowBlur:10}}}]})}}}})
   }else{aEl.innerHTML=''}
-  // Venues — ECharts horizontal bar, clickable to show artists
-  var venCounts={};var venArtists={};
-  filtered.forEach(function(e){var vk=e.venue+(e.city?', '+e.city:'');venCounts[vk]=(venCounts[vk]||0)+1;if(!venArtists[vk])venArtists[vk]=[];if(venArtists[vk].indexOf(e.artist)<0)venArtists[vk].push(e.artist)});
-  var venues=Object.entries(venCounts).sort(function(a,b){return b[1]-a[1]}).map(function(e){return{n:e[0],c:e[1],artists:venArtists[e[0]]||[]}});
+  // Venues — ECharts horizontal bar (count unique concerts, not sets), clickable to show artists
+  var venEvents={};var venArtists={};
+  filtered.forEach(function(e){var vk=e.venue+(e.city?', '+e.city:'');var ek=e.date+'|'+vk;if(!venEvents[vk])venEvents[vk]={};venEvents[vk][ek]=true;if(!venArtists[vk])venArtists[vk]=[];if(venArtists[vk].indexOf(e.artist)<0)venArtists[vk].push(e.artist)});
+  var venues=Object.entries(venEvents).sort(function(a,b){return Object.keys(b[1]).length-Object.keys(a[1]).length}).map(function(e){return{n:e[0],c:Object.keys(e[1]).length,artists:venArtists[e[0]]||[]}});
   var venEl=document.getElementById('con-ven-chart');
   if(venues.length){
     var venSlice=venues.slice(0,10).reverse();
