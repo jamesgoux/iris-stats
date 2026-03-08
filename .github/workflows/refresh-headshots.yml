@@ -30,6 +30,9 @@ jobs:
       - name: Backfill book genres
         run: python scripts/refresh_book_genres.py
 
+      - name: Backfill artist genres
+        run: python scripts/refresh_artist_genres.py
+
       - name: Rebuild dashboard (full refresh with cast+studios)
         env:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}

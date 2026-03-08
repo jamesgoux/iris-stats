@@ -1005,15 +1005,27 @@ if concerts:
         top_songs = [(s,ct) for s,ct in ca_song_list[artist].most_common() if ct>=2]
         albums = [{"n":a,"c":ct} for a,ct in ca_albums[artist].most_common()]
         artist_detail[artist] = {"songs":[{"n":s,"c":ct} for s,ct in ca_song_list[artist].most_common(20)],"top":[{"n":s,"c":ct} for s,ct in top_songs[:15]],"albums":albums}
+    # Load artist genres from MusicBrainz
+    artist_genres_map = {}
+    if os.path.exists("data/artist_genres.json"):
+        with open("data/artist_genres.json") as f:
+            artist_genres_map = json.load(f)
+    con_genre_counter = Ctr2()
+    for c in concerts:
+        for g in artist_genres_map.get(c["artist"], []):
+            con_genre_counter[g] += 1
+    con_genres = [{"n": g, "c": c} for g, c in con_genre_counter.most_common(15)]
+
     data["con"] = {
         "total": real_concert_count, "songs": total_songs, "sets": total_sets,
         "artists": [{"n": a, "c": c, "s": ca_songs[a]} for a, c in ca.most_common(25)],
         "adetail": artist_detail,
         "venues": [{"n": v, "c": c} for v, c in cv.most_common(25)],
+        "genres": con_genres,
         "years": [{"yr": y, "c": c, "s": cy2_songs.get(y,0), "st": cy2_sets.get(y,0)} for y, c in sorted(cy2.items())],
         "recent": [{"artist": c["artist"], "venue": c["venue"], "city": c["city"],
                     "date": c["date"], "yr": c["year"], "tour": c["tour"],
-                    "songs": c["song_count"]} for c in concerts],
+                    "songs": c["song_count"], "genres": artist_genres_map.get(c["artist"], [])} for c in concerts],
     }
 
 # Theater data from Mezzanine

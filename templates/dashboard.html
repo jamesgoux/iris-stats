@@ -193,6 +193,7 @@ body{overflow-x:hidden}
 <div id="sec-con" class="cd s-con"><h3><span class="i">🎸</span>Concerts <span class="vtog" style="float:right"><button class="vb vb-on con-tog" data-v="shows">By Shows</button><button class="vb con-tog" data-v="sets">By Sets</button><button class="vb con-tog" data-v="songs">By Songs</button></span></h3><div id="conc" style="height:280px"></div></div>
 <div class="cd s-con"><h3><span class="i">🎤</span>Most Seen Artists</h3><div class="stb" id="con-artists" style="font-size:12px"></div></div>
 <div class="cd s-con"><h3><span class="i">🏟️</span>Venues</h3><div id="con-ven-chart" style="height:280px"></div></div>
+<div class="cd s-con"><h3><span class="i">🎵</span>Genres</h3><div id="con-genre-chart" style="height:280px"></div></div>
 </div>
 <!-- THEATER -->
 <div class="g2 med-s" data-med="all theater" id="th-wrap" style="display:none">
@@ -1029,6 +1030,31 @@ function renderConcerts(){
     });
     ch.push(venChart);
   }else{venEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No venue data</div>'}
+  // Concert genres from MusicBrainz
+  var conGenres=con.genres||[];
+  var cgEl=document.getElementById('con-genre-chart');
+  if(conGenres.length){
+    var cgSlice=conGenres.slice(0,10).reverse();
+    var cgChart=echarts.init(cgEl);
+    var cgCols=['#fb923c','#e94560','#60a5fa','#a78bfa','#4ade80','#f472b6','#38bdf8','#fbbf24','#22d3ee','#34d399'];
+    cgChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' sets'}},
+      grid:{left:gl(110),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:cgSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:cgSlice.map(function(d,i){return{value:d.c,itemStyle:{color:cgCols[i%cgCols.length]}}}),barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10}}]});
+    cgChart.on('click',function(p){
+      var g=cgSlice[p.dataIndex];if(!g)return;
+      var matchArtists=filtered.filter(function(e){return(e.genres||[]).indexOf(g.n)>=0}).map(function(e){return e.artist});
+      var unique=[];matchArtists.forEach(function(a){if(unique.indexOf(a)<0)unique.push(a)});
+      if(!unique.length)return;
+      var ex=cgEl.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===g.n)return}
+      var div=document.createElement('div');div.className='chart-detail';div.dataset.val=g.n;
+      var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+g.n+' ('+unique.length+' artists)</b>';
+      unique.forEach(function(a){h+='<div class="cd-item"><span>'+a+'</span></div>'});
+      div.innerHTML=h;cgEl.parentElement.appendChild(div);
+    });
+    ch.push(cgChart);
+  }else{cgEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No genre data</div>'}
 }
 
 function renderTheater(){
