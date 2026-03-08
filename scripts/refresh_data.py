@@ -958,7 +958,6 @@ if theater:
     for t in theater:
         if t["date"]: th_monthly[t["date"][:7]] += 1
     data["c"]["th_m"] = dict(th_monthly)
-    data["c"]["th_y"] = {t["year"]: c for t, c in zip(sorted(th_years.items()), [c for _, c in sorted(th_years.items())])}
     data["c"]["th_y"] = dict(th_years)
 
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
