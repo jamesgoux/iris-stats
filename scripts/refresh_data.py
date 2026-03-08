@@ -403,7 +403,8 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             from zoneinfo import ZoneInfo
             dt_local = dt.astimezone(ZoneInfo("America/Los_Angeles"))
             dwc[dwn[dt_local.weekday()]] += 1
-            hod[y][dt_local.hour] += 1
+            h_key = f"{dt_local.hour}_{e['type']}"
+            hod[y][h_key] += 1
         except: pass
 
     # Recent: keep 200 most recent for filtering
@@ -469,12 +470,23 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     for v in show_ratings.values(): v["wy"] = sorted(v["wy"])
     shows_by_community = sorted(show_ratings.values(), key=lambda x: x["r"], reverse=True)
 
-    # Hour of day aggregate (all time)
-    hod_all = Counter()
+    # Hour of day aggregate (all time) — split by movie/episode
+    hod_movies = Counter()
+    hod_episodes = Counter()
     for yr_data in hod.values():
-        for h, c in yr_data.items():
-            hod_all[h] += c
-    hod_by_year = {y: dict(d) for y, d in hod.items()}
+        for k, c in yr_data.items():
+            h, typ = k.rsplit("_", 1)
+            if typ == "movie": hod_movies[int(h)] += c
+            else: hod_episodes[int(h)] += c
+    hod_all = {str(h): {"m": hod_movies.get(h, 0), "e": hod_episodes.get(h, 0)} for h in range(24)}
+    hod_by_year = {}
+    for y, yr_data in hod.items():
+        ym = Counter(); ye = Counter()
+        for k, c in yr_data.items():
+            h, typ = k.rsplit("_", 1)
+            if typ == "movie": ym[int(h)] += c
+            else: ye[int(h)] += c
+        hod_by_year[y] = {str(h): {"m": ym.get(h, 0), "e": ye.get(h, 0)} for h in range(24)}
 
     # Build director/writer lists with title indices
     def build_crew(crew_raw):

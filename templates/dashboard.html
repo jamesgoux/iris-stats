@@ -423,18 +423,19 @@ function baseCharts(){
 
   // Hour of day
   var hodData=D.c.hod||{};if(cy!=='all'&&D.c.hod_y&&D.c.hod_y[cy])hodData=D.c.hod_y[cy];
-  var hrs=[];for(var h=0;h<24;h++){hrs.push({h:h,v:hodData[String(h)]||0})}
-  var maxHod=Math.max.apply(null,hrs.map(function(d){return d.v}))||1;
+  var hrs=[];for(var h=0;h<24;h++){var d=hodData[String(h)]||{};hrs.push({h:h,m:d.m||0,e:d.e||0})}
+  var maxHod=Math.max.apply(null,hrs.map(function(d){return d.m+d.e}))||1;
   var c5=echarts.init(document.getElementById('hodc'));
-  // Radial clock: 0/24 at top, 12 at bottom, bars extend outward
   var hodLabels=hrs.map(function(d){var h=d.h;return h===0?'12am':h===12?'12pm':h<12?h+'am':(h-12)+'pm'});
-  c5.setOption({tooltip:{trigger:'item',...tt,formatter:function(p){return'<b>'+hodLabels[p.dataIndex]+'</b><br/>'+p.value+' watches'}},
+  c5.setOption({tooltip:{trigger:'item',...tt},
+    legend:{data:['Episodes','Movies'],top:0,textStyle:{color:'#999',fontSize:9}},
     angleAxis:{type:'category',data:hodLabels,startAngle:97.5,axisLabel:{color:'#999',fontSize:9,interval:1},axisLine:{lineStyle:{color:'#333'}},axisTick:{show:false}},
     radiusAxis:{show:false,max:maxHod*1.1},
-    polar:{center:['50%','50%'],radius:['15%','85%']},
-    series:[{type:'bar',coordinateSystem:'polar',data:hrs.map(function(d){
-      var h=d.h;var c=h>=6&&h<12?'#fb923c':h>=12&&h<18?'#e94560':h>=18&&h<22?'#a78bfa':'#1e3a5f';
-      return{value:d.v,itemStyle:{color:c}}}),barMaxWidth:20}]});
+    polar:{center:['50%','55%'],radius:['15%','80%']},
+    series:[
+      {name:'Episodes',type:'bar',coordinateSystem:'polar',stack:'hod',data:hrs.map(function(d){return d.e}),itemStyle:{color:'#60a5fa'},barMaxWidth:20},
+      {name:'Movies',type:'bar',coordinateSystem:'polar',stack:'hod',data:hrs.map(function(d){return d.m}),itemStyle:{color:'#e94560'},barMaxWidth:20}
+    ]});
 
   // Yearly
   var yr=D.c.y.filter(function(d){return parseInt(d.year)>=2012}).map(function(d){return{year:d.year,episodes:d.year==='2016'?0:d.episodes,movies:d.year==='2016'?0:d.movies}});
