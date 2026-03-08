@@ -29,6 +29,12 @@ jobs:
           GOODREADS_USER_ID: ${{ secrets.GOODREADS_USER_ID }}
         run: python scripts/refresh_goodreads.py
 
+      - name: Refresh Last.fm
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_USER: ${{ secrets.LASTFM_USER }}
+        run: python scripts/refresh_lastfm.py
+
       - name: Refresh Concerts
         env:
           SETLIST_FM_API_KEY: ${{ secrets.SETLIST_FM_API_KEY }}

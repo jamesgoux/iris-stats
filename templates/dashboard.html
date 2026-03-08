@@ -35,7 +35,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .s-a{border-left-color:#e94560}.s-s{border-left-color:#a78bfa}.s-m{border-left-color:#e94560}
 .s-g{border-left-color:#fb923c}.s-n{border-left-color:#60a5fa}.s-u{border-left-color:#a78bfa}
 .s-t{border-left-color:#4ade80}.s-e{border-left-color:#4ade80}.s-c{border-left-color:#fb923c}.s-con{border-left-color:#fb923c}.s-th{border-left-color:#d946ef}
-.s-r{border-left-color:#60a5fa}.s-gr{border-left-color:#22d3ee}
+.s-r{border-left-color:#60a5fa}.s-gr{border-left-color:#22d3ee}.s-lfm{border-left-color:#1db954}
 .stb{max-height:300px;overflow-y:auto}.stb::-webkit-scrollbar{width:5px}.stb::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:7px 8px;color:var(--t2);font-weight:500;border-bottom:1px solid rgba(255,255,255,.1);font-size:10px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;background:var(--sf);z-index:1}
@@ -85,9 +85,9 @@ body{overflow-x:hidden}
 <div class="fbar">
 <h1><svg class="iris-logo" viewBox="0 0 512 512" width="28" height="28" style="vertical-align:middle;margin-right:6px"><defs><radialGradient id="ig" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e94560"/><stop offset="45%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#0f3460"/></radialGradient></defs><path d="M256 96C128 96 32 256 32 256s96 160 224 160 224-160 224-160S384 96 256 96z" fill="#1a1a2e" stroke="#a78bfa" stroke-width="12"/><circle cx="256" cy="256" r="100" fill="url(#ig)"/><circle cx="256" cy="256" r="40" fill="#0f0f0f"/><circle cx="230" cy="230" r="18" fill="rgba(255,255,255,0.4)"/></svg><span style="color:var(--ac);font-weight:800">iris</span> <span style="color:var(--t2);font-weight:400">// jamesgoux</span></h1>
 <div class="fctrls">
-<div class="fbtn"><label>Type</label><select id="gs"><option value="all">🌐 All</option><option value="movie">🎞️ Movies</option><option value="show">📺 Shows</option><option value="book">📚 Books</option><option value="concert">🎸 Concerts</option><option value="theater">🎭 Theater</option></select></div>
+<div class="fbtn"><label>Type</label><select id="gs"><option value="all">🌐 All</option><option value="movie">🎞️ Movies</option><option value="show">📺 Shows</option><option value="book">📚 Books</option><option value="music">🎧 Music</option><option value="concert">🎸 Concerts</option><option value="theater">🎭 Theater</option></select></div>
 <div class="fbtn"><label>Year</label><select id="ys"><option value="all">All Time</option></select></div>
-<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-tl">📈 Timeline</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-eps">📺 Episodes</option><option value="sec-time">🕐 Day & Time</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option><option value="sec-gr">📚 Books</option><option value="sec-con">🎸 Concerts</option><option value="sec-th">🎭 Theater</option></select></div>
+<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-tl">📈 Timeline</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-eps">📺 Episodes</option><option value="sec-time">🕐 Day & Time</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option><option value="sec-gr">📚 Books</option><option value="sec-lfm">🎧 Music</option><option value="sec-con">🎸 Concerts</option><option value="sec-th">🎭 Theater</option></select></div>
 <button class="rbtn" onclick="location.reload()">&#x21bb;</button>
 </div>
 </div>
@@ -188,6 +188,14 @@ body{overflow-x:hidden}
 <div class="cd s-gr"><h3><span class="i">🏆</span>Highest Rated</h3><div id="gr-high"></div></div>
 <div class="cd s-gr"><h3><span class="i">👎</span>Lowest Rated</h3><div id="gr-low"></div></div>
 </div>
+<!-- MUSIC (Last.fm) -->
+<div class="g2 med-s" data-med="all music" id="lfm-wrap" style="display:none">
+<div id="sec-lfm" class="cd s-lfm"><h3><span class="i">🎧</span>Listening Activity</h3><div id="lfm-weekly" style="height:280px"></div></div>
+<div class="cd s-lfm"><h3><span class="i">🎤</span>Top Artists <span class="vtog" style="float:right"><button class="vb vb-on lfm-per" data-v="overall">All Time</button><button class="vb lfm-per" data-v="12month">Year</button><button class="vb lfm-per" data-v="1month">Month</button></span></h3><div id="lfm-artists" style="height:280px"></div></div>
+<div class="cd s-lfm"><h3><span class="i">🎵</span>Top Tracks</h3><div id="lfm-tracks" style="height:280px"></div></div>
+<div class="cd s-lfm"><h3><span class="i">💿</span>Top Albums</h3><div id="lfm-albums" style="height:280px"></div></div>
+<div class="cd s-lfm"><h3><span class="i">🏷️</span>Genres</h3><div id="lfm-genres" style="height:280px"></div></div>
+</div>
 <!-- CONCERTS (bottom) -->
 <div class="g2 med-s" data-med="all concert" id="con-wrap" style="display:none">
 <div id="sec-con" class="cd s-con"><h3><span class="i">🎸</span>Concerts <span class="vtog" style="float:right"><button class="vb vb-on con-tog" data-v="shows">By Shows</button><button class="vb con-tog" data-v="sets">By Sets</button><button class="vb con-tog" data-v="songs">By Songs</button></span></h3><div id="conc" style="height:280px"></div></div>
@@ -267,8 +275,12 @@ function stats(){
   if(cy==='all'&&ct==='all'){var s=D.c.s;var h2='<div class="sc"><div class="v" style="color:var(--gr)">'+s.total_watches.toLocaleString()+'</div><div class="l">👁️ Watches</div></div><div class="sc"><div class="v" style="color:var(--or)">'+s.total_runtime_days+'</div><div class="l">⏱️ Days</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.unique_movies+'</div><div class="l">🎞️ Movies</div></div><div class="sc"><div class="v" style="color:var(--pu)">'+s.unique_shows+'</div><div class="l">📺 Shows</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+s.episode_watches.toLocaleString()+'</div><div class="l">🔢 Episodes</div></div>';
     if(D.con&&D.con.total)h2+='<div class="sc"><div class="v" style="color:#fb923c">'+D.con.total+'</div><div class="l">🎸 Concerts</div></div><div class="sc"><div class="v" style="color:#fb923c">'+(D.con.sets||0)+'</div><div class="l">🎤 Sets</div></div>';
     if(D.gr&&D.gr.total)h2+='<div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total+'</div><div class="l">📚 Books</div></div><div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total_pages.toLocaleString()+'</div><div class="l">📖 Pages</div></div>';
+    if(D.lfm&&D.lfm.total)h2+='<div class="sc"><div class="v" style="color:#1db954">'+D.lfm.total.toLocaleString()+'</div><div class="l">🎧 Scrobbles</div></div>';
     if(D.th&&D.th.total)h2+='<div class="sc"><div class="v" style="color:#d946ef">'+D.th.total+'</div><div class="l">🎭 Plays</div></div>';
     el.innerHTML=h2}
+  else if(ct==='music'){
+    var lfm=D.lfm||{};var topA=(lfm.top_artists||[{}])[0].artists||[];
+    el.innerHTML='<div class="sc"><div class="v" style="color:#1db954">'+((lfm.total||0)).toLocaleString()+'</div><div class="l">🎧 Scrobbles</div></div><div class="sc"><div class="v" style="color:#1db954">'+topA.length+'</div><div class="l">🎤 Artists</div></div>'}
   else if(ct==='book'){
     var gr=D.gr||{};var allB=gr.all||[];var fb=cy==='all'?allB:allB.filter(function(b){return b.yr===cy});
     var tp2=fb.reduce(function(s,b){return s+b.p},0);var rated=fb.filter(function(b){return b.r>0});
@@ -973,6 +985,91 @@ function renderGoodreads(){
   bookList('gr-low',gr.lowest,'r');
 }
 
+function renderLastfm(){
+  var lfm=D.lfm;var wrap=document.getElementById('lfm-wrap');
+  if(!lfm||!lfm.total||ct!=='all'&&ct!=='music'){if(wrap)wrap.style.display='none';return}
+  wrap.style.display='';
+  window._lfmPer=window._lfmPer||'overall';
+  var per=window._lfmPer;
+
+  // Weekly listening activity
+  var weekly=lfm.weekly||[];
+  var wEl=document.getElementById('lfm-weekly');
+  if(weekly.length){
+    var wChart=echarts.init(wEl);
+    wChart.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+tp(p).value+' scrobbles'}},
+      grid:{left:50,right:20,top:30,bottom:30},
+      title:{text:lfm.total.toLocaleString()+' scrobbles',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+      xAxis:{type:'category',data:weekly.map(function(w){return w.week}),axisLabel:{color:'#666',interval:Math.floor(weekly.length/6),rotate:45,fontSize:9},axisLine:{lineStyle:{color:'#333'}}},
+      yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      series:[{type:'bar',data:weekly.map(function(w){return w.c}),itemStyle:{color:LG('#0f3460','#1db954')},barMaxWidth:10}]});
+    ch.push(wChart);
+  }
+
+  // Top Artists — period toggle
+  var perData=lfm.top_artists||[];
+  var curArtists=(perData.find(function(p){return p.period===per})||{}).artists||[];
+  var aEl=document.getElementById('lfm-artists');
+  if(curArtists.length){
+    var aSlice=curArtists.slice(0,12).reverse();
+    var aChart=echarts.init(aEl);
+    aChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' plays'}},
+      grid:{left:gl(120),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:aSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:aSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#1db954')},barMaxWidth:18,label:{show:true,position:'right',color:'#1db954',fontSize:10}}]});
+    ch.push(aChart);
+  }
+  document.querySelectorAll('.lfm-per').forEach(function(btn){btn.onclick=function(){
+    document.querySelectorAll('.lfm-per').forEach(function(b){b.classList.remove('vb-on')});btn.classList.add('vb-on');
+    window._lfmPer=btn.dataset.v;renderLastfm()}});
+
+  // Top Tracks
+  var trData=lfm.top_tracks||[];
+  var curTracks=(trData.find(function(p){return p.period===per})||{}).tracks||[];
+  var tEl=document.getElementById('lfm-tracks');
+  if(curTracks.length){
+    var tSlice=curTracks.slice(0,10).reverse();
+    var tChart=echarts.init(tEl);
+    tChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var t=tSlice.find(function(x){return tp(p).name.indexOf(x.n.substring(0,15))>=0});return t?'<b>'+t.n+'</b><br/>'+t.a+'<br/>'+t.c+' plays':''}},
+      grid:{left:gl(130),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:tSlice.map(function(d){return d.n.length>22?d.n.substring(0,20)+'…':d.n}),axisLabel:{color:'#ccc',fontSize:9,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:tSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#a78bfa')},barMaxWidth:18,label:{show:true,position:'right',color:'#a78bfa',fontSize:9}}]});
+    ch.push(tChart);
+  }
+
+  // Top Albums
+  var alData=lfm.top_albums||[];
+  var curAlbums=(alData.find(function(p){return p.period===per})||{}).albums||[];
+  var alEl=document.getElementById('lfm-albums');
+  if(curAlbums.length){
+    var alSlice=curAlbums.slice(0,10).reverse();
+    var alChart=echarts.init(alEl);
+    alChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var a=alSlice.find(function(x){return tp(p).name.indexOf(x.n.substring(0,15))>=0});return a?'<b>'+a.n+'</b><br/>'+a.a+'<br/>'+a.c+' plays':''}},
+      grid:{left:gl(130),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:alSlice.map(function(d){return d.n.length>22?d.n.substring(0,20)+'…':d.n}),axisLabel:{color:'#ccc',fontSize:9,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:alSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#fb923c')},barMaxWidth:18,label:{show:true,position:'right',color:'#fb923c',fontSize:9}}]});
+    ch.push(alChart);
+  }
+
+  // Genres
+  var genres=lfm.genres||[];
+  var gEl=document.getElementById('lfm-genres');
+  if(genres.length){
+    var gSlice=genres.slice(0,10).reverse();
+    var gChart=echarts.init(gEl);
+    var gCols=['#1db954','#60a5fa','#a78bfa','#e94560','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24','#22d3ee'];
+    gChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt},
+      grid:{left:gl(110),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:gSlice.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:gSlice.map(function(d,i){return{value:d.c,itemStyle:{color:gCols[i%gCols.length]}}}),barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10}}]});
+    ch.push(gChart);
+  }
+}
+
 function renderConcerts(){
   var con=D.con;var wrap=document.getElementById('con-wrap');var wrap2=document.getElementById('con-wrap2');
   if(!con||!con.total||ct!=='all'&&ct!=='concert'){wrap.style.display='none';if(wrap2)wrap2.style.display='none';return}
@@ -1162,7 +1259,7 @@ function renderStatus(){
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
   // Show/hide sections based on medium filter
   document.querySelectorAll('.med-s').forEach(function(el){var meds=el.dataset.med||'';el.style.display=meds.indexOf(ct)>=0?'':'none'});
-  stats();ptbl('atb',D.a);ptbl('xtb',D.x);ptbl('dtb',D.d||[]);ptbl('wtb',D.w||[]);movieCharts();renderPosters();baseCharts();renderLetterboxd();renderGoodreads();renderConcerts();renderTheater();renderStatus()}
+  stats();ptbl('atb',D.a);ptbl('xtb',D.x);ptbl('dtb',D.d||[]);ptbl('wtb',D.w||[]);movieCharts();renderPosters();baseCharts();renderLetterboxd();renderGoodreads();renderLastfm();renderConcerts();renderTheater();renderStatus()}
 var _rzt,_lastW=window.innerWidth;
 function _rz(){clearTimeout(_rzt);_rzt=setTimeout(function(){mob=window.innerWidth<768;ch.forEach(function(c){try{c.resize()}catch(e){}})},200)}
 window.addEventListener('resize',function(){

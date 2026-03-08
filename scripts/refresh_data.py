@@ -1239,6 +1239,12 @@ if gr_books:
     data["c"]["mt"] = mt
     print(f"  Goodreads: {len(gr_books)} books, {len(gr_rated)} rated")
 
+# Last.fm data
+if os.path.exists("data/lastfm.json"):
+    with open("data/lastfm.json") as f:
+        data["lfm"] = json.load(f)
+    print(f"  Last.fm: {data['lfm']['total']} scrobbles")
+
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:
     template = f.read()
