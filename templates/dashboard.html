@@ -1136,8 +1136,9 @@ function renderLastfm(){
     ch.push(alChart);
   }
 
-  // Genres
-  var genres=lfm.genres||[];
+  // Genres — respects period toggle
+  var genresP=lfm.genres_p||{};
+  var genres=genresP[per]||lfm.genres||[];
   var gEl=document.getElementById('lfm-genres');
   if(genres.length){
     var gSlice=genres.slice(0,10).reverse();

@@ -58,23 +58,29 @@ for period in ["overall", "12month", "3month", "1month"]:
     top_albums.append({"period": period, "albums": albums})
     time.sleep(0.3)
 
-# Top tags/genres (from top artists' tags)
+# Top tags/genres (from top artists' tags) — per period
+SKIP_TAGS = {"seen live", "favorites", "favourite", "american", "british", "all", ""}
 print("  Fetching artist tags for genres...")
-genre_counter = {}
-for a in top_artists[0]["artists"][:15]:  # top 15 all-time artists
-    try:
-        data = api("artist.gettoptags", artist=a["n"])
-        tags = data.get("toptags", {}).get("tag", [])
-        for t in tags[:5]:
+genres_by_period = {}
+fetched_artist_tags = {}  # cache
+for pdata in top_artists:
+    period = pdata["period"]
+    genre_counter = {}
+    for a in pdata["artists"][:15]:
+        if a["n"] not in fetched_artist_tags:
+            try:
+                data = api("artist.gettoptags", artist=a["n"])
+                fetched_artist_tags[a["n"]] = data.get("toptags", {}).get("tag", [])
+                time.sleep(0.3)
+            except:
+                fetched_artist_tags[a["n"]] = []
+        for t in fetched_artist_tags[a["n"]][:5]:
             name = t["name"].lower()
-            if name not in ("seen live", "favorites", "favourite", "american", "british", "all", ""):
+            if name not in SKIP_TAGS:
                 genre_counter[name] = genre_counter.get(name, 0) + int(t.get("count", 1))
-        time.sleep(0.3)
-    except:
-        pass
-
-top_genres = sorted(genre_counter.items(), key=lambda x: x[1], reverse=True)[:15]
-genres = [{"n": g, "c": c} for g, c in top_genres]
+    top_genres = sorted(genre_counter.items(), key=lambda x: x[1], reverse=True)[:15]
+    genres_by_period[period] = [{"n": g, "c": c} for g, c in top_genres]
+genres = genres_by_period.get("overall", [])
 
 # Weekly chart list — aggregate into yearly and monthly buckets
 from datetime import datetime
@@ -174,6 +180,7 @@ output = {
     "top_tracks": top_tracks,
     "top_albums": top_albums,
     "genres": genres,
+    "genres_p": genres_by_period,
     "yearly": lfm_yearly,
     "monthly": lfm_monthly,
     "weekly": weekly,
