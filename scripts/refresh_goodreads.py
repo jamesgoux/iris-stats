@@ -56,6 +56,8 @@ while True:
         user_date_added = item.findtext("user_date_created", "").strip()  # when originally shelved
         book_image = item.findtext("book_large_image_url", "") or item.findtext("book_image_url", "")
         book_published = item.findtext("book_published", "").strip()
+        user_shelves = item.findtext("user_shelves", "").strip()
+        shelves = [s.strip() for s in user_shelves.split(",") if s.strip()] if user_shelves else []
 
         # Parse dates
         def parse_date(s):
@@ -84,6 +86,7 @@ while True:
             "date_added": date_added,
             "year_read": date_read[:4] if date_read else "",
             "published": book_published,
+            "shelves": shelves,
             "image": (book_image or "").strip(),
         }
 
