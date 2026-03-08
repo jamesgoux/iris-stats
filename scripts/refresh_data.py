@@ -913,12 +913,15 @@ if concerts:
         if e["venue"]:
             cv[f"{e['venue']}, {e['city']}"] += 1
 
-    # Year counts: per unique event
+    # Year counts: per unique event + per set (each artist performance)
     cy2 = Ctr2()
     cy2_songs = defaultdict(int)
+    cy2_sets = Ctr2()
     for e in unique_events.values():
         cy2[e["year"]] += 1
         cy2_songs[e["year"]] += e["songs"]
+        cy2_sets[e["year"]] += len(e["artists"])
+    total_sets = sum(cy2_sets.values())
     # Album breakdown per artist
     ca_albums = defaultdict(Counter)
     for c in concerts:
@@ -931,11 +934,11 @@ if concerts:
         albums = [{"n":a,"c":ct} for a,ct in ca_albums[artist].most_common()]
         artist_detail[artist] = {"songs":[{"n":s,"c":ct} for s,ct in ca_song_list[artist].most_common(20)],"top":[{"n":s,"c":ct} for s,ct in top_songs[:15]],"albums":albums}
     data["con"] = {
-        "total": real_concert_count, "songs": total_songs,
+        "total": real_concert_count, "songs": total_songs, "sets": total_sets,
         "artists": [{"n": a, "c": c, "s": ca_songs[a]} for a, c in ca.most_common(25)],
         "adetail": artist_detail,
         "venues": [{"n": v, "c": c} for v, c in cv.most_common(25)],
-        "years": [{"yr": y, "c": c, "s": cy2_songs.get(y,0)} for y, c in sorted(cy2.items())],
+        "years": [{"yr": y, "c": c, "s": cy2_songs.get(y,0), "st": cy2_sets.get(y,0)} for y, c in sorted(cy2.items())],
         "recent": [{"artist": c["artist"], "venue": c["venue"], "city": c["city"],
                     "date": c["date"], "yr": c["year"], "tour": c["tour"],
                     "songs": c["song_count"]} for c in concerts[:20]],

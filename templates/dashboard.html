@@ -177,7 +177,7 @@ body{overflow-x:hidden}
 </div>
 <!-- CONCERTS (bottom) -->
 <div class="g2" id="con-wrap" style="display:none">
-<div id="sec-con" class="cd s-g"><h3><span class="i">🎸</span>Concerts <span class="vtog" style="float:right"><button class="vb vb-on con-tog" data-v="shows">By Shows</button><button class="vb con-tog" data-v="songs">By Songs</button></span></h3><div id="conc" style="height:280px"></div></div>
+<div id="sec-con" class="cd s-g"><h3><span class="i">🎸</span>Concerts <span class="vtog" style="float:right"><button class="vb vb-on con-tog" data-v="shows">By Shows</button><button class="vb con-tog" data-v="sets">By Sets</button><button class="vb con-tog" data-v="songs">By Songs</button></span></h3><div id="conc" style="height:280px"></div></div>
 <div class="cd s-g"><h3><span class="i">🎤</span>Most Seen Artists</h3><div class="stb" id="con-artists" style="font-size:12px"></div></div>
 </div>
 <!-- THEATER -->
@@ -718,11 +718,14 @@ function renderConcerts(){
   var con=D.con;var wrap=document.getElementById('con-wrap');var wrap2=document.getElementById('con-wrap2');
   if(!con||!con.total){wrap.style.display='none';if(wrap2)wrap2.style.display='none';return}
   wrap.style.display='';if(wrap2)wrap2.style.display='';
-  window._conMode=window._conMode||'shows';var isSongs=window._conMode==='songs';
+  window._conMode=window._conMode||'shows';var mode=window._conMode;
   var yrs=(con.years||[]);if(cy!=='all')yrs=yrs.filter(function(y){return y.yr===cy});
   var cChart=echarts.init(document.getElementById('conc'));
+  var mLabel=mode==='songs'?' songs':mode==='sets'?' sets':' concerts';
+  var mColor=mode==='songs'?'#a78bfa':mode==='sets'?'#4ade80':'#fb923c';
+  var mTotal=con.total+' concerts, '+(con.sets||0)+' sets, '+con.songs+' songs';
   if(yrs.length===0){document.getElementById('conc').innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No concerts'+(cy!=='all'?' in '+cy:'')+'</div>'}
-  else{cChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+tp(p).value+(isSongs?' songs':' concerts')}},grid:{left:50,right:20,top:30,bottom:24},title:{text:con.total+' concerts, '+con.songs+' songs heard',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},xAxis:{type:'category',data:yrs.map(function(y){return y.yr}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{type:'bar',data:yrs.map(function(y){return{value:isSongs?(y.s||0):y.c,itemStyle:{color:LG('#0f3460',isSongs?'#a78bfa':'#fb923c')}}}),barMaxWidth:30,label:{show:true,position:'top',color:'#999',fontSize:10}}]});ch.push(cChart)}
+  else{cChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+tp(p).value+mLabel}},grid:{left:50,right:20,top:30,bottom:24},title:{text:mTotal,left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},xAxis:{type:'category',data:yrs.map(function(y){return y.yr}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{type:'bar',data:yrs.map(function(y){return{value:mode==='songs'?(y.s||0):mode==='sets'?(y.st||0):y.c,itemStyle:{color:LG('#0f3460',mColor)}}}),barMaxWidth:30,label:{show:true,position:'top',color:'#999',fontSize:10}}]});ch.push(cChart)}
   document.querySelectorAll('.con-tog').forEach(function(btn){btn.onclick=function(){document.querySelectorAll('.con-tog').forEach(function(b){b.classList.remove('vb-on')});btn.classList.add('vb-on');window._conMode=btn.dataset.v;renderConcerts()}});
   var aEl=document.getElementById('con-artists');var artists=con.artists||[];var ad=con.adetail||{};
   if(artists.length){var h='<table><thead><tr><th>#</th><th>Artist</th><th>Shows</th><th>Songs</th></tr></thead><tbody>';
