@@ -28,7 +28,10 @@ print("=== Last.fm Refresh ===")
 # User info
 info = api("user.getinfo")["user"]
 total_scrobbles = int(info.get("playcount", 0))
-print(f"  User: {info['name']}, Scrobbles: {total_scrobbles}")
+total_artists = int(info.get("artist_count", 0))
+total_albums = int(info.get("album_count", 0))
+total_tracks = int(info.get("track_count", 0))
+print(f"  User: {info['name']}, Scrobbles: {total_scrobbles}, Artists: {total_artists}, Albums: {total_albums}")
 
 # Top artists (all time + by year periods)
 top_artists = []
@@ -113,6 +116,9 @@ except Exception as e:
 
 output = {
     "total": total_scrobbles,
+    "artists": total_artists,
+    "albums": total_albums,
+    "tracks": total_tracks,
     "top_artists": top_artists,
     "top_tracks": top_tracks,
     "top_albums": top_albums,
