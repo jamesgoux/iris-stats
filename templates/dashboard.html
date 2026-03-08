@@ -191,7 +191,7 @@ body{overflow-x:hidden}
 <!-- MUSIC (Last.fm) -->
 <div class="g2 med-s" data-med="all music" id="lfm-wrap" style="display:none">
 <div id="sec-lfm" class="cd s-lfm"><h3><span class="i">🎧</span>Listening Activity <span class="vtog" style="float:right"><button class="vb vb-on lfm-met" data-v="s">Scrobbles</button><button class="vb lfm-met" data-v="a">Artists</button><button class="vb lfm-met" data-v="al">Albums</button></span></h3><div id="lfm-weekly" style="height:280px"></div></div>
-<div class="cd s-lfm"><h3><span class="i">🎤</span>Top Artists <span class="vtog" style="float:right"><button class="vb vb-on lfm-per" data-v="overall">All Time</button><button class="vb lfm-per" data-v="12month">Year</button><button class="vb lfm-per" data-v="1month">Month</button></span></h3><div id="lfm-artists" style="height:280px"></div></div>
+<div class="cd s-lfm"><h3><span class="i">🎤</span>Top Artists</h3><div id="lfm-artists" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">🎵</span>Top Tracks</h3><div id="lfm-tracks" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">💿</span>Top Albums</h3><div id="lfm-albums" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">🏷️</span>Genres</h3><div id="lfm-genres" style="height:280px"></div></div>
@@ -280,7 +280,8 @@ function stats(){
     el.innerHTML=h2}
   else if(ct==='music'){
     var lfm=D.lfm||{};
-    el.innerHTML='<div class="sc"><div class="v" style="color:#1db954">'+((lfm.total||0)).toLocaleString()+'</div><div class="l">🎧 Scrobbles</div></div><div class="sc"><div class="v" style="color:#1db954">'+(lfm.artists||0).toLocaleString()+'</div><div class="l">🎤 Artists</div></div><div class="sc"><div class="v" style="color:#1db954">'+(lfm.albums||0).toLocaleString()+'</div><div class="l">💿 Albums</div></div><div class="sc"><div class="v" style="color:#1db954">'+(lfm.tracks||0).toLocaleString()+'</div><div class="l">🎵 Tracks</div></div>'}
+    var yrD=cy!=='all'&&lfm.yearly?(lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:lfm.total,a:lfm.artists,al:lfm.albums};
+    el.innerHTML='<div class="sc"><div class="v" style="color:#1db954">'+(yrD.s||0).toLocaleString()+'</div><div class="l">🎧 Scrobbles</div></div><div class="sc"><div class="v" style="color:#1db954">'+(yrD.a||0).toLocaleString()+'</div><div class="l">🎤 Artists</div></div><div class="sc"><div class="v" style="color:#1db954">'+(yrD.al||0).toLocaleString()+'</div><div class="l">💿 Albums</div></div>'}
   else if(ct==='book'){
     var gr=D.gr||{};var allB=gr.all||[];var fb=cy==='all'?allB:allB.filter(function(b){return b.yr===cy});
     var tp2=fb.reduce(function(s,b){return s+b.p},0);var rated=fb.filter(function(b){return b.r>0});
@@ -990,9 +991,6 @@ function renderLastfm(){
   var lfm=D.lfm;var wrap=document.getElementById('lfm-wrap');
   if(!lfm||!lfm.total||ct!=='all'&&ct!=='music'){if(wrap)wrap.style.display='none';return}
   wrap.style.display='';
-  window._lfmPer=window._lfmPer||'overall';
-  var per=window._lfmPer;
-
   // Listening activity — yearly (all time) or monthly/weekly (year filtered)
   window._lfmMet=window._lfmMet||'s';var met=window._lfmMet;
   var metLabels={s:'Scrobbles',a:'Artists',al:'Albums'};
@@ -1000,10 +998,15 @@ function renderLastfm(){
   var wEl=document.getElementById('lfm-weekly');
   var isYr=cy!=='all';
   var lfmYearly=lfm.yearly||[];var lfmMonthly=lfm.monthly||[];var lfmWeekly=lfm.weekly||[];
+  window._lfmRes=window._lfmRes||'monthly';var res=window._lfmRes;
   var buckets,keys,vals;
   if(!isYr){
     // Yearly view
     buckets=lfmYearly;keys=buckets.map(function(d){return d.yr});vals=buckets.map(function(d){return d[met]||0});
+  }else if(res==='weekly'&&met==='s'){
+    // Weekly for selected year (scrobbles only)
+    var wkFiltered=lfmWeekly.filter(function(w){return w.week.startsWith(cy)});
+    keys=wkFiltered.map(function(w){return w.week});vals=wkFiltered.map(function(w){return w.c});
   }else{
     // Monthly for selected year
     var moFiltered=lfmMonthly.filter(function(d){return d.m.startsWith(cy)});
@@ -1022,11 +1025,24 @@ function renderLastfm(){
   }
   document.querySelectorAll('.lfm-met').forEach(function(btn){btn.onclick=function(){
     document.querySelectorAll('.lfm-met').forEach(function(b){b.classList.remove('vb-on')});btn.classList.add('vb-on');
-    window._lfmMet=btn.dataset.v;renderLastfm()}});
+    window._lfmMet=btn.dataset.v;if(btn.dataset.v!=='s')window._lfmRes='monthly';renderLastfm()}});
+  // Add monthly/weekly resolution toggle when year is selected
+  var resWrap=wEl.parentElement.querySelector('.lfm-res-wrap');if(resWrap)resWrap.remove();
+  if(isYr){
+    var rd=document.createElement('div');rd.className='lfm-res-wrap';rd.style.cssText='text-align:center;margin-top:6px';
+    rd.innerHTML='<button class="vb lfm-res '+(res==='monthly'?'vb-on':'')+'" data-v="monthly" style="font-size:9px">Monthly</button> <button class="vb lfm-res '+(res==='weekly'&&met==='s'?'vb-on':'')+'" data-v="weekly" style="font-size:9px">Weekly</button>';
+    wEl.parentElement.appendChild(rd);
+    rd.querySelectorAll('.lfm-res').forEach(function(btn){btn.onclick=function(){
+      window._lfmRes=btn.dataset.v;renderLastfm()}});
+  }
 
-  // Top Artists — period toggle
+  // Map year filter to API period: current year→12month, all→overall, past→overall
+  var curYr=new Date().getFullYear().toString();
+  var per=isYr&&cy===curYr?'12month':'overall';
+
+  // Top Artists — obeys year filter
   var perData=lfm.top_artists||[];
-  var curArtists=(perData.find(function(p){return p.period===per})||{}).artists||[];
+  var curArtists=(perData.find(function(p){return p.period===per})||perData[0]||{}).artists||[];
   var aEl=document.getElementById('lfm-artists');
   if(curArtists.length){
     var aSlice=curArtists.slice(0,12).reverse();
@@ -1038,13 +1054,10 @@ function renderLastfm(){
       series:[{type:'bar',data:aSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#1db954')},barMaxWidth:18,label:{show:true,position:'right',color:'#1db954',fontSize:10}}]});
     ch.push(aChart);
   }
-  document.querySelectorAll('.lfm-per').forEach(function(btn){btn.onclick=function(){
-    document.querySelectorAll('.lfm-per').forEach(function(b){b.classList.remove('vb-on')});btn.classList.add('vb-on');
-    window._lfmPer=btn.dataset.v;renderLastfm()}});
 
-  // Top Tracks
+  // Top Tracks — obeys year filter
   var trData=lfm.top_tracks||[];
-  var curTracks=(trData.find(function(p){return p.period===per})||{}).tracks||[];
+  var curTracks=(trData.find(function(p){return p.period===per})||trData[0]||{}).tracks||[];
   var tEl=document.getElementById('lfm-tracks');
   if(curTracks.length){
     var tSlice=curTracks.slice(0,10).reverse();
@@ -1059,7 +1072,7 @@ function renderLastfm(){
 
   // Top Albums
   var alData=lfm.top_albums||[];
-  var curAlbums=(alData.find(function(p){return p.period===per})||{}).albums||[];
+  var curAlbums=(alData.find(function(p){return p.period===per})||alData[0]||{}).albums||[];
   var alEl=document.getElementById('lfm-albums');
   if(curAlbums.length){
     var alSlice=curAlbums.slice(0,10).reverse();
