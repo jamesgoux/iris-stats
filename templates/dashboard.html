@@ -109,6 +109,10 @@ body{overflow-x:hidden}
 <div class="g2 med-s" data-med="all show">
 <div id="sec-shows" class="cd fw s-s"><h3><span class="i">📺</span>Top Shows <span class="vtog" style="float:right"><button class="vb" id="ss-eps" onclick="window._showSort='eps';document.getElementById('ss-eps').classList.add('vb-on');document.getElementById('ss-dur').classList.remove('vb-on');renderPosters(true)">By Episodes</button><button class="vb vb-on" id="ss-dur" onclick="window._showSort='dur';document.getElementById('ss-dur').classList.add('vb-on');document.getElementById('ss-eps').classList.remove('vb-on');renderPosters(true)">By Duration</button></span></h3><div id="poster-grid" style="display:flex;flex-wrap:wrap;gap:10px;overflow-x:auto;padding:4px 0"></div></div>
 </div>
+<!-- EPISODES WATCHED -->
+<div class="g2 med-s" data-med="all show">
+<div id="sec-eps" class="cd fw s-s"><h3><span class="i">📺</span>Episodes Watched</h3><div id="epcc" style="height:300px"></div></div>
+</div>
 <!-- TTW + CATCH-UP (same row) -->
 <div class="g2 med-s" data-med="all show">
 <div id="sec-ttw" class="cd s-s"><h3><span class="i">⏱️</span>Time to Watch (avg days after air)</h3><div id="ttwc" style="height:400px"></div></div>
@@ -118,10 +122,6 @@ body{overflow-x:hidden}
 <div class="g2 med-s" data-med="all movie">
 <div id="sec-mov" class="cd s-m"><h3 id="mdh"><span class="i">🎞️</span>Movies by Watch Time</h3><div id="mdc" style="height:340px"></div></div>
 <div class="cd s-m" id="mrc-card"><h3 id="mrh"><span class="i">🔁</span>Most Rewatched</h3><div id="mrc" style="height:340px"></div></div>
-</div>
-<!-- EPISODES WATCHED -->
-<div class="g2 med-s" data-med="all show">
-<div id="sec-eps" class="cd fw s-s"><h3><span class="i">📺</span>Episodes Watched</h3><div id="epcc" style="height:300px"></div></div>
 </div>
 <div class="g2 med-s" data-med="all movie show">
 <div id="sec-time" class="cd s-t"><h3><span class="i">📅</span>Day of Week</h3><div id="dwc" style="height:280px"></div></div>
@@ -191,13 +191,10 @@ body{overflow-x:hidden}
 <!-- MUSIC (Last.fm) -->
 <div class="g2 med-s" data-med="all music" id="lfm-wrap" style="display:none">
 <div id="sec-lfm" class="cd s-lfm"><h3><span class="i">🎧</span>Listening Activity <span class="vtog" style="float:right"><button class="vb vb-on lfm-met" data-v="s">Scrobbles</button><button class="vb lfm-met" data-v="a">Artists</button><button class="vb lfm-met" data-v="al">Albums</button></span></h3><div id="lfm-weekly" style="height:280px"></div></div>
-<div class="cd s-lfm"><h3><span class="i">🎤</span>Top Artists</h3><div id="lfm-artists" style="height:280px"></div></div>
+<div class="cd s-lfm"><h3><span class="i">🎤</span>Top Artists <span class="vtog" id="lfm-range-wrap" style="float:right"></span></h3><div id="lfm-artists" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">💿</span>Top Albums</h3><div id="lfm-albums" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">🎵</span>Top Tracks</h3><div id="lfm-tracks" style="height:280px"></div></div>
 <div class="cd s-lfm"><h3><span class="i">🏷️</span>Genres</h3><div id="lfm-genres" style="height:280px"></div></div>
-<div class="cd s-lfm" id="lfm-90-artists-card" style="display:none"><h3><span class="i">🔥</span>Last 90 Days — Artists</h3><div id="lfm-90-artists" style="height:280px"></div></div>
-<div class="cd s-lfm" id="lfm-90-albums-card" style="display:none"><h3><span class="i">🔥</span>Last 90 Days — Albums</h3><div id="lfm-90-albums" style="height:280px"></div></div>
-<div class="cd s-lfm" id="lfm-90-tracks-card" style="display:none"><h3><span class="i">🔥</span>Last 90 Days — Tracks</h3><div id="lfm-90-tracks" style="height:280px"></div></div>
 </div>
 <!-- CONCERTS (bottom) -->
 <div class="g2 med-s" data-med="all concert" id="con-wrap" style="display:none">
@@ -275,36 +272,38 @@ function tmatch(type){return ct==='all'||(ct==='movie'&&type==='movie')||(ct==='
 
 function stats(){
   var el=document.getElementById('st');
-  if(cy==='all'&&ct==='all'){var s=D.c.s;var h2='<div class="sc"><div class="v" style="color:var(--gr)">'+s.total_watches.toLocaleString()+'</div><div class="l">👁️ Watches</div></div><div class="sc"><div class="v" style="color:var(--or)">'+s.total_runtime_days+'</div><div class="l">⏱️ Days</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+s.unique_movies+'</div><div class="l">🎞️ Movies</div></div><div class="sc"><div class="v" style="color:var(--pu)">'+s.unique_shows+'</div><div class="l">📺 Shows</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+s.episode_watches.toLocaleString()+'</div><div class="l">🔢 Episodes</div></div>';
-    if(D.con&&D.con.total){var conArtists=(D.con.recent||[]).map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;h2+='<div class="sc"><div class="v" style="color:#fb923c">'+D.con.total+'</div><div class="l">🎸 Concerts</div></div><div class="sc"><div class="v" style="color:#fb923c">'+(D.con.sets||0)+'</div><div class="l">🎤 Sets</div></div><div class="sc"><div class="v" style="color:#fb923c">'+conArtists+'</div><div class="l">🎙️ Artists</div></div>'}
-    if(D.gr&&D.gr.total)h2+='<div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total+'</div><div class="l">📚 Books</div></div><div class="sc"><div class="v" style="color:#22d3ee">'+D.gr.total_pages.toLocaleString()+'</div><div class="l">📖 Pages</div></div>';
-    if(D.lfm&&D.lfm.total)h2+='<div class="sc"><div class="v" style="color:#1db954">'+D.lfm.total.toLocaleString()+'</div><div class="l">🎧 Scrobbles</div></div><div class="sc"><div class="v" style="color:#1db954">'+(D.lfm.artists||0).toLocaleString()+'</div><div class="l">🎤 Artists</div></div><div class="sc"><div class="v" style="color:#1db954">'+(D.lfm.albums||0).toLocaleString()+'</div><div class="l">💿 Albums</div></div>';
-    if(D.th&&D.th.total)h2+='<div class="sc"><div class="v" style="color:#d946ef">'+D.th.total+'</div><div class="l">🎭 Plays</div></div>';
-    el.innerHTML=h2}
-  else if(ct==='music'){
-    var lfm=D.lfm||{};
-    var yrD=cy!=='all'&&lfm.yearly?(lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:lfm.total,a:lfm.artists,al:lfm.albums};
-    el.innerHTML='<div class="sc"><div class="v" style="color:#1db954">'+(yrD.s||0).toLocaleString()+'</div><div class="l">🎧 Scrobbles</div></div><div class="sc"><div class="v" style="color:#1db954">'+(yrD.a||0).toLocaleString()+'</div><div class="l">🎤 Artists</div></div><div class="sc"><div class="v" style="color:#1db954">'+(yrD.al||0).toLocaleString()+'</div><div class="l">💿 Albums</div></div>'}
-  else if(ct==='book'){
-    var gr=D.gr||{};var allB=gr.all||[];var fb=cy==='all'?allB:allB.filter(function(b){return b.yr===cy});
-    var tp2=fb.reduce(function(s,b){return s+b.p},0);var rated=fb.filter(function(b){return b.r>0});
-    var avg=rated.length?Math.round(rated.reduce(function(s,b){return s+b.r},0)/rated.length*10)/10:0;
-    el.innerHTML='<div class="sc"><div class="v" style="color:#22d3ee">'+fb.length+'</div><div class="l">📚 Books</div></div><div class="sc"><div class="v" style="color:#22d3ee">'+tp2.toLocaleString()+'</div><div class="l">📖 Pages</div></div><div class="sc"><div class="v" style="color:#22d3ee">'+avg+'★</div><div class="l">⭐ Avg</div></div>'}
-  else if(ct==='concert'){
-    var con=D.con||{};var allC=con.recent||[];var fc=cy==='all'?allC:allC.filter(function(e){return e.yr===cy});
-    var events={};fc.forEach(function(e){events[e.date+'|'+e.venue]=true});
-    var songs=fc.reduce(function(s,e){return s+e.songs},0);
-    var uniqA=fc.map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;
-    el.innerHTML='<div class="sc"><div class="v" style="color:#fb923c">'+Object.keys(events).length+'</div><div class="l">🎸 Concerts</div></div><div class="sc"><div class="v" style="color:#fb923c">'+fc.length+'</div><div class="l">🎤 Sets</div></div><div class="sc"><div class="v" style="color:#fb923c">'+uniqA+'</div><div class="l">🎙️ Artists</div></div><div class="sc"><div class="v" style="color:#fb923c">'+songs+'</div><div class="l">🎵 Songs</div></div>'}
-  else if(ct==='theater'){
-    var th=D.th||{};var allT=th.all||[];var ft=cy==='all'?allT:allT.filter(function(e){return e.y===cy});
-    var rated2=ft.filter(function(e){return e.r});var avg2=rated2.length?Math.round(rated2.reduce(function(s,e){return s+e.r},0)/rated2.length*10)/10:0;
-    el.innerHTML='<div class="sc"><div class="v" style="color:#d946ef">'+ft.length+'</div><div class="l">🎭 Plays</div></div><div class="sc"><div class="v" style="color:#d946ef">'+rated2.length+'</div><div class="l">⭐ Rated</div></div><div class="sc"><div class="v" style="color:#d946ef">'+avg2+'★</div><div class="l">📊 Avg</div></div>'}
-  else{var mw=0,ew=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){mw+=m.movies;ew+=m.episodes});
-    var s=D.c.s;
-    if(ct==='movie'){el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+mw.toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'🎞️ Movies</div></div><div class="sc"><div class="v" style="color:var(--or)">'+(s.movie_runtime_days||0)+'</div><div class="l">⏱️ Days</div></div>'}
-    else if(ct==='show'){el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+ew.toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'📺 Episodes</div></div><div class="sc"><div class="v" style="color:var(--or)">'+(s.show_runtime_days||0)+'</div><div class="l">⏱️ Days</div></div>'}
-    else{el.innerHTML='<div class="sc"><div class="v" style="color:var(--gr)">'+(mw+ew).toLocaleString()+'</div><div class="l">'+(cy!=='all'?cy+' ':'')+'Total</div></div><div class="sc"><div class="v" style="color:var(--ac)">'+mw+'</div><div class="l">🎞️ Movies</div></div><div class="sc"><div class="v" style="color:var(--bl)">'+ew.toLocaleString()+'</div><div class="l">📺 Episodes</div></div><div class="sc"><div class="v" style="color:var(--or)">'+s.total_runtime_days+'</div><div class="l">⏱️ Days</div></div>'}}
+  function sc(val,label,color){return'<div class="sc"><div class="v" style="color:'+color+'">'+val+'</div><div class="l">'+label+'</div></div>'}
+  // Single-medium filters
+  if(ct==='music'){
+    var lfm=D.lfm||{};var yrD=cy!=='all'&&lfm.yearly?(lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:lfm.total,a:lfm.artists,al:lfm.albums};
+    el.innerHTML=sc((yrD.s||0).toLocaleString(),'🎧 Scrobbles','#1db954')+sc((yrD.a||0).toLocaleString(),'🎤 Artists','#1db954')+sc((yrD.al||0).toLocaleString(),'💿 Albums','#1db954');return}
+  if(ct==='book'){
+    var gr=D.gr||{};var fb=cy==='all'?(gr.all||[]):(gr.all||[]).filter(function(b){return b.yr===cy});
+    var tp2=fb.reduce(function(s,b){return s+b.p},0);
+    el.innerHTML=sc(fb.length,'📚 Books','#22d3ee')+sc(tp2.toLocaleString(),'📖 Pages','#22d3ee');return}
+  if(ct==='concert'){
+    var allC=(D.con||{}).recent||[];var fc=cy==='all'?allC:allC.filter(function(e){return e.yr===cy});
+    var ev={};fc.forEach(function(e){ev[e.date+'|'+e.venue]=true});
+    var ua=fc.map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;
+    el.innerHTML=sc(Object.keys(ev).length,'🎸 Concerts','#fb923c')+sc(fc.length,'🎤 Sets','#fb923c')+sc(ua,'🎙️ Artists','#fb923c');return}
+  if(ct==='theater'){
+    var allT=(D.th||{}).all||[];var ft=cy==='all'?allT:allT.filter(function(e){return e.y===cy});
+    el.innerHTML=sc(ft.length,'🎭 Plays','#d946ef');return}
+  // Movie/show/all — compute counts
+  var mw=0,ew=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){mw+=m.movies;ew+=m.episodes});
+  var s=D.c.s;var h2='';
+  if(ct==='movie'){h2=sc(mw.toLocaleString(),'🎞️ Movies','var(--ac)')+sc((s.movie_runtime_days||0),'⏱️ Days','var(--or)')}
+  else if(ct==='show'){h2=sc(ew.toLocaleString(),'📺 Episodes','var(--pu)')+sc((s.show_runtime_days||0),'⏱️ Days','var(--or)')}
+  else{
+    // Row 1: Watches, Days, Movies, Shows, Episodes, Books
+    h2=sc(s.total_watches.toLocaleString(),'👁️ Watches','var(--gr)')+sc(s.total_runtime_days,'⏱️ Days','var(--or)')+sc(s.unique_movies,'🎞️ Movies','var(--ac)')+sc(s.unique_shows,'📺 Shows','var(--pu)')+sc(s.episode_watches.toLocaleString(),'🔢 Episodes','var(--pu)');
+    if(D.gr&&D.gr.total){var grB=cy==='all'?D.gr.total:(D.gr.all||[]).filter(function(b){return b.yr===cy}).length;h2+=sc(grB,'📚 Books','#22d3ee')}
+    // Row 2: Scrobbles, Artists, Albums, Concerts, Sets, Plays
+    if(D.lfm&&D.lfm.total){var lfmY=cy!=='all'&&D.lfm.yearly?(D.lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:D.lfm.total,a:D.lfm.artists,al:D.lfm.albums};h2+=sc((lfmY.s||0).toLocaleString(),'🎧 Scrobbles','#1db954')+sc((lfmY.a||0).toLocaleString(),'🎤 Artists','#1db954')}
+    if(D.con&&D.con.total){var conR=D.con.recent||[];var conF=cy==='all'?conR:conR.filter(function(e){return e.yr===cy});var conEv={};conF.forEach(function(e){conEv[e.date+'|'+e.venue]=true});h2+=sc(Object.keys(conEv).length,'🎸 Concerts','#fb923c')+sc(conF.length,'🎤 Sets','#fb923c')}
+    if(D.th&&D.th.total){var thF=cy==='all'?(D.th.all||[]):(D.th.all||[]).filter(function(e){return e.y===cy});h2+=sc(thF.length,'🎭 Plays','#d946ef')}
+  }
+  el.innerHTML=h2;
 }
 
 function ptbl(id,pp){var tb=document.getElementById(id);tb.innerHTML='';
@@ -652,7 +651,7 @@ function renderPosters(animate){
   shows.sort(function(a,b){return window._showSort==='dur'?(b.h-a.h):(b.e-a.e)});
   var top=shows.slice(0,20);
   function slug(n){return n.toLowerCase().replace(/[^a-z0-9]/g,'-')}
-  function findImg(s){var sl=slug(s);for(var k in PS){if(k.indexOf(sl.substring(0,10))>=0||sl.indexOf(k.substring(0,10))>=0)return PS[k]}return null}
+  function findImg(s){var sl=slug(s);for(var k in PS){if(k===sl||sl===k)return PS[k]}for(var k in PS){if(sl.length>5&&k.indexOf(sl)>=0)return PS[k]}return null}
   // FLIP animate if existing children match (toggle sort)
   var existing=grid.querySelectorAll('.poster-item');
   if(animate&&existing.length>0){
@@ -1060,11 +1059,19 @@ function renderLastfm(){
       window._lfmRes=btn.dataset.v;renderLastfm()}});
   }
 
-  // Map year filter to API period: current year→12month, all→overall, past→overall
+  // Period: use range toggle if available (all-time or current year), else map by year
   var curYr=new Date().getFullYear().toString();
-  var per=isYr&&cy===curYr?'12month':'overall';
+  var canToggle=!isYr||cy===curYr;
+  window._lfmRange=window._lfmRange||'overall';
+  var per=canToggle?window._lfmRange:(isYr&&cy===curYr?'12month':'overall');
+  // Show range toggle on Top Artists header
+  var rangeWrap=document.getElementById('lfm-range-wrap');
+  if(canToggle&&rangeWrap){
+    rangeWrap.innerHTML='<button class="vb lfm-rng '+(per==='overall'?'vb-on':'')+'" data-v="overall" style="font-size:9px">All Time</button><button class="vb lfm-rng '+(per==='3month'?'vb-on':'')+'" data-v="3month" style="font-size:9px">Last 90 Days</button>';
+    rangeWrap.querySelectorAll('.lfm-rng').forEach(function(btn){btn.onclick=function(){window._lfmRange=btn.dataset.v;renderLastfm()}});
+  }else if(rangeWrap){rangeWrap.innerHTML=''}
 
-  // Top Artists — obeys year filter
+  // Top Artists
   var perData=lfm.top_artists||[];
   var curArtists=(perData.find(function(p){return p.period===per})||perData[0]||{}).artists||[];
   var aEl=document.getElementById('lfm-artists');
@@ -1124,27 +1131,6 @@ function renderLastfm(){
     ch.push(gChart);
   }
 
-  // Last 90 Days — only show on all-time or current year
-  var show90=!isYr||cy===curYr;
-  function lfmBar(elId,cardId,items,color,label){
-    var card=document.getElementById(cardId);var el=document.getElementById(elId);
-    if(!show90||!items||!items.length){card.style.display='none';return}
-    card.style.display='';
-    var slice=items.slice(0,10).reverse();
-    var c=echarts.init(el);
-    c.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' plays'}},
-      grid:{left:gl(120),right:30,top:8,bottom:8},
-      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
-      yAxis:{type:'category',data:slice.map(function(d){return(d.a?d.n+' — '+d.a:d.n).substring(0,25)}),axisLabel:{color:'#ccc',fontSize:9,interval:0},axisLine:{lineStyle:{color:'#333'}}},
-      series:[{type:'bar',data:slice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460',color)},barMaxWidth:18,label:{show:true,position:'right',color:color,fontSize:9}}]});
-    ch.push(c);
-  }
-  var p90a=(perData.find(function(p){return p.period==='3month'})||{}).artists;
-  var p90al=(alData.find(function(p){return p.period==='3month'})||{}).albums;
-  var p90t=(trData.find(function(p){return p.period==='3month'})||{}).tracks;
-  lfmBar('lfm-90-artists','lfm-90-artists-card',p90a,'#1db954','plays');
-  lfmBar('lfm-90-albums','lfm-90-albums-card',p90al,'#fb923c','plays');
-  lfmBar('lfm-90-tracks','lfm-90-tracks-card',p90t,'#a78bfa','plays');
 }
 
 function renderConcerts(){
