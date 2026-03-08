@@ -275,6 +275,10 @@ function movieCharts(){
 }
 
 function legendIsolate(ec,legs){var hd=false;ec.on('legendselectchanged',function(p){if(hd)return;hd=true;var s=p.selected,n=p.name,c=0;for(var k in s)if(s[k])c++;if(c===0){ec.dispatchAction({type:'legendAllSelect'})}else if(c<legs.length){for(var k in s){if(k===n&&!s[k])ec.dispatchAction({type:'legendSelect',name:k});if(k!==n&&s[k])ec.dispatchAction({type:'legendUnSelect',name:k})}}hd=false})}
+// Helper: get allowed types from chart legend state
+function _legTypes(chart){var map={Episodes:'show',Movies:'movie',Concerts:'concert',Theater:'theater'};var opt=chart.getOption();var sel=(opt.legend&&opt.legend[0]&&opt.legend[0].selected)||{};var any=false,allow={};for(var k in map){if(sel[k]===false)any=true;else allow[map[k]]=true}if(!any){allow={show:true,movie:true,concert:true,theater:true}}return allow}
+// Helper: build grouped detail HTML (shows titles grouped by medium)
+function _detailHtml(header,items){var typeOrder=['show','movie','concert','theater'];var labels={show:'📺 Shows',movie:'🎞️ Movies',concert:'🎸 Concerts',theater:'🎭 Theater'};var grouped={};items.forEach(function(t){if(!grouped[t.type])grouped[t.type]=[];grouped[t.type].push(t)});var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+header+'</b>';var types=typeOrder.filter(function(tp){return grouped[tp]&&grouped[tp].length});if(types.length>1){types.forEach(function(tp){h+='<div style="margin-top:6px;font-size:10px;font-weight:600;color:var(--t2)">'+labels[tp]+' ('+grouped[tp].length+')</div>';grouped[tp].forEach(function(t){var badge=t.type==='movie'?'b-m':t.type==='concert'?'b-c':t.type==='theater'?'b-th':'b-e';var label=t.type==='show'?t.c+' eps':(t.type==='concert'||t.type==='theater'?'':(t.c>1?t.c+'x':''));h+='<div class="cd-item"><span><span class="badge '+badge+'">'+t.type+'</span> '+t.t+'</span><span class="nm '+(t.type==='show'?'nm-b':t.type==='concert'?'nm-o':t.type==='theater'?'nm-p':'nm-a')+'">'+label+'</span></div>'})})}else{items.forEach(function(t){var badge=t.type==='movie'?'b-m':t.type==='concert'?'b-c':t.type==='theater'?'b-th':'b-e';var label=t.type==='show'?t.c+' eps':(t.type==='concert'||t.type==='theater'?'':(t.c>1?t.c+'x':''));h+='<div class="cd-item"><span><span class="badge '+badge+'">'+t.type+'</span> '+t.t+'</span><span class="nm '+(t.type==='show'?'nm-b':t.type==='concert'?'nm-o':t.type==='theater'?'nm-p':'nm-a')+'">'+label+'</span></div>'})}return h}
 function baseCharts(){
   // Toggle monthly vs yearly in same card
   var isYear=cy!=='all';
@@ -300,14 +304,13 @@ function baseCharts(){
   if(ct==='all'&&tlLeg.length>1)legendIsolate(c1,tlLeg);
   c1.on('click',function(p){
     var month=mf[p.dataIndex]?mf[p.dataIndex].month:p.name;
-    var titles=mtData[month]||[];if(!titles.length)return;
+    var raw=mtData[month]||[];if(!raw.length)return;
+    var allow=_legTypes(c1);
+    var titles=raw.filter(function(t){return allow[t.type]});if(!titles.length)return;
     var el=document.getElementById('tlc');
     var ex=el.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===month)return}
     var div=document.createElement('div');div.className='chart-detail';div.dataset.val=month;
-    var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+month+' ('+titles.length+' titles)</b>';
-    titles.forEach(function(t){var badge=t.type==='movie'?'b-m':t.type==='concert'?'b-c':t.type==='theater'?'b-th':'b-e';var label=t.type==='show'?t.c+' eps':(t.type==='concert'||t.type==='theater'?'':(t.c>1?t.c+'x':''));
-      h+='<div class="cd-item"><span><span class="badge '+badge+'">'+t.type+'</span> '+t.t+'</span><span class="nm '+(t.type==='show'?'nm-b':t.type==='concert'?'nm-o':t.type==='theater'?'nm-p':'nm-a')+'">'+label+'</span></div>'});
-    div.innerHTML=h;el.parentElement.appendChild(div)});
+    div.innerHTML=_detailHtml(month+' ('+titles.length+' titles)',titles);el.parentElement.appendChild(div)});
   ch.push(c1);
   }
 
@@ -486,20 +489,20 @@ function baseCharts(){
   if(ct==='all'&&yrLeg.length>1)legendIsolate(c6,yrLeg);
   c6.on('click',function(p){
     var year=yr[p.dataIndex]?yr[p.dataIndex].year:p.name;
+    var allow=_legTypes(c6);
     var allTitles={};
     Object.keys(mtData).filter(function(m){return m.startsWith(year)}).forEach(function(m){
       (mtData[m]||[]).forEach(function(t){
+        if(!allow[t.type])return;
         if(!allTitles[t.t])allTitles[t.t]={type:t.type,count:0};
         allTitles[t.t].count+=t.c})});
-    var titles=Object.entries(allTitles).sort(function(a,b){return b[1].count-a[1].count}).slice(0,25);
-    if(!titles.length)return;
+    var flat=Object.entries(allTitles).map(function(e){return{t:e[0],type:e[1].type,c:e[1].count}});
+    flat.sort(function(a,b){return b.c-a.c});flat=flat.slice(0,30);
+    if(!flat.length)return;
     var el=document.getElementById('yrc');
     var ex=el.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===year)return}
     var div=document.createElement('div');div.className='chart-detail';div.dataset.val=year;
-    var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+year+' ('+titles.length+' top titles)</b>';
-    titles.forEach(function(e){var t=e[0],d=e[1];var badge=d.type==='movie'?'b-m':d.type==='concert'?'b-c':d.type==='theater'?'b-th':'b-e';var label=d.type==='show'?d.count+' eps':(d.type==='concert'||d.type==='theater'?'':(d.count>1?d.count+'x':''));
-      h+='<div class="cd-item"><span><span class="badge '+badge+'">'+d.type+'</span> '+t+'</span><span class="nm '+(d.type==='show'?'nm-b':d.type==='concert'?'nm-o':d.type==='theater'?'nm-p':'nm-a')+'">'+label+'</span></div>'});
-    div.innerHTML=h;el.parentElement.appendChild(div)});
+    div.innerHTML=_detailHtml(year+' ('+flat.length+' top titles)',flat);el.parentElement.appendChild(div)});
   ch.push(c6);
   }
 
