@@ -119,14 +119,13 @@ body{overflow-x:hidden}
 <div id="sec-mov" class="cd s-m"><h3 id="mdh"><span class="i">🎞️</span>Movies by Watch Time</h3><div id="mdc" style="height:340px"></div></div>
 <div class="cd s-m" id="mrc-card"><h3 id="mrh"><span class="i">🔁</span>Most Rewatched</h3><div id="mrc" style="height:340px"></div></div>
 </div>
-<!-- TIME SECTION: Monthly + Day/Time/Yearly -->
+<!-- TIME SECTION: Monthly/Yearly + Day/Time -->
 <div class="g2">
-<div id="sec-tl" class="cd fw s-t"><h3><span class="i">📊</span>Monthly Activity</h3><div id="tlc" style="height:280px"></div></div>
+<div id="sec-tl" class="cd fw s-t"><h3 id="tlh"><span class="i">📈</span>Yearly Watch Count</h3><div id="yrc" style="height:280px"></div><div id="tlc" style="height:280px;display:none"></div></div>
 </div>
-<div class="g3">
+<div class="g2">
 <div id="sec-time" class="cd s-t"><h3><span class="i">📅</span>Day of Week</h3><div id="dwc" style="height:280px"></div></div>
 <div class="cd s-t"><h3><span class="i">🕐</span>Time of Day</h3><div id="hodc" style="height:280px"></div></div>
-<div class="cd s-t"><h3><span class="i">📈</span>Yearly Watch Count</h3><div id="yrc" style="height:280px"></div></div>
 </div>
 <!-- GENRES + NETWORKS + STUDIOS -->
 <div class="g3">
@@ -277,20 +276,28 @@ function movieCharts(){
 
 function legendIsolate(ec,legs){var hd=false;ec.on('legendselectchanged',function(p){if(hd)return;hd=true;var s=p.selected,n=p.name,c=0;for(var k in s)if(s[k])c++;if(c===0){ec.dispatchAction({type:'legendAllSelect'})}else if(c<legs.length){for(var k in s){if(k===n&&!s[k])ec.dispatchAction({type:'legendSelect',name:k});if(k!==n&&s[k])ec.dispatchAction({type:'legendUnSelect',name:k})}}hd=false})}
 function baseCharts(){
-  // Timeline - respects type filter
-  var mf=cy==='all'?D.c.m:D.c.m.filter(function(m){return m.month.startsWith(cy)});
+  // Toggle monthly vs yearly in same card
+  var isYear=cy!=='all';
+  document.getElementById('tlc').style.display=isYear?'':'none';
+  document.getElementById('yrc').style.display=isYear?'none':'';
+  document.getElementById('tlh').innerHTML=isYear?'<span class="i">📊</span>Monthly Activity ('+cy+')':'<span class="i">📈</span>Yearly Watch Count';
+  // Clear any lingering detail panels
+  var tlCard=document.getElementById('sec-tl');
+  var oldDetail=tlCard.querySelector('.chart-detail');if(oldDetail)oldDetail.remove();
+  var mtData=D.c.mt||{};
+  // Monthly activity — only when a year is selected
+  if(isYear){
+  var mf=D.c.m.filter(function(m){return m.month.startsWith(cy)});
   var c1=echarts.init(document.getElementById('tlc'));
   var tlSeries=[];
-  if(ct!=='movie')tlSeries.push({name:'Episodes',type:'bar',stack:'t',data:mf.map(function(d){return d.episodes}),itemStyle:{color:'#60a5fa'},barMaxWidth:cy==='all'?5:30});
-  if(ct!=='show')tlSeries.push({name:'Movies',type:'bar',stack:'t',data:mf.map(function(d){return d.movies}),itemStyle:{color:'#e94560'},barMaxWidth:cy==='all'?5:30});
+  if(ct!=='movie')tlSeries.push({name:'Episodes',type:'bar',stack:'t',data:mf.map(function(d){return d.episodes}),itemStyle:{color:'#60a5fa'},barMaxWidth:30});
+  if(ct!=='show')tlSeries.push({name:'Movies',type:'bar',stack:'t',data:mf.map(function(d){return d.movies}),itemStyle:{color:'#e94560'},barMaxWidth:30});
   var conM=D.c.con_m||{};var thM=D.c.th_m||{};
-  if(Object.keys(conM).length)tlSeries.push({name:'Concerts',type:'bar',stack:'t',data:mf.map(function(d){return conM[d.month]||0}),itemStyle:{color:'#fb923c'},barMaxWidth:cy==='all'?5:30});
-  if(Object.keys(thM).length)tlSeries.push({name:'Theater',type:'bar',stack:'t',data:mf.map(function(d){return thM[d.month]||0}),itemStyle:{color:'#d946ef'},barMaxWidth:cy==='all'?5:30});
+  if(Object.keys(conM).length)tlSeries.push({name:'Concerts',type:'bar',stack:'t',data:mf.map(function(d){return conM[d.month]||0}),itemStyle:{color:'#fb923c'},barMaxWidth:30});
+  if(Object.keys(thM).length)tlSeries.push({name:'Theater',type:'bar',stack:'t',data:mf.map(function(d){return thM[d.month]||0}),itemStyle:{color:'#d946ef'},barMaxWidth:30});
   var tlLeg=['Episodes','Movies'];if(Object.keys(conM).length)tlLeg.push('Concerts');if(Object.keys(thM).length)tlLeg.push('Theater');
-  c1.setOption({tooltip:{trigger:'axis',...tt},legend:{data:ct==='all'?tlLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:mf.map(function(d){return d.month}),axisLabel:{color:'#666',interval:cy==='all'?11:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:tlSeries});
+  c1.setOption({tooltip:{trigger:'axis',...tt},legend:{data:ct==='all'?tlLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:30},xAxis:{type:'category',data:mf.map(function(d){return d.month}),axisLabel:{color:'#666',interval:0,rotate:45,fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:tlSeries});
   if(ct==='all'&&tlLeg.length>1)legendIsolate(c1,tlLeg);
-  // Click monthly to see titles (bundled)
-  var mtData=D.c.mt||{};
   c1.on('click',function(p){
     var month=mf[p.dataIndex]?mf[p.dataIndex].month:p.name;
     var titles=mtData[month]||[];if(!titles.length)return;
@@ -301,6 +308,8 @@ function baseCharts(){
     titles.forEach(function(t){var badge=t.type==='movie'?'b-m':'b-e';var label=t.type==='show'?t.c+' eps':(t.c>1?t.c+'x':'');
       h+='<div class="cd-item"><span><span class="badge '+badge+'">'+t.type+'</span> '+t.t+'</span><span class="nm '+(t.type==='show'?'nm-b':'nm-a')+'">'+label+'</span></div>'});
     div.innerHTML=h;el.parentElement.appendChild(div)});
+  ch.push(c1);
+  }
 
   // Genres - respects type AND year filter
   var gd;
@@ -462,7 +471,8 @@ function baseCharts(){
       {name:'Movies',type:'bar',coordinateSystem:'polar',stack:'hod',data:hrs.map(function(d){return d.m}),itemStyle:{color:'#e94560'},barMaxWidth:20}
     ]});
 
-  // Yearly
+  // Yearly — only when All Time (no year filter)
+  if(!isYear){
   var yr=D.c.y.filter(function(d){return parseInt(d.year)>=2012}).map(function(d){return{year:d.year,episodes:d.year==='2016'?0:d.episodes,movies:d.year==='2016'?0:d.movies}});
   var c6=echarts.init(document.getElementById('yrc'));
   var yrSeries=[];
@@ -474,7 +484,6 @@ function baseCharts(){
   var yrLeg=['Episodes','Movies'];if(Object.keys(conY).length)yrLeg.push('Concerts');if(Object.keys(thY).length)yrLeg.push('Theater');
   c6.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){if(p[0]&&tp(p).axisValue==='2016')return'<b>2016</b><br/>Zeroed (outlier: 4,257)';return p.map(function(s){return s.marker+s.seriesName+': '+s.value}).join('<br/>')}},legend:{data:ct==='all'?yrLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:36,bottom:24},xAxis:{type:'category',data:yr.map(function(d){return d.year}),axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:yrSeries});
   if(ct==='all'&&yrLeg.length>1)legendIsolate(c6,yrLeg);
-  // Click yearly to see titles for that year (aggregate months)
   c6.on('click',function(p){
     var year=yr[p.dataIndex]?yr[p.dataIndex].year:p.name;
     var allTitles={};
@@ -491,6 +500,8 @@ function baseCharts(){
     titles.forEach(function(e){var t=e[0],d=e[1];var badge=d.type==='movie'?'b-m':'b-e';var label=d.type==='show'?d.count+' eps':(d.count>1?d.count+'x':'');
       h+='<div class="cd-item"><span><span class="badge '+badge+'">'+d.type+'</span> '+t+'</span><span class="nm '+(d.type==='show'?'nm-b':'nm-a')+'">'+label+'</span></div>'});
     div.innerHTML=h;el.parentElement.appendChild(div)});
+  ch.push(c6);
+  }
 
   // Time to watch
   var ttwData=(cy!=='all'&&D.c.ttw_y&&D.c.ttw_y[cy]?D.c.ttw_y[cy]:(D.c.ttw||[])).slice(0,20).reverse();
@@ -534,7 +545,7 @@ function baseCharts(){
   c8.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var l=lnd.find(function(x){return tp(p).name.includes(langName(x.n))});return l?'🗣️ <b>'+langName(l.n)+'</b><br/>'+tp(p).value+' titles':''}},grid:{left:gl(90),right:20,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:lnd.map(function(d){return'🗣️ '+langName(d.n)}),axisLabel:{color:'#ccc',fontSize:11,interval:0},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:lnd.map(function(d){return d.count}),itemStyle:{color:LG('#0f3460','#60a5fa')},barMaxWidth:18,label:{show:true,position:'right',color:'#60a5fa',fontSize:10}}]});
 
   c8.on('click',function(p){var n=lnd[p.dataIndex]?lnd[p.dataIndex].n:p.name.toLowerCase();showDetail(document.getElementById('langc'),'lang',n)});
-  ch.push(c1,c2,c3,c3b,c4,c5,c6,c7,c8);
+  ch.push(c2,c3,c3b,c4,c5,c7,c8);
 }
 
 function renderPosters(){
