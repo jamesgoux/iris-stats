@@ -86,7 +86,7 @@ body{overflow-x:hidden}
 <div class="fctrls">
 <div class="fbtn"><label>Type</label><select id="gs"><option value="all">Both</option><option value="movie">Movies</option><option value="show">Shows</option></select></div>
 <div class="fbtn"><label>Year</label><select id="ys"><option value="all">All Time</option></select></div>
-<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-tl">📊 Timeline</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-time">📅 Day/Time/Yearly</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-con">🎸 Concerts</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option></select></div>
+<div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-tl">📊 Timeline</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-time">📅 Day/Time/Yearly</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-con">🎸 Concerts</option><option value="sec-th">🎭 Theater</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option></select></div>
 <button class="rbtn" onclick="location.reload()">&#x21bb;</button>
 </div>
 </div>
@@ -180,6 +180,11 @@ body{overflow-x:hidden}
 <div class="g2" id="con-wrap" style="display:none">
 <div id="sec-con" class="cd s-g"><h3><span class="i">🎸</span>Concerts <span class="vtog" style="float:right"><button class="vb vb-on con-tog" data-v="shows">By Shows</button><button class="vb con-tog" data-v="songs">By Songs</button></span></h3><div id="conc" style="height:280px"></div></div>
 <div class="cd s-g"><h3><span class="i">🎤</span>Most Seen Artists</h3><div class="stb" id="con-artists" style="font-size:12px"></div></div>
+</div>
+<!-- THEATER -->
+<div class="g2" id="th-wrap" style="display:none">
+<div id="sec-th" class="cd s-g"><h3><span class="i">🎭</span>Theater Shows</h3><div id="thc" style="height:280px"></div></div>
+<div class="cd s-g"><h3><span class="i">🏛️</span>Theaters &amp; Companions</h3><div class="stb" id="th-detail" style="font-size:12px"></div></div>
 </div>
 <div class="cd fw s-g" style="margin-top:14px">
 <h3><span class="i">📤</span>Update Letterboxd Tags</h3>
@@ -676,6 +681,24 @@ function renderConcerts(){
   if(wrap2){var vEl=document.getElementById('con-venues');var venues=con.venues||[];if(venues.length){var h2='<table><thead><tr><th>#</th><th>Venue</th><th>Shows</th></tr></thead><tbody>';venues.forEach(function(v,i){h2+='<tr><td style="color:var(--t2);font-size:10px">'+(i+1)+'</td><td style="font-weight:600">'+v.n+'</td><td class="nm nm-o">'+v.c+'</td></tr>'});h2+='</tbody></table>';vEl.innerHTML=h2}}
 }
 
+function renderTheater(){
+  var th=D.th;var wrap=document.getElementById('th-wrap');
+  if(!th||!th.total){wrap.style.display='none';return}
+  wrap.style.display='';
+  var yrs=(th.years||[]);if(cy!=='all')yrs=yrs.filter(function(y){return y.yr===cy});
+  var tChart=echarts.init(document.getElementById('thc'));
+  if(yrs.length===0){document.getElementById('thc').innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No shows'+(cy!=='all'?' in '+cy:'')+'</div>'}
+  else{tChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+tp(p).value+' shows'}},grid:{left:50,right:20,top:30,bottom:24},title:{text:th.total+' shows'+(th.rated?' ('+th.avg+'★ avg)':''),left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},xAxis:{type:'category',data:yrs.map(function(y){return y.yr}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{type:'bar',data:yrs.map(function(y){return{value:y.c,itemStyle:{color:LG('#0f3460','#d946ef')}}}),barMaxWidth:30,label:{show:true,position:'top',color:'#999',fontSize:10}}]});ch.push(tChart)}
+  // Detail: theaters + people
+  var dEl=document.getElementById('th-detail');
+  var h='';
+  var theaters=th.theaters||[];
+  if(theaters.length){h+='<table><thead><tr><th>#</th><th>Theater</th><th>Shows</th></tr></thead><tbody>';theaters.slice(0,10).forEach(function(t,i){h+='<tr><td style="color:var(--t2);font-size:10px">'+(i+1)+'</td><td style="font-weight:600">'+t.n+'</td><td class="nm nm-o">'+t.c+'</td></tr>'});h+='</tbody></table>'}
+  var people=th.people||[];
+  if(people.length){h+='<div style="margin-top:8px"><b style="color:var(--t2);font-size:11px">Companions</b></div><table><tbody>';people.slice(0,10).forEach(function(p,i){h+='<tr><td style="color:var(--t2);font-size:10px">'+(i+1)+'</td><td style="font-weight:600">'+p.n+'</td><td class="nm nm-p">'+p.c+'</td></tr>'});h+='</tbody></table>'}
+  dEl.innerHTML=h;
+}
+
 function renderStatus(){
   var total_people=D.a.length+D.x.length;
   var hs_count=Object.keys(D.hs||{}).length;
@@ -684,7 +707,7 @@ function renderStatus(){
   el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: __BUILD_TIME__</span>';
 }
 
-function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];stats();ptbl('atb',D.a);ptbl('xtb',D.x);ptbl('dtb',D.d||[]);ptbl('wtb',D.w||[]);showCharts();movieCharts();renderPosters();baseCharts();renderLetterboxd();renderConcerts();renderStatus()}
+function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];stats();ptbl('atb',D.a);ptbl('xtb',D.x);ptbl('dtb',D.d||[]);ptbl('wtb',D.w||[]);showCharts();movieCharts();renderPosters();baseCharts();renderLetterboxd();renderConcerts();renderTheater();renderStatus()}
 window.addEventListener('resize',function(){mob=window.innerWidth<768;ch.forEach(function(c){try{c.resize()}catch(e){}})});
 window.addEventListener('hashchange',function(){readHash();render()});
 render();

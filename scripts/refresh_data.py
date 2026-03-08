@@ -650,6 +650,22 @@ concerts = []
 if os.path.exists("data/setlist.json"):
     with open("data/setlist.json") as f: concerts = json.load(f)
 
+# Theater data from Mezzanine
+theater = []
+if os.path.exists("data/mezzanine.csv"):
+    import csv
+    with open("data/mezzanine.csv", newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            date = row.get("date","")[:10]
+            year = date[:4] if date else ""
+            tags = [t.strip() for t in row.get("customTags","").split(",") if t.strip()]
+            theater.append({
+                "show": row.get("show",""), "date": date, "year": year,
+                "theater": row.get("theater",""), "location": row.get("location",""),
+                "time": row.get("time",""), "rating": float(row["rating"]) if row.get("rating") else None,
+                "tags": tags, "seat": row.get("seat","")
+            })
+
 print(f"\n[3/3] Building dashboard ({len(entries)} entries, {len(people)} people, {len(hs)} headshots, {len(ps)} posters)...")
 data = build_data(entries, people, hs, ps, slug_studios, directors_raw, writers_raw)
 data["lg"] = logos  # studio/network logos
@@ -903,6 +919,28 @@ if concerts:
         "recent": [{"artist": c["artist"], "venue": c["venue"], "city": c["city"],
                     "date": c["date"], "yr": c["year"], "tour": c["tour"],
                     "songs": c["song_count"]} for c in concerts[:20]],
+    }
+
+# Theater data from Mezzanine
+if theater:
+    th_theaters = Ctr2(t["theater"] for t in theater if t["theater"])
+    th_locations = Ctr2(t["location"] for t in theater if t["location"])
+    th_years = Ctr2(t["year"] for t in theater)
+    th_people = Ctr2()
+    for t in theater:
+        for tag in t["tags"]:
+            th_people[tag] += 1
+    th_rated = [t for t in theater if t["rating"]]
+    data["th"] = {
+        "total": len(theater),
+        "rated": len(th_rated),
+        "avg": round(sum(t["rating"] for t in th_rated)/len(th_rated),1) if th_rated else 0,
+        "theaters": [{"n":t,"c":c} for t,c in th_theaters.most_common(20)],
+        "locations": [{"n":l,"c":c} for l,c in th_locations.most_common(20)],
+        "years": [{"yr":y,"c":c} for y,c in sorted(th_years.items())],
+        "people": [{"n":p,"c":c} for p,c in th_people.most_common(20)],
+        "recent": [{"show":t["show"],"date":t["date"],"yr":t["year"],"theater":t["theater"],
+                    "location":t["location"],"rating":t["rating"]} for t in sorted(theater,key=lambda x:x["date"],reverse=True)[:15]],
     }
 
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
