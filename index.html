@@ -167,9 +167,9 @@ body{overflow-x:hidden}
 <div id="sec-ratings" class="cd fw s-m"><h3><span class="i">⭐</span>My Ratings (Letterboxd)</h3><div id="lbc" style="height:280px"></div></div>
 </div>
 <div class="g3 med-s" data-med="all movie show">
-<div class="cd s-m"><h3><span class="i">⭐</span>My Movies (Letterboxd) <span class="vtog" style="float:right"><button class="vb vb-on rt-my" data-v="high" onclick="window._rtMy='high';document.querySelectorAll('.rt-my').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-my" data-v="low" onclick="window._rtMy='low';document.querySelectorAll('.rt-my').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="my-rat" style="font-size:12px"></div></div>
-<div class="cd s-m"><h3><span class="i">🎞️</span>Movies (Trakt Community) <span class="vtog" style="float:right"><button class="vb vb-on rt-mc" data-v="high" onclick="window._rtMc='high';document.querySelectorAll('.rt-mc').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-mc" data-v="low" onclick="window._rtMc='low';document.querySelectorAll('.rt-mc').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="mc-rat" style="font-size:12px"></div></div>
-<div class="cd s-s"><h3><span class="i">📺</span>TV (Trakt Community) <span class="vtog" style="float:right"><button class="vb vb-on rt-sc" data-v="high" onclick="window._rtSc='high';document.querySelectorAll('.rt-sc').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-sc" data-v="low" onclick="window._rtSc='low';document.querySelectorAll('.rt-sc').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="sc-rat" style="font-size:12px"></div></div>
+<div class="cd s-m"><h3><span class="i">⭐</span>My Movies (Letterboxd) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="my-rat" style="font-size:12px"></div></div>
+<div class="cd s-m"><h3><span class="i">🎞️</span>Movies (Trakt Community) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="mc-rat" style="font-size:12px"></div></div>
+<div class="cd s-s"><h3><span class="i">📺</span>TV (Trakt Community) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="sc-rat" style="font-size:12px"></div></div>
 </div>
 <!-- FIRST + LAST WATCHES (same row) -->
 <div class="g2 med-s" data-med="all movie show">
@@ -1141,10 +1141,11 @@ function renderRatings(){
     });
     h+='</tbody></table>';el.innerHTML=h;
   }
-  window._rtMy=window._rtMy||'high';window._rtMc=window._rtMc||'high';window._rtSc=window._rtSc||'high';
-  ratingList('my-rat',window._rtMy==='high'?(lb.myh||[]):(lb.myl||[]),'★',window._rtMy==='high'?'#4ade80':'#e94560',20);
-  ratingList('mc-rat',window._rtMc==='high'?(D.c.mch||[]):(D.c.mcl||[]),'Rating',window._rtMc==='high'?'#60a5fa':'#e94560',20);
-  ratingList('sc-rat',window._rtSc==='high'?(D.c.sch||[]):(D.c.scl||[]),'Rating',window._rtSc==='high'?'#a78bfa':'#e94560',20);
+  window._rtMode=window._rtMode||'high';
+  var isHigh=window._rtMode==='high';
+  ratingList('my-rat',isHigh?(lb.myh||[]):(lb.myl||[]),'★',isHigh?'#4ade80':'#e94560',20);
+  ratingList('mc-rat',isHigh?(D.c.mch||[]):(D.c.mcl||[]),'Rating',isHigh?'#60a5fa':'#e94560',20);
+  ratingList('sc-rat',isHigh?(D.c.sch||[]):(D.c.scl||[]),'Rating',isHigh?'#a78bfa':'#e94560',20);
 }
 
 function renderGoodreads(){
@@ -1652,7 +1653,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-09 20:32 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-09 20:35 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
