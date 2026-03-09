@@ -39,6 +39,13 @@ jobs:
       - name: Backfill artist genres
         run: python scripts/refresh_artist_genres.py
 
+      - name: Backfill Last.fm daily scrobbles
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_USER: ${{ secrets.LASTFM_USER }}
+          LASTFM_DAILY_BUDGET: "100"
+        run: python scripts/backfill_lastfm_daily.py
+
       - name: Rebuild dashboard (full refresh with cast+studios)
         env:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}

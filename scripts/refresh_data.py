@@ -1383,6 +1383,19 @@ if gr_books:
 
 # Scrobbles from Last.fm
 exact_sc_days = set()
+
+# Load backfilled daily scrobble counts (from backfill_lastfm_daily.py)
+lastfm_daily_counts = {}
+if os.path.exists("data/lastfm_daily.json"):
+    with open("data/lastfm_daily.json") as f:
+        lastfm_daily_counts = json.load(f)
+    print(f"  Loaded {len(lastfm_daily_counts)} days of backfilled scrobble data")
+    # Apply backfilled counts to lifeline
+    for d, count in lastfm_daily_counts.items():
+        if count > 0:
+            ll_counts[d]["sc"] = count
+            exact_sc_days.add(d)
+
 LASTFM_KEY = os.environ.get("LASTFM_API_KEY", "")
 LASTFM_USER = os.environ.get("LASTFM_USER", "")
 if LASTFM_KEY and LASTFM_USER:
