@@ -5,7 +5,9 @@ Reads headshots from data/headshots.json and posters from data/posters.json.
 Outputs index.html for GitHub Pages.
 """
 
-import os, json, time, requests
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import json, time, requests
 from collections import defaultdict, Counter
 from datetime import datetime
 from utils import retry_request

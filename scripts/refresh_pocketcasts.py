@@ -11,7 +11,9 @@ Strategy for listen dates:
 Requires POCKETCASTS_EMAIL and POCKETCASTS_PASSWORD env vars.
 """
 
-import os, json, time, requests
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import json, time, requests
 from datetime import datetime, timezone
 from utils import retry_request
 

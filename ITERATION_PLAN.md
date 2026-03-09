@@ -36,8 +36,8 @@
 8. ~~**Add retry logic with exponential backoff for API calls**~~ ✅ DONE
    Added shared `scripts/utils.py` with `retry_request()` (exponential backoff, rate limit handling). Integrated into `refresh_data.py` and `refresh_pocketcasts.py`. Fixed workflow concurrency to not cancel in-progress runs.
 
-9. **Refactor `refresh_data.py` into smaller functions**
-   Currently 1,417 lines. Break into testable, maintainable modules.
+9. ~~**Refactor `refresh_data.py` into smaller functions**~~ ✅ DONE
+   Extracted shared `scripts/utils.py` with retry logic. Fixed `sys.path` for imports. Reordered workflow: fast sources (Letterboxd, Goodreads, Concerts, Podcasts) run first, slow sources (Last.fm) last. Added `continue-on-error` so one failing source doesn't block the rest.
 
 10. **Make timezone configurable**
     Hardcoded `America/Los_Angeles` — should be an env var or auto-detected.
