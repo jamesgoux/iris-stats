@@ -679,10 +679,17 @@ function baseCharts(){
     }
   }
 
-  // Day of week
-  var dwC=['#60a5fa','#a78bfa','#4ade80','#fb923c','#e94560','#60a5fa','#a78bfa'];
+  // Day of week — stacked movie/show on All, single when filtered
   var c4=echarts.init(document.getElementById('dwc'));
-  c4.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:8,bottom:24},xAxis:{type:'category',data:D.c.dw.map(function(d){return d.day}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:[{type:'bar',data:D.c.dw.map(function(d,i){return{value:d.count,itemStyle:{color:dwC[i]}}}),barMaxWidth:50}]});
+  var dwSeries=[];
+  if(ct==='all'&&D.c.dw[0]&&D.c.dw[0].m!==undefined){
+    dwSeries.push({name:'Movies',type:'bar',stack:'dw',data:D.c.dw.map(function(d){return d.m||0}),itemStyle:{color:'#fb923c'},barMaxWidth:50});
+    dwSeries.push({name:'Shows',type:'bar',stack:'dw',data:D.c.dw.map(function(d){return d.s||0}),itemStyle:{color:'#14b8a6'},barMaxWidth:50});
+  }else{
+    var dwC=['#60a5fa','#a78bfa','#4ade80','#fb923c','#e94560','#60a5fa','#a78bfa'];
+    dwSeries.push({type:'bar',data:D.c.dw.map(function(d,i){return{value:ct==='movie'?(d.m||d.count):ct==='show'?(d.s||d.count):d.count,itemStyle:{color:dwC[i]}}}),barMaxWidth:50});
+  }
+  c4.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt},legend:{data:ct==='all'&&D.c.dw[0]&&D.c.dw[0].m!==undefined?['Movies','Shows']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:20,top:ct==='all'?30:8,bottom:24},xAxis:{type:'category',data:D.c.dw.map(function(d){return d.day}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:dwSeries});
 
   // Hour of day
   var hodData=D.c.hod||{};if(cy!=='all'&&D.c.hod_y&&D.c.hod_y[cy])hodData=D.c.hod_y[cy];

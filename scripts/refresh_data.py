@@ -332,7 +332,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     yearly = defaultdict(lambda: {"movies": 0, "episodes": 0, "total": 0})
     genre_movie = Counter(); genre_show = Counter()
     genre_movie_y = defaultdict(Counter); genre_show_y = defaultdict(Counter)
-    dwc = Counter(); dwn = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    dwc = Counter(); dwc_m = Counter(); dwc_s = Counter(); dwn = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
     hod = defaultdict(lambda: defaultdict(int))  # hour of day by year
     net_movies = Counter()  # count unique titles, not episodes
     net_shows = Counter()
@@ -408,7 +408,10 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             # Convert UTC to Pacific time (UTC-8 PST / UTC-7 PDT)
             from zoneinfo import ZoneInfo
             dt_local = dt.astimezone(ZoneInfo("America/Los_Angeles"))
-            dwc[dwn[dt_local.weekday()]] += 1
+            dw_name = dwn[dt_local.weekday()]
+            dwc[dw_name] += 1
+            if e["type"] == "movie": dwc_m[dw_name] += 1
+            else: dwc_s[dw_name] += 1
             h_key = f"{dt_local.hour}_{e['type']}"
             hod[y][h_key] += 1
         except: pass
@@ -643,7 +646,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "gs_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_show_y.items()},
             "ga_y": {y: [{"genre": g, "count": (genre_movie_y[y][g] + genre_show_y[y][g])} for g, _ in (genre_movie_y[y] + genre_show_y[y]).most_common(20)] for y in set(list(genre_movie_y) + list(genre_show_y))},
             "gt": _build_genre_trends(genre_movie_y, genre_show_y),
-            "dw": [{"day": d, "count": dwc.get(d, 0)} for d in dwn],
+            "dw": [{"day": d, "count": dwc.get(d, 0), "m": dwc_m.get(d, 0), "s": dwc_s.get(d, 0)} for d in dwn],
             "hod": hod_all,
             "hod_y": hod_by_year,
             "net": [{"n": n, "s": net_shows[n]} for n in sorted(net_shows, key=net_shows.get, reverse=True)[:25]],
