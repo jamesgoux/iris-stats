@@ -332,6 +332,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     yearly = defaultdict(lambda: {"movies": 0, "episodes": 0, "total": 0})
     genre_movie = Counter(); genre_show = Counter()
     genre_movie_y = defaultdict(Counter); genre_show_y = defaultdict(Counter)
+    genre_titles = {}  # genre -> {"m": [movie titles], "s": [show titles]}
     dwc = Counter(); dwc_m = Counter(); dwc_s = Counter(); dwn = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
     hod = defaultdict(lambda: defaultdict(int))  # hour of day by year
     net_movies = Counter()  # count unique titles, not episodes
@@ -360,10 +361,27 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
         else: monthly[m]["episodes"] += 1; yearly[y]["episodes"] += 1
         yearly[y]["total"] += 1
         if e["genres"]:
+            slug = e["trakt_slug"]
+            title_name = e.get("show_title") or e.get("title") or ""
             for g in e["genres"].split(", "):
                 gs = g.strip()
-                if e["type"] == "movie": genre_movie[gs] += 1; genre_movie_y[y][gs] += 1
-                else: genre_show[gs] += 1; genre_show_y[y][gs] += 1
+                if e["type"] == "movie":
+                    genre_movie[gs] += 1; genre_movie_y[y][gs] += 1
+                    gtkey = (gs, "m", title_name)
+                    if gtkey not in seen_net and title_name:
+                        seen_net.add(gtkey)
+                        if gs not in genre_titles: genre_titles[gs] = {"m": [], "s": []}
+                        genre_titles[gs]["m"].append(title_name)
+                else:
+                    gkey = (slug, gs, y)
+                    if gkey not in seen_net:
+                        seen_net.add(gkey)
+                        genre_show[gs] += 1; genre_show_y[y][gs] += 1
+                    gtkey = (gs, "s", title_name)
+                    if gtkey not in seen_net and title_name:
+                        seen_net.add(gtkey)
+                        if gs not in genre_titles: genre_titles[gs] = {"m": [], "s": []}
+                        genre_titles[gs]["s"].append(title_name)
         # Networks: count unique titles (slug), not episodes
         slug = e["trakt_slug"]
         net_key = (slug, y)
@@ -642,6 +660,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "gs": [{"genre": g, "count": c} for g, c in genre_show.most_common(20)],
             "ga": [{"genre": g, "count": genre_movie[g] + genre_show[g], "m": genre_movie[g], "s": genre_show[g]}
                    for g, _ in (genre_movie + genre_show).most_common(20)],
+            "gt_titles": {g: {"m": v["m"][:20], "s": v["s"][:20]} for g, v in genre_titles.items()},
             "gm_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_movie_y.items()},
             "gs_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_show_y.items()},
             "ga_y": {y: [{"genre": g, "count": (genre_movie_y[y][g] + genre_show_y[y][g])} for g, _ in (genre_movie_y[y] + genre_show_y[y]).most_common(20)] for y in set(list(genre_movie_y) + list(genre_show_y))},

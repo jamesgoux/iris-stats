@@ -480,7 +480,19 @@ function baseCharts(){
   c2.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt},legend:{data:ct==='all'&&gd[0]&&gd[0].m!==undefined?['Movies','Shows']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:gl(120),right:20,top:ct==='all'?30:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:gd.map(function(d){return(GE[d.genre.toLowerCase()]||'')+' '+d.genre}),axisLabel:{color:'#ccc',fontSize:11,interval:0},axisLine:{lineStyle:{color:'#333'}}},series:gnSeries});
 
   // Genres click
-  addClick(c2,document.getElementById('gnc'),'genre',gd,'genre');
+  // Genre click — show top 20 titles
+  var gtTitles=D.c.gt_titles||{};
+  c2.on('click',function(p){
+    var g=gd[p.dataIndex];if(!g)return;var gn=g.genre;
+    var tt=gtTitles[gn]||{};var el=document.getElementById('gnc');
+    var ex=el.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===gn)return}
+    var div=document.createElement('div');div.className='chart-detail';div.dataset.val=gn;
+    var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+gn+'</b>';
+    var movies=tt.m||[];var shows=tt.s||[];
+    if(ct!=='show'&&movies.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--mv)">🎞️ Movies ('+movies.length+')</div>';movies.slice(0,20).forEach(function(t){h+='<div class="cd-item"><span>'+t+'</span></div>'})}
+    if(ct!=='movie'&&shows.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--tv)">📺 Shows ('+shows.length+')</div>';shows.slice(0,20).forEach(function(t){h+='<div class="cd-item"><span>'+t+'</span></div>'})}
+    div.innerHTML=h;el.parentElement.appendChild(div);
+  });
 
   // Genre trends (100% stacked area) - yearly or monthly
   var gtWrap=document.getElementById('gt-wrap');
