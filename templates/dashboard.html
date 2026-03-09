@@ -1024,8 +1024,9 @@ function renderGoodreads(){
     ch.push(ttrChart);
   }else{ttrEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No time-to-read data</div>'}
 
-  // Most read authors
-  var authors=gr.authors||[];
+  // Most read authors — computed from filtered books
+  var authCounts={};filtered.forEach(function(b){if(b.a){authCounts[b.a]=(authCounts[b.a]||0)+1}});
+  var authors=Object.entries(authCounts).sort(function(a,b){return b[1]-a[1]}).map(function(e){return{n:e[0],c:e[1]}});
   var authSlice=authors.slice(0,10).reverse();
   var authEl=document.getElementById('gr-auth');
   if(authSlice.length){
@@ -1048,14 +1049,17 @@ function renderGoodreads(){
     ch.push(authChart);
   }
 
-  // Rating distribution
-  var dist=gr.dist||[];
+  // Rating distribution — from filtered
+  var fRated=filtered.filter(function(b){return b.r>0});
+  var fDist={};fRated.forEach(function(b){fDist[b.r]=(fDist[b.r]||0)+1});
+  var dist=Object.keys(fDist).sort().map(function(r){return{r:r,c:fDist[r]}});
+  var fAvg=fRated.length?Math.round(fRated.reduce(function(s,b){return s+b.r},0)/fRated.length*10)/10:0;
   var distEl=document.getElementById('gr-dist');
   if(dist.length){
     var distChart=echarts.init(distEl);
     distChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return tp(p).name+': '+tp(p).value+' books'}},
       grid:{left:50,right:20,top:30,bottom:24},
-      title:{text:gr.rated+' rated, '+gr.avg+'★ avg',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+      title:{text:fRated.length+' rated, '+fAvg+'★ avg',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
       xAxis:{type:'category',data:dist.map(function(d){return d.r+'★'}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},
       yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
       series:[{type:'bar',data:dist.map(function(d){return{value:d.c,itemStyle:{color:parseInt(d.r)>=4?'#22d3ee':parseInt(d.r)>=3?'#a78bfa':'#e94560'}}}),barMaxWidth:40,label:{show:true,position:'top',color:'#999',fontSize:10}}]});
@@ -1071,8 +1075,11 @@ function renderGoodreads(){
       h+='<div class="cd-item" style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--t2);font-size:10px;margin-right:6px">'+(i+1)+'</span><span style="font-weight:600;font-size:12px">'+b.t+'</span><span style="color:var(--t2);font-size:11px;margin-left:4px">— '+b.a+'</span><span class="nm" style="color:#22d3ee;font-size:11px">'+val+'</span></div>'});
     el.innerHTML=h;
   }
-  bookList('gr-long',gr.longest,'p');
-  bookList('gr-short',gr.shortest,'p');
+  var fWithPages=filtered.filter(function(b){return b.p>0});
+  var fLongest=fWithPages.slice().sort(function(a,b){return b.p-a.p}).slice(0,10).map(function(b){return{t:b.t,a:b.a,p:b.p}});
+  var fShortest=fWithPages.slice().sort(function(a,b){return a.p-b.p}).slice(0,10).map(function(b){return{t:b.t,a:b.a,p:b.p}});
+  bookList('gr-long',fLongest,'p');
+  bookList('gr-short',fShortest,'p');
 
   // Helper: render a genre/shelf bar chart
   function grBarChart(elId,data,field,color,label){
@@ -1101,8 +1108,10 @@ function renderGoodreads(){
   grBarChart('gr-genres',gr.genres||[],'gn','#22d3ee','genre');
   grBarChart('gr-shelves',gr.shelves||[],'sh','#a78bfa','shelf')
 
-  bookList('gr-high',gr.highest,'r');
-  bookList('gr-low',gr.lowest,'r');
+  var fHighest=fRated.slice().sort(function(a,b){return b.r-a.r||b.p-a.p}).slice(0,10).map(function(b){return{t:b.t,a:b.a,r:b.r,p:b.p}});
+  var fLowest=fRated.slice().sort(function(a,b){return a.r-b.r||a.p-b.p}).slice(0,10).map(function(b){return{t:b.t,a:b.a,r:b.r,p:b.p}});
+  bookList('gr-high',fHighest,'r');
+  bookList('gr-low',fLowest,'r');
 }
 
 function renderLastfm(){
