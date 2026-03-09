@@ -4,8 +4,8 @@
 
 ## Priority 1: Active Bugs & Feature Requests
 
-1. **"Watches" and "Days Watched" not filtering by year**
-   Stats bar totals for watches and days watched are not respecting the year filter selection. They should recalculate based on the selected year.
+1. ~~**"Watches" and "Days Watched" not filtering by year**~~ ✅ DONE
+   Stats bar totals for watches and days watched now recalculate based on the selected year. Added per-month runtime tracking to Python pipeline and computed filtered totals in JS.
 
 2. **Show posters not obeying the 50% image fallback rule**
    The Top Shows section should fall back to bar graphs when fewer than 50% of shows have poster images. Currently it renders the poster grid regardless of coverage.

@@ -889,6 +889,21 @@ function renderPosters(animate){
   var top=shows.slice(0,20);
   function slug(n){return n.toLowerCase().replace(/[^a-z0-9]/g,'-')}
   function findImg(s){var sl=slug(s);for(var k in PS){if(k===sl||sl===k)return PS[k]}for(var k in PS){if(sl.length>5&&k.indexOf(sl)>=0)return PS[k]}return null}
+  // Check poster coverage — if <50%, use bar chart instead
+  var imgCount=top.reduce(function(s,sh){return s+(findImg(sh.n)?1:0)},0);
+  var useGrid=imgCount>=top.length*0.5;
+  if(!useGrid){
+    grid.className='';grid.style.height='auto';
+    var barItems=top.slice(0,15).reverse();
+    var barChart=echarts.init(grid);
+    grid.style.height=Math.max(280,barItems.length*22+20)+'px';
+    var isDur=window._showSort==='dur';
+    barChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+(isDur?tp(p).value+'h':tp(p).value+' eps')}},
+      grid:{left:gl(150),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:barItems.map(function(d){return d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:barItems.map(function(d){return isDur?d.h:d.e}),itemStyle:{color:LG('#0f3460','#14b8a6')},barMaxWidth:18,label:{show:true,position:'right',color:'var(--tv)',fontSize:10,formatter:function(p){return isDur?p.value+'h':p.value+' eps'}}}]});
+    ch.push(barChart);return}
   // FLIP animate if existing children match (toggle sort)
   var existing=grid.querySelectorAll('.poster-item');
   if(animate&&existing.length>0){
@@ -1605,7 +1620,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-09 18:23 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-09 18:36 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
