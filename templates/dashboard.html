@@ -1105,8 +1105,12 @@ function renderGoodreads(){
     });
     ch.push(c);
   }
-  grBarChart('gr-genres',gr.genres||[],'gn','#22d3ee','genre');
-  grBarChart('gr-shelves',gr.shelves||[],'sh','#a78bfa','shelf')
+  var fGenC={};filtered.forEach(function(b){(b.gn||[]).forEach(function(g){fGenC[g]=(fGenC[g]||0)+1})});
+  var fGenList=Object.entries(fGenC).sort(function(a,b){return b[1]-a[1]}).slice(0,15).map(function(e){return{n:e[0],c:e[1]}});
+  var fShC={};filtered.forEach(function(b){(b.sh||[]).forEach(function(s){fShC[s]=(fShC[s]||0)+1})});
+  var fShList=Object.entries(fShC).sort(function(a,b){return b[1]-a[1]}).slice(0,15).map(function(e){return{n:e[0],c:e[1]}});
+  grBarChart('gr-genres',fGenList,'gn','#22d3ee','genre');
+  grBarChart('gr-shelves',fShList,'sh','#a78bfa','shelf')
 
   var fHighest=fRated.slice().sort(function(a,b){return b.r-a.r||b.p-a.p}).slice(0,10).map(function(b){return{t:b.t,a:b.a,r:b.r,p:b.p}});
   var fLowest=fRated.slice().sort(function(a,b){return a.r-b.r||a.p-b.p}).slice(0,10).map(function(b){return{t:b.t,a:b.a,r:b.r,p:b.p}});
