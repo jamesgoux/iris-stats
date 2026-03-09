@@ -68,8 +68,8 @@
 
 ## Priority 5: Security & Reliability
 
-17. **Validate CSV imports before processing**
-    Drag-drop CSV import doesn't check file format or sanitize input.
+17. ~~**Validate CSV imports before processing**~~ ✅ DONE
+    CSV import now validates file extension (.csv only), size (max 10MB), non-empty content, and requires header + at least one data row before processing.
 
-18. **Prevent workflow overlap conflicts**
-    The 20-min refresh and daily headshot workflow could collide. Add concurrency guards or file locking.
+18. ~~**Prevent workflow overlap conflicts**~~ ✅ DONE
+    Added `concurrency` groups to both workflows. The 20-min refresh uses `cancel-in-progress: true` so new runs cancel stale ones. The daily headshot workflow queues instead of canceling.

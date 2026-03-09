@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: refresh-headshots
+  cancel-in-progress: false
+
 jobs:
   headshots:
     runs-on: ubuntu-latest

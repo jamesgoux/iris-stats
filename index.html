@@ -1657,7 +1657,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-09 19:47 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-09 20:25 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
@@ -1702,11 +1702,18 @@ function classifyTag(t){
 }
 
 function processCSV(file){
+  // Validate file before processing
+  if(!file.name.toLowerCase().endsWith('.csv')){stat.textContent='Error: Only .csv files are supported';return}
+  if(file.size>10*1024*1024){stat.textContent='Error: File too large (max 10MB)';return}
+  if(file.size===0){stat.textContent='Error: File is empty';return}
   stat.textContent='Reading '+file.name+'...';
   var reader=new FileReader();
+  reader.onerror=function(){stat.textContent='Error: Could not read file'};
   reader.onload=function(e){
     var text=e.target.result;
-    var lines=text.split('\n');
+    if(!text||!text.trim()){stat.textContent='Error: File is empty';return}
+    var lines=text.split('\n').filter(function(l){return l.trim()});
+    if(lines.length<2){stat.textContent='Error: CSV must have a header row and at least one data row';return}
     var headers=lines[0].split(',').map(function(h){return h.trim().replace(/"/g,'')});
 
     // Auto-detect: Mezzanine has "show" and "theater" columns
