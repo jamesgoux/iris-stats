@@ -1260,7 +1260,7 @@ function renderLastfm(){
   var curAlbums=(alData.find(function(p){return p.period===per})||alData[0]||{}).albums||[];
   var alEl=document.getElementById('lfm-albums');
   if(curAlbums.length){
-    var alH='<div class="cover-grid">';curAlbums.slice(0,25).forEach(function(a,i){
+    var alH='<div class="cover-grid">';curAlbums.slice(0,20).forEach(function(a,i){
       var cover=a.img?'<img src="'+a.img+'" class="al-cover">':'<div style="width:80px;height:80px;background:linear-gradient(135deg,#1a1a4e,#111);border-radius:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:20px;font-weight:800">'+a.n.charAt(0)+'</div>';
       alH+='<div class="gi">'+cover+'<span>'+a.n+'</span><span>'+a.a+'</span><span class="val">'+a.c+' plays</span></div>'});
     alH+='</div>';alEl.style.height='auto';alEl.innerHTML=alH;

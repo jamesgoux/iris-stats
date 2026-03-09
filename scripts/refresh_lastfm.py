@@ -52,7 +52,7 @@ for period in ["overall", "12month", "3month", "1month"]:
 # Top albums
 top_albums = []
 for period in ["overall", "12month", "3month", "1month"]:
-    data = api("user.gettopalbums", period=period, limit=15)
+    data = api("user.gettopalbums", period=period, limit=20)
     albums = [{"n": a["name"], "a": a["artist"]["name"], "c": int(a["playcount"]),
                "img": a.get("image", [{}])[-1].get("#text", "")} for a in data.get("topalbums", {}).get("album", [])]
     top_albums.append({"period": period, "albums": albums})
