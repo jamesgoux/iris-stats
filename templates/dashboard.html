@@ -1191,12 +1191,19 @@ function renderLastfm(){
   // Period: use range toggle if available (all-time or current year), else map by year
   var curYr=new Date().getFullYear().toString();
   var canToggle=!isYr||cy===curYr;
-  window._lfmRange=window._lfmRange||'overall';
-  var per=canToggle?window._lfmRange:(isYr&&cy===curYr?'12month':'overall');
+  // When year is selected, force 12month; only allow overall on all-time
+  if(isYr&&window._lfmRange==='overall')window._lfmRange='12month';
+  if(!isYr)window._lfmRange=window._lfmRange||'overall';
+  var per=isYr?'12month':window._lfmRange;
+  if(canToggle&&window._lfmRange==='3month')per='3month';
   // Show range toggle on Top Artists header
   var rangeWrap=document.getElementById('lfm-range-wrap');
   if(canToggle&&rangeWrap){
-    rangeWrap.innerHTML='<button class="vb lfm-rng '+(per==='overall'?'vb-on':'')+'" data-v="overall" style="font-size:9px">All Time</button><button class="vb lfm-rng '+(per==='3month'?'vb-on':'')+'" data-v="3month" style="font-size:9px">Last 90 Days</button>';
+    var opts='';
+    if(!isYr)opts+='<button class="vb lfm-rng '+(per==='overall'?'vb-on':'')+'" data-v="overall" style="font-size:9px">All Time</button>';
+    if(isYr)opts+='<button class="vb lfm-rng '+(per==='12month'?'vb-on':'')+'" data-v="12month" style="font-size:9px">This Year</button>';
+    opts+='<button class="vb lfm-rng '+(per==='3month'?'vb-on':'')+'" data-v="3month" style="font-size:9px">Last 90 Days</button>';
+    rangeWrap.innerHTML=opts;
     rangeWrap.querySelectorAll('.lfm-rng').forEach(function(btn){btn.onclick=function(){window._lfmRange=btn.dataset.v;renderLastfm()}});
   }else if(rangeWrap){rangeWrap.innerHTML=''}
 
