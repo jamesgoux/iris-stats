@@ -1600,14 +1600,19 @@ if theater:
             ll_counts[d]["th"] += 1
             ll_events[d].append({"t": "19:30", "n": "🎭 " + t["show"], "ty": "th"})
 
-# Podcasts
+# Podcasts — only include episodes with real poll data (not init/pub backfill)
 if os.path.exists("data/pocketcasts_history.json"):
     with open("data/pocketcasts_history.json") as f:
         pc_history = json.load(f)
+    pc_poll_count = 0
     for ep_uuid, ev in pc_history.items():
-        d = ev.get("d", "")
-        if d and len(d) >= 10:
-            ll_counts[d]["pc"] += 1
+        if ev.get("src") == "poll":
+            d = ev.get("d", "")
+            if d and len(d) >= 10:
+                ll_counts[d]["pc"] += 1
+                pc_poll_count += 1
+    if pc_poll_count:
+        print(f"  Podcasts in lifeline: {pc_poll_count} polled episodes")
 
 # Build output: counts for bars + events only for recent 90 days
 event_cutoff = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
