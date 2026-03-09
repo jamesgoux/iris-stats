@@ -232,7 +232,6 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     season_delays = []  # [{show, slug, season, delay_days, watch_year}]
     for (slug, sn), eps in season_eps.items():
         delays = []
-        zero_count = 0
         for ep in eps:
             try:
                 aired = datetime.fromisoformat(ep["aired"].replace("Z", "+00:00"))
@@ -240,12 +239,12 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
                 days = (watched - aired).total_seconds() / 86400
                 if days < 0: days = 0
                 delays.append(days)
-                if days < 0.5: zero_count += 1
             except Exception: pass
         if not delays or len(delays) < 2: continue
-        # Filter: if >80% of episodes have 0-day delay, likely bulk import — skip
-        if zero_count / len(delays) > 0.8 and len(delays) > 3: continue
         avg_delay = sum(delays) / len(delays)
+        # Filter bulk imports: if avg delay < 1 day for a season with 3+ episodes,
+        # it's almost certainly bulk-imported (watched_at set to air date)
+        if avg_delay < 1.0 and len(delays) > 3: continue
         # Use the latest watch year for this season
         watch_year = max(ep["year"] for ep in eps if ep.get("year"))
         season_delays.append({
