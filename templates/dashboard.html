@@ -383,9 +383,10 @@ function renderLifeline(){
   var llChart=echarts.init(llEl);
   llChart.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){var day=days[p[0].dataIndex];var h='<b>'+day+'</b>';p.forEach(function(s){var v=Math.abs(s.value);if(v){if(s.seriesName==='Scrobbles'){v=Math.abs(negData.sc[p[0].dataIndex])}h+='<br/>'+s.marker+s.seriesName+': '+v}});return h}},
     legend:{data:['Episodes','Movies','Books','Scrobbles','Concerts','Plays'],top:0,textStyle:{color:'#999',fontSize:9},type:'scroll'},
-    grid:{left:40,right:10,top:35,bottom:30},
+    grid:{left:40,right:50,top:35,bottom:30},
     xAxis:{type:'category',data:days.map(function(d){return d.substring(5)}),axisLabel:{color:'#666',fontSize:8,rotate:45,interval:0},axisLine:{lineStyle:{color:'#444'}}},
-    yAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return Math.abs(v)}},splitLine:{lineStyle:{color:'#222'}}},
+    yAxis:[{type:'value',axisLabel:{color:'#666',formatter:function(v){return v>=0?v:''}},splitLine:{lineStyle:{color:'#222'}}},
+           {type:'value',position:'right',axisLabel:{color:'#1db954',fontSize:9,formatter:function(v){if(v>=0)return'';var real=Math.round(Math.abs(v)/scScale);return real}},splitLine:{show:false},axisLine:{show:false},axisTick:{show:false}}],
     series:[
       {name:'Movies',type:'bar',stack:'ll',data:posData.mv,itemStyle:{color:new echarts.graphic.LinearGradient(0,1,0,0,[{offset:0,color:'rgba(251,146,60,0.4)'},{offset:1,color:'#fb923c'}])},barMaxWidth:bw},
       {name:'Episodes',type:'bar',stack:'ll',data:posData.ep,itemStyle:{color:new echarts.graphic.LinearGradient(0,1,0,0,[{offset:0,color:'rgba(20,184,166,0.4)'},{offset:1,color:'#14b8a6'}])},barMaxWidth:bw},
