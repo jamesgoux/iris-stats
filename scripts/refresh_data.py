@@ -1271,6 +1271,15 @@ if theater:
 # Podcast data from Pocket Casts
 if pc_data:
     data["pc"] = pc_data
+    # Add podcast monthly/yearly episode counts for timeline charts
+    pc_monthly = {}
+    pc_yearly = {}
+    for m in pc_data.get("monthly", []):
+        pc_monthly[m["month"]] = m["eps"]
+    for y in pc_data.get("yearly", []):
+        pc_yearly[y["yr"]] = y["eps"]
+    data["c"]["pc_m"] = pc_monthly
+    data["c"]["pc_y"] = pc_yearly
     print(f"  Podcasts: {pc_data.get('total_podcasts', 0)} shows, {pc_data.get('total_listened_hrs', 0)}h listened")
 
 # Merge concert + theater titles into monthly title lists (mt)
@@ -1427,7 +1436,7 @@ if os.path.exists("data/lastfm.json"):
 
 # Lifeline: per-day activity with timestamped events for chronological display
 from datetime import timedelta
-ll_counts = defaultdict(lambda: {"ep": 0, "mv": 0, "bk": 0, "sc": 0, "co": 0, "th": 0})
+ll_counts = defaultdict(lambda: {"ep": 0, "mv": 0, "bk": 0, "sc": 0, "co": 0, "th": 0, "pc": 0})
 ll_events = defaultdict(list)  # day -> [{t: time, n: name, ty: type}]
 
 # Episodes + Movies from Trakt (have full timestamps)
@@ -1550,14 +1559,23 @@ if theater:
             ll_counts[d]["th"] += 1
             ll_events[d].append({"t": "19:30", "n": "🎭 " + t["show"], "ty": "th"})
 
+# Podcasts
+if os.path.exists("data/pocketcasts_history.json"):
+    with open("data/pocketcasts_history.json") as f:
+        pc_history = json.load(f)
+    for ep_uuid, ev in pc_history.items():
+        d = ev.get("d", "")
+        if d and len(d) >= 10:
+            ll_counts[d]["pc"] += 1
+
 # Build output: counts for bars + events only for recent 90 days
 event_cutoff = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
 lifeline_all = {}
 for d in sorted(ll_counts.keys()):
     c = ll_counts[d]
-    if c["ep"] or c["mv"] or c["bk"] or c["sc"] or c["co"] or c["th"]:
+    if c["ep"] or c["mv"] or c["bk"] or c["sc"] or c["co"] or c["th"] or c["pc"]:
         entry = {"ep": c["ep"], "mv": c["mv"], "bk": c["bk"],
-                 "sc": c["sc"], "co": c["co"], "th": c["th"]}
+                 "sc": c["sc"], "co": c["co"], "th": c["th"], "pc": c["pc"]}
         # Only store detailed events for last 90 days (saves ~1MB)
         if d >= event_cutoff:
             evts = sorted(ll_events.get(d, []), key=lambda x: x["t"])
