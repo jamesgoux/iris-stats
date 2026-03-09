@@ -46,6 +46,13 @@ jobs:
           LASTFM_DAILY_BUDGET: "100"
         run: python scripts/backfill_lastfm_daily.py
 
+      - name: Sync Letterboxd watches to Trakt (one-time)
+        env:
+          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
+          TRAKT_ACCESS_TOKEN: ${{ secrets.TRAKT_ACCESS_TOKEN }}
+        run: python scripts/sync_letterboxd_to_trakt.py
+        continue-on-error: true
+
       - name: Rebuild dashboard (full refresh with cast+studios)
         env:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
