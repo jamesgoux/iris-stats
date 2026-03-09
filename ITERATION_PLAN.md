@@ -23,11 +23,11 @@
 5. ~~**Add `requirements.txt` with pinned versions**~~ ✅ DONE
    Added `requirements.txt` with `requests>=2.31,<3`. Both workflows now use `pip install -r requirements.txt`.
 
-6. **Replace bare `except:` clauses with specific exceptions**
-   7+ instances across scripts silently swallow errors. Catch specific exceptions and log them.
+6. ~~**Replace bare `except:` clauses with specific exceptions**~~ ✅ DONE
+   Replaced 23 bare `except:` with `except Exception:` across all scripts.
 
-7. **Add data validation before type conversions**
-   Guard against crashes on malformed API responses (e.g., `int(num_pages)` in goodreads without a check).
+7. ~~**Add data validation before type conversions**~~ ✅ DONE
+   Added `safe_int()` and `safe_float()` helpers to `refresh_data.py` and `refresh_lastfm.py`. All unguarded `int()`/`float()` conversions now use safe wrappers.
 
 ---
 
