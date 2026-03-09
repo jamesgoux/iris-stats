@@ -893,6 +893,7 @@ function renderPosters(animate){
   var imgCount=top.reduce(function(s,sh){return s+(findImg(sh.n)?1:0)},0);
   var useGrid=imgCount>=top.length*0.5;
   if(!useGrid){
+    var existingChart=echarts.getInstanceByDom(grid);if(existingChart){existingChart.dispose()}
     grid.className='';grid.innerHTML='';
     grid.style.height=Math.max(280,top.slice(0,15).length*22+20)+'px';
     var barItems=top.slice(0,15).reverse();
@@ -1622,7 +1623,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-09 18:40 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-09 18:43 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];

@@ -893,6 +893,7 @@ function renderPosters(animate){
   var imgCount=top.reduce(function(s,sh){return s+(findImg(sh.n)?1:0)},0);
   var useGrid=imgCount>=top.length*0.5;
   if(!useGrid){
+    var existingChart=echarts.getInstanceByDom(grid);if(existingChart){existingChart.dispose()}
     grid.className='';grid.innerHTML='';
     grid.style.height=Math.max(280,top.slice(0,15).length*22+20)+'px';
     var barItems=top.slice(0,15).reverse();
