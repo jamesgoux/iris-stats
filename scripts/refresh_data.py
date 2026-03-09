@@ -782,6 +782,59 @@ if os.path.exists("data/letterboxd.json") and not os.path.exists("data/.lb_backf
 
 print(f"  Total: {len(entries)} entries (after merge)")
 
+# Resolve missing Trakt slugs (from Letterboxd backfill entries)
+missing_slugs = set()
+for e in entries:
+    if e["type"] == "movie" and not e["trakt_slug"] and e["title"]:
+        missing_slugs.add((e["title"], str(e.get("year", ""))))
+
+if missing_slugs:
+    print(f"  Resolving {len(missing_slugs)} missing Trakt slugs...")
+    slug_cache_path = "data/lb_slug_cache.json"
+    slug_cache = {}
+    if os.path.exists(slug_cache_path):
+        with open(slug_cache_path) as f:
+            slug_cache = json.load(f)
+    
+    resolved = 0
+    for i, (title, year) in enumerate(missing_slugs):
+        cache_key = f"{title}|{year}"
+        if cache_key in slug_cache:
+            slug = slug_cache[cache_key]
+        else:
+            # Search Trakt by title
+            try:
+                params = {"query": title, "years": year} if year else {"query": title}
+                r = retry_request("get", f"{BASE_URL}/search/movie",
+                                  params=params, headers=HEADERS, timeout=10)
+                slug = ""
+                if r and r.status_code == 200:
+                    results = r.json()
+                    for res in results[:3]:
+                        m = res.get("movie", {})
+                        if m.get("title", "").lower() == title.lower():
+                            slug = m.get("ids", {}).get("slug", "")
+                            break
+                    if not slug and results:
+                        slug = results[0].get("movie", {}).get("ids", {}).get("slug", "")
+                slug_cache[cache_key] = slug
+                time.sleep(0.15)
+            except Exception:
+                slug_cache[cache_key] = ""
+        
+        if slug:
+            for e in entries:
+                if e["type"] == "movie" and e["title"] == title and str(e.get("year", "")) == year and not e["trakt_slug"]:
+                    e["trakt_slug"] = slug
+            resolved += 1
+        
+        if (i + 1) % 50 == 0:
+            print(f"    {i+1}/{len(missing_slugs)} searched, {resolved} resolved")
+    
+    with open(slug_cache_path, "w") as f:
+        json.dump(slug_cache, f, separators=(",", ":"))
+    print(f"  Resolved {resolved}/{len(missing_slugs)} slugs")
+
 os.makedirs("data", exist_ok=True)
 
 # Cast+studios: only on full refresh (FULL_REFRESH=1) or when no people.json exists
