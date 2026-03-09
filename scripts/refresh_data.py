@@ -240,7 +240,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
                 if days < 0: days = 0
                 delays.append(days)
             except Exception: pass
-        if not delays or len(delays) < 2: continue
+        if not delays or len(delays) < 4: continue
         avg_delay = sum(delays) / len(delays)
         # Filter bulk imports: if avg delay < 1 day, almost certainly bulk-imported
         if avg_delay < 1.0: continue
