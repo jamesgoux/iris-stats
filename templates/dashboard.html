@@ -302,7 +302,7 @@ function stats(){
   var mw=0,ew=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){mw+=m.movies;ew+=m.episodes});
   var s=D.c.s;var h2='';
   if(ct==='movie'){h2=sc(mw.toLocaleString(),'🎞️ Movies','var(--ac)')+sc((s.movie_runtime_days||0),'⏱️ Days','#b0b0b0')}
-  else if(ct==='show'){h2=sc(ew.toLocaleString(),'📺 Episodes','var(--pu)')+sc((s.show_runtime_days||0),'⏱️ Days','#b0b0b0')}
+  else if(ct==='show'){var seasonCount2=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){seasonCount2+=m.seasons||0});h2=sc(s.unique_shows,'📺 Shows','var(--pu)')+sc(seasonCount2,'📦 Seasons','var(--pu)')+sc(ew.toLocaleString(),'🔢 Episodes','var(--pu)')+sc((s.show_runtime_days||0),'⏱️ Days','#b0b0b0')}
   else{
     // Row 1: Watches, Days, Movies, Shows, Episodes, Books
     var seasonCount=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){seasonCount+=m.seasons||0});
