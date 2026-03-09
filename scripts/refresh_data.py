@@ -347,8 +347,10 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     seen_stu = set()
     ctry_counter = Counter()
     ctry_counter_y = defaultdict(Counter)
+    ctry_movies = Counter(); ctry_shows = Counter()
     lang_counter = Counter()
     lang_counter_y = defaultdict(Counter)
+    lang_movies = Counter(); lang_shows = Counter()
     recent_all = []
 
     for e in entries:
@@ -393,10 +395,14 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             seen_stu.add(ctry_key)
             ctry_counter[ctry] += 1
             ctry_counter_y[y][ctry] += 1
+            if e["type"] == "movie": ctry_movies[ctry] += 1
+            else: ctry_shows[ctry] += 1
         if lang and lang_key not in seen_stu:
             seen_stu.add(lang_key)
             lang_counter[lang] += 1
             lang_counter_y[y][lang] += 1
+            if e["type"] == "movie": lang_movies[lang] += 1
+            else: lang_shows[lang] += 1
         try:
             dt = datetime.fromisoformat(e["watched_at"].replace("Z", "+00:00"))
             # Convert UTC to Pacific time (UTC-8 PST / UTC-7 PDT)
@@ -631,7 +637,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "th_y": {},   # placeholder, filled below
             "gm": [{"genre": g, "count": c} for g, c in genre_movie.most_common(20)],
             "gs": [{"genre": g, "count": c} for g, c in genre_show.most_common(20)],
-            "ga": [{"genre": g, "count": genre_movie[g] + genre_show[g]}
+            "ga": [{"genre": g, "count": genre_movie[g] + genre_show[g], "m": genre_movie[g], "s": genre_show[g]}
                    for g, _ in (genre_movie + genre_show).most_common(20)],
             "gm_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_movie_y.items()},
             "gs_y": {y: [{"genre": g, "count": c} for g, c in ct.most_common(20)] for y, ct in genre_show_y.items()},
@@ -644,9 +650,9 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "net_y": {y: [{"n": n, "s": ct[n]} for n in sorted(ct, key=ct.get, reverse=True)[:25]] for y, ct in net_shows_y.items()},
             "stu": [{"n": s, "m": stu_movies[s], "s": stu_shows[s]} for s in sorted(set(list(stu_movies)+list(stu_shows)), key=lambda x: stu_movies[x]+stu_shows[x], reverse=True)[:25]],
             "stu_y": {y: [{"n": s, "m": stu_movies_y[y][s], "s": stu_shows_y[y][s]} for s in sorted(set(list(stu_movies_y[y])+list(stu_shows_y[y])), key=lambda x: stu_movies_y[y][x]+stu_shows_y[y][x], reverse=True)[:25]] for y in set(list(stu_movies_y)+list(stu_shows_y))},
-            "ctry": [{"n": c, "count": n} for c, n in ctry_counter.most_common(20)],
+            "ctry": [{"n": c, "count": n, "m": ctry_movies[c], "s": ctry_shows[c]} for c, n in ctry_counter.most_common(20)],
             "ctry_y": {y: [{"n": c, "count": n} for c, n in ct.most_common(20)] for y, ct in ctry_counter_y.items()},
-            "lang": [{"n": l, "count": n} for l, n in lang_counter.most_common(20)],
+            "lang": [{"n": l, "count": n, "m": lang_movies[l], "s": lang_shows[l]} for l, n in lang_counter.most_common(20)],
             "lang_y": {y: [{"n": l, "count": n} for l, n in ct.most_common(20)] for y, ct in lang_counter_y.items()},
             "r": recent_all,
             "f": first_all,
