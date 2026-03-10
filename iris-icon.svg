@@ -5,10 +5,14 @@
       <stop offset="45%" stop-color="#a78bfa"/>
       <stop offset="100%" stop-color="#0f3460"/>
     </radialGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f0f0f"/>
+    </linearGradient>
   </defs>
-  <!-- Dark background with rounded corners for iOS -->
-  <rect width="512" height="512" rx="90" fill="#0f0f0f"/>
-  <rect width="512" height="512" rx="90" fill="none" stroke="#a78bfa" stroke-width="6" stroke-opacity="0.4"/>
+  <!-- Dark background with gradient and visible purple border -->
+  <rect width="512" height="512" rx="90" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="90" fill="none" stroke="#a78bfa" stroke-width="12"/>
   <!-- Eye shape -->
   <path d="M256 96C128 96 32 256 32 256s96 160 224 160 224-160 224-160S384 96 256 96z" fill="#1a1a2e" stroke="#a78bfa" stroke-width="8"/>
   <!-- Iris circle -->
