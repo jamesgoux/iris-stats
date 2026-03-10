@@ -1690,7 +1690,9 @@ function renderPodcasts(){
   var pc=D.pc;var wrap=document.getElementById('pc-wrap');
   if(!pc||!pc.total_podcasts||(ct!=='all'&&ct!=='podcast')){if(wrap)wrap.style.display='none';return}
   wrap.style.display='';
-  var top=pc.top||[];if(!top.length)return;
+  // Use year-filtered top list if available
+  var top=(cy!=='all'&&pc.top_y&&pc.top_y[cy])?pc.top_y[cy]:(pc.top||[]);
+  if(!top.length){wrap.style.display='none';return}
   window._pcMode=window._pcMode||'hrs';
   var isHrs=window._pcMode==='hrs';
   var el=document.getElementById('pc-chart');
@@ -1711,7 +1713,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 05:47 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 06:01 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];

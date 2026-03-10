@@ -1384,7 +1384,27 @@ if pc_data:
                     break
             if not found:
                 data["c"]["mt"][mo].append({"t": pod_name, "type": "podcast", "c": 1})
-    print(f"  Podcasts: {pc_data.get('total_podcasts', 0)} shows, {pc_data.get('total_listened_hrs', 0)}h listened, {sum(pc_poll_yearly.values())} polled episodes")
+    
+    # Build per-year top podcast lists from history
+    pc_by_year = defaultdict(lambda: defaultdict(lambda: {"eps": 0, "sec": 0}))
+    for ev in _pch.values():
+        if ev.get("src") in ("poll", "export") and ev.get("d"):
+            played = ev.get("played", 0) or 0
+            if played > 0 and played < 300:
+                continue
+            yr = ev["d"][:4]
+            pod = ev.get("p", "Unknown")
+            pc_by_year[yr][pod]["eps"] += 1
+            pc_by_year[yr][pod]["sec"] += played
+    
+    # Build top_y: {year: [{title, played, listened_hrs}]}
+    pc_top_y = {}
+    for yr, pods in pc_by_year.items():
+        top_list = sorted(pods.items(), key=lambda x: x[1]["sec"], reverse=True)
+        pc_top_y[yr] = [{"title": name, "played": d["eps"], "listened_hrs": round(d["sec"]/3600, 1)} for name, d in top_list[:25]]
+    data["pc"]["top_y"] = pc_top_y
+    
+    print(f"  Podcasts: {pc_data.get('total_podcasts', 0)} shows, {pc_data.get('total_listened_hrs', 0)}h listened, {sum(pc_poll_yearly.values())} episodes in timeline")
 
 # Merge concert + theater titles into monthly title lists (mt)
 mt = data["c"].get("mt", {})
