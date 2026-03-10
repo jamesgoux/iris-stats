@@ -976,7 +976,8 @@ function baseCharts(){
 function renderCatchup(){
   window._cupMode=window._cupMode||'long';
   var cupRaw=(cy!=='all'&&D.c.cup_y&&D.c.cup_y[cy]?D.c.cup_y[cy]:(D.c.cup||[])).slice();
-  if(window._cupMode==='short')cupRaw.sort(function(a,b){return a.avg-b.avg});
+  if(window._cupMode==='long')cupRaw.sort(function(a,b){return b.avg-a.avg});
+  else cupRaw.sort(function(a,b){return a.avg-b.avg});
   var cupData=cupRaw.slice(0,20).reverse();
   var cupEl=document.getElementById('cupc');
   var existingCup=echarts.getInstanceByDom(cupEl);if(existingCup)existingCup.dispose();
@@ -1548,7 +1549,7 @@ function renderLastfm(){
   var curArtists=(perData.find(function(p){return p.period===per})||perData[0]||{}).artists||[];
   var aEl=document.getElementById('lfm-artists');
   if(curArtists.length){
-    var aSlice=curArtists.slice(0,12).reverse();
+    var aSlice=curArtists.slice(0,24).reverse();
     var aChart=echarts.init(aEl);
     aChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b>: '+tp(p).value+' plays'}},
       grid:{left:gl(120),right:30,top:8,bottom:8},
@@ -1563,7 +1564,7 @@ function renderLastfm(){
   var curTracks=(trData.find(function(p){return p.period===per})||trData[0]||{}).tracks||[];
   var tEl=document.getElementById('lfm-tracks');
   if(curTracks.length){
-    var tSlice=curTracks.slice(0,10).reverse();
+    var tSlice=curTracks.slice(0,30).reverse();
     var tChart=echarts.init(tEl);
     tChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var t=tSlice.find(function(x){return tp(p).name.indexOf(x.n.substring(0,15))>=0});return t?'<b>'+t.n+'</b><br/>'+t.a+'<br/>'+t.c+' plays':''}},
       grid:{left:gl(130),right:30,top:8,bottom:8},
