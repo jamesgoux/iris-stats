@@ -1580,7 +1580,7 @@ function renderLastfm(){
   var curAlbums=(alData.find(function(p){return p.period===per})||alData[0]||{}).albums||[];
   var alEl=document.getElementById('lfm-albums');
   if(curAlbums.length){
-    var alH='<div class="cover-grid" style="justify-content:flex-start;gap:12px">';curAlbums.slice(0,30).forEach(function(a,i){
+    var alH='<div class="cover-grid" style="justify-content:flex-start;gap:12px">';curAlbums.slice(0,mob?20:34).forEach(function(a,i){
       var cover=a.img?'<img src="'+a.img+'" class="al-cover">':'<div style="width:80px;height:80px;background:linear-gradient(135deg,#1a1a4e,#111);border-radius:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:20px;font-weight:800">'+a.n.charAt(0)+'</div>';
       alH+='<div class="gi">'+cover+'<span>'+a.n+'</span><span>'+a.a+'</span><span class="val">'+a.c+' plays</span></div>'});
     alH+='</div>';alEl.style.height='auto';alEl.innerHTML=alH;
@@ -1628,7 +1628,7 @@ function renderConcerts(){
   // Recompute artists from filtered entries
   var artistCounts={};var artistSongs={};
   filtered.forEach(function(e){artistCounts[e.artist]=(artistCounts[e.artist]||0)+1;artistSongs[e.artist]=(artistSongs[e.artist]||0)+e.songs});
-  var artists=Object.entries(artistCounts).sort(function(a,b){return b[1]-a[1]}).map(function(e){return{n:e[0],c:e[1],s:artistSongs[e[0]]||0}});
+  var artists=Object.entries(artistCounts).sort(function(a,b){return b[1]-a[1]}).filter(function(e){return e[1]>=2}).map(function(e){return{n:e[0],c:e[1],s:artistSongs[e[0]]||0}});
   var ad=con.adetail||{};
   var aEl=document.getElementById('con-artists');
   if(artists.length){var h='<table><thead><tr><th>#</th><th>Artist</th><th>Shows</th><th>Songs</th></tr></thead><tbody>';
@@ -1815,7 +1815,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 06:43 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 06:45 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
