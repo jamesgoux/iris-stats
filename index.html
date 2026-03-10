@@ -867,7 +867,6 @@ function baseCharts(){
   ch.push(c9);
 
   // Catch-up shows
-  ch.push(c2,c3,c3b,c4,c5,c7,c8);
   renderCatchup();
 }
 
@@ -921,6 +920,7 @@ function renderCatchup(){
   c8.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var pp=Array.isArray(p)?p:[p];var l=lnd.find(function(x){return pp[0].name.includes(langName(x.n))});if(!l)return'';var h='🗣️ <b>'+langName(l.n)+'</b>';if(pp.length>1)pp.forEach(function(s){h+='<br/>'+s.marker+s.seriesName+': '+s.value});else h+='<br/>'+pp[0].value+' titles';return h}},legend:{data:ct==='all'&&lnd[0]&&lnd[0].m!==undefined?['Movies','Shows']:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:gl(90),right:20,top:ct==='all'?30:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:lnd.map(function(d){return'🗣️ '+langName(d.n)}),axisLabel:{color:'#ccc',fontSize:11,interval:0},axisLine:{lineStyle:{color:'#333'}}},series:langSeries});
 
   c8.on('click',function(p){var n=lnd[p.dataIndex]?lnd[p.dataIndex].n:p.name.toLowerCase();showDetail(document.getElementById('langc'),'lang',n)});
+  ch.push(c7,c8);
 }
 
 function renderPosters(animate){
@@ -1708,7 +1708,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 03:35 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 03:54 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
