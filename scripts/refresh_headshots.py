@@ -13,9 +13,6 @@ Daily run (default): 2000 items. 20-min run: 300 items.
 """
 
 import os, json, time, re, requests
-from datetime import datetime, timedelta
-
-SKIP_TTL_DAYS = 30  # re-check skipped people after this many days
 
 CLIENT_ID = os.environ.get("TRAKT_CLIENT_ID")
 BASE_URL = "https://api.trakt.tv"
@@ -230,25 +227,12 @@ def fetch_logos(budget):
 # ============================================================
 def fetch_headshots_for(label, priority, source_files, budget):
     hs = load_json("data/headshots.json")
-    skip_raw = load_json("data/headshots_skip.json")  # names confirmed to have no TMDB image
+    skip = load_json("data/headshots_skip.json")  # names confirmed to have no TMDB image
 
-    # Migrate old format (name -> tmdb_id) to new (name -> {id, ts}) and separate expired entries
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    cutoff = (datetime.utcnow() - timedelta(days=SKIP_TTL_DAYS)).strftime("%Y-%m-%d")
-    skip = {}
-    expired_names = set()
-    for name, val in skip_raw.items():
+    # Normalize any old {name: {id, ts}} format back to simple {name: tmdb_id}
+    for name, val in list(skip.items()):
         if isinstance(val, dict):
-            if val.get("ts", "") >= cutoff:
-                skip[name] = val
-            else:
-                expired_names.add(name)
-                skip[name] = val  # keep in cache, but mark as eligible for retry
-        else:
-            # Old format — treat as fresh (migrate)
-            skip[name] = {"id": val, "ts": today}
-    if expired_names:
-        print(f"  {len(expired_names)} skip entries expired (>{SKIP_TTL_DAYS} days) — eligible for retry if queue is empty")
+            skip[name] = val.get("id", 0)
 
     slug_recency = load_json("data/slug_recency.json")
     vis = load_json("data/visible_priority.json")
@@ -267,32 +251,29 @@ def fetch_headshots_for(label, priority, source_files, budget):
         titles = all_people.get(slug, {}).get("titles", [])
         return max((slug_recency.get(t, 0) for t in titles), default=0)
 
-    # Exclude names already cached AND names in active skip cache
-    # Expired skip entries go to the back of the queue as low-priority retries
-    active_skip_names = set(n for n in skip.keys() if n not in expired_names)
+    skip_names = set(skip.keys())
+    # Never-tried people first, then previously-skipped as low-priority backfill
     need_fresh = [(slug, info) for slug, info in all_people.items()
-                  if info["name"] not in hs and info["name"] not in skip]
+                  if info["name"] not in hs and info["name"] not in skip_names]
     need_retry = [(slug, info) for slug, info in all_people.items()
-                  if info["name"] not in hs and info["name"] in expired_names]
+                  if info["name"] not in hs and info["name"] in skip_names]
     need_fresh.sort(key=lambda x: (1 if x[0] in vis_pids else 0, person_recency(x[0])), reverse=True)
     need_retry.sort(key=lambda x: (1 if x[0] in vis_pids else 0, person_recency(x[0])), reverse=True)
-    # Fresh first, then expired retries fill remaining budget
     need = need_fresh[:budget]
-    if len(need) < budget:
-        need.extend(need_retry[:budget - len(need)])
+    remaining_budget = budget - len(need)
+    if remaining_budget > 0:
+        need.extend(need_retry[:remaining_budget])
 
-    skipped_count = sum(1 for p in all_people.values() if p["name"] in active_skip_names)
-    print(f"\n[{priority}/5] {label}: {sum(1 for p in all_people.values() if p['name'] in hs)} cached, {skipped_count} skipped (no image), {len(need)} to fetch ({len(need_retry)} retries eligible)")
+    print(f"\n[{priority}/5] {label}: {sum(1 for p in all_people.values() if p['name'] in hs)} cached, {len(skip_names)} skipped (no image), {len(need)} to fetch ({min(remaining_budget, len(need_retry)) if remaining_budget > 0 else 0} retries)")
     if not need: return 0
 
     count = 0; used = 0; new_skips = 0
     for i, (slug, info) in enumerate(need):
         try:
-            # Get TMDB ID from Trakt
             r1 = requests.get(f"{BASE_URL}/people/{slug}?extended=full", headers=TRAKT_HEADERS, timeout=5)
             used += 1
             if r1.status_code == 429:
-                time.sleep(10)  # rate limited, wait longer
+                time.sleep(10)
                 r1 = requests.get(f"{BASE_URL}/people/{slug}?extended=full", headers=TRAKT_HEADERS, timeout=5)
                 used += 1
             if r1.status_code == 200:
@@ -303,25 +284,20 @@ def fetch_headshots_for(label, priority, source_files, budget):
                         used += 1
                         if url:
                             hs[info["name"]] = url; count += 1
+                            skip.pop(info["name"], None)  # found image, remove from skip
                         else:
-                            # Confirmed no TMDB image — skip for SKIP_TTL_DAYS
-                            skip[info["name"]] = {"id": tmdb_id, "ts": today}
-                            new_skips += 1
+                            skip[info["name"]] = tmdb_id; new_skips += 1
                     else:
                         h = fetch_tmdb_image_scrape(f"https://www.themoviedb.org/person/{tmdb_id}")
                         used += 1
                         if h:
                             hs[info["name"]] = f"https://image.tmdb.org/t/p/w185/{h}"
-                            count += 1
+                            count += 1; skip.pop(info["name"], None)
                         else:
-                            skip[info["name"]] = {"id": tmdb_id, "ts": today}
-                            new_skips += 1
-                elif not tmdb_id:
-                    # No TMDB ID at all — skip
-                    skip[info["name"]] = {"id": 0, "ts": today}
-                    new_skips += 1
+                            skip[info["name"]] = tmdb_id; new_skips += 1
+                else:
+                    skip[info["name"]] = 0; new_skips += 1
         except Exception as e:
-            # Don't skip on errors — might be transient
             if i < 3: print(f"  Error on {slug}: {e}")
         if (i+1) % 100 == 0:
             print(f"  {i+1}/{len(need)}, {count} found, {new_skips} skipped")
