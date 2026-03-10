@@ -232,22 +232,23 @@ def fetch_headshots_for(label, priority, source_files, budget):
     hs = load_json("data/headshots.json")
     skip_raw = load_json("data/headshots_skip.json")  # names confirmed to have no TMDB image
 
-    # Migrate old format (name -> tmdb_id) to new (name -> {id, ts}) and expire old entries
+    # Migrate old format (name -> tmdb_id) to new (name -> {id, ts}) and separate expired entries
     today = datetime.utcnow().strftime("%Y-%m-%d")
     cutoff = (datetime.utcnow() - timedelta(days=SKIP_TTL_DAYS)).strftime("%Y-%m-%d")
     skip = {}
-    expired = 0
+    expired_names = set()
     for name, val in skip_raw.items():
         if isinstance(val, dict):
             if val.get("ts", "") >= cutoff:
                 skip[name] = val
             else:
-                expired += 1
+                expired_names.add(name)
+                skip[name] = val  # keep in cache, but mark as eligible for retry
         else:
             # Old format — treat as fresh (migrate)
             skip[name] = {"id": val, "ts": today}
-    if expired:
-        print(f"  Expired {expired} skip entries (>{SKIP_TTL_DAYS} days old)")
+    if expired_names:
+        print(f"  {len(expired_names)} skip entries expired (>{SKIP_TTL_DAYS} days) — eligible for retry if queue is empty")
 
     slug_recency = load_json("data/slug_recency.json")
     vis = load_json("data/visible_priority.json")
@@ -266,15 +267,22 @@ def fetch_headshots_for(label, priority, source_files, budget):
         titles = all_people.get(slug, {}).get("titles", [])
         return max((slug_recency.get(t, 0) for t in titles), default=0)
 
-    # Exclude names already cached AND names confirmed to have no image
-    skip_names = set(skip.keys())
-    need = [(slug, info) for slug, info in all_people.items()
-            if info["name"] not in hs and info["name"] not in skip_names]
-    need.sort(key=lambda x: (1 if x[0] in vis_pids else 0, person_recency(x[0])), reverse=True)
-    need = need[:budget]
+    # Exclude names already cached AND names in active skip cache
+    # Expired skip entries go to the back of the queue as low-priority retries
+    active_skip_names = set(n for n in skip.keys() if n not in expired_names)
+    need_fresh = [(slug, info) for slug, info in all_people.items()
+                  if info["name"] not in hs and info["name"] not in skip]
+    need_retry = [(slug, info) for slug, info in all_people.items()
+                  if info["name"] not in hs and info["name"] in expired_names]
+    need_fresh.sort(key=lambda x: (1 if x[0] in vis_pids else 0, person_recency(x[0])), reverse=True)
+    need_retry.sort(key=lambda x: (1 if x[0] in vis_pids else 0, person_recency(x[0])), reverse=True)
+    # Fresh first, then expired retries fill remaining budget
+    need = need_fresh[:budget]
+    if len(need) < budget:
+        need.extend(need_retry[:budget - len(need)])
 
-    skipped_count = sum(1 for p in all_people.values() if p["name"] in skip_names)
-    print(f"\n[{priority}/5] {label}: {sum(1 for p in all_people.values() if p['name'] in hs)} cached, {skipped_count} skipped (no image), {len(need)} to fetch")
+    skipped_count = sum(1 for p in all_people.values() if p["name"] in active_skip_names)
+    print(f"\n[{priority}/5] {label}: {sum(1 for p in all_people.values() if p['name'] in hs)} cached, {skipped_count} skipped (no image), {len(need)} to fetch ({len(need_retry)} retries eligible)")
     if not need: return 0
 
     count = 0; used = 0; new_skips = 0

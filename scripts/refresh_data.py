@@ -275,7 +275,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             ttw_all.append({"n": label, "avg": sd["delay"], "ct": sd["eps"]})
 
     ttw_all.sort(key=lambda x: x["avg"])
-    catchup_all.sort(key=lambda x: x["avg"])
+    catchup_all.sort(key=lambda x: x["avg"], reverse=True)  # longest first
 
     # Per-year breakdowns
     ttw_by_year = defaultdict(list)
@@ -290,7 +290,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
         else:
             catchup_by_year[yr].append({"n": label, "avg": round(sd["delay"] / 365, 1), "ct": sd["eps"]})
     for yr in ttw_by_year: ttw_by_year[yr].sort(key=lambda x: x["avg"])
-    for yr in catchup_by_year: catchup_by_year[yr].sort(key=lambda x: x["avg"])
+    for yr in catchup_by_year: catchup_by_year[yr].sort(key=lambda x: x["avg"], reverse=True)
 
     # Content vintage: count unique titles by their release year (not watch year)
     vintage_movies = Counter()  # release_year -> count of unique movie titles
@@ -722,8 +722,8 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             "epl": ep_legend,
             "ttw": ttw_all[:25],
             "ttw_y": {y: v[:25] for y, v in ttw_by_year.items()},
-            "cup": catchup_all[:25],
-            "cup_y": {y: v[:25] for y, v in catchup_by_year.items()},
+            "cup": catchup_all,
+            "cup_y": {y: v for y, v in catchup_by_year.items()},
             "vy": vintage_data,
             "vy_y": vintage_by_year,
             "mch": movies_by_community,
