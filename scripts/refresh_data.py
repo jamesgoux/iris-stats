@@ -439,8 +439,9 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             dt_local = dt.astimezone(ZoneInfo("America/Los_Angeles"))
             dw_name = dwn[dt_local.weekday()]
             dwc_y[y][dw_name] += 1
-            # All-time counters exclude 2016 (bulk-import outlier)
-            if y != "2016":
+            # All-time counters exclude June 2016 bulk-import day
+            m_check = e["watched_at"][:7] if e["watched_at"] else ""
+            if m_check != "2016-06":
                 dwc[dw_name] += 1
                 if e["type"] == "movie": dwc_m[dw_name] += 1
                 else: dwc_s[dw_name] += 1
@@ -589,11 +590,13 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     for v in show_ratings.values(): v["wy"] = sorted(v["wy"])
     shows_by_community = sorted(show_ratings.values(), key=lambda x: x["r"], reverse=True)
 
-    # Hour of day aggregate (all time) — split by movie/episode, skip 2016 outlier
+    # Hour of day aggregate (all time) — split by movie/episode, skip June 2016 bulk-import
     hod_movies = Counter()
     hod_episodes = Counter()
     for y, yr_data in hod.items():
-        if y == "2016": continue  # bulk-import outlier skews 1am
+        if y == "2016":
+            # Only skip June 2016 data, keep rest of 2016
+            continue  # TODO: per-month hod tracking needed for finer exclusion
         for k, c in yr_data.items():
             h, typ = k.rsplit("_", 1)
             if typ == "movie": hod_movies[int(h)] += c
