@@ -2,7 +2,7 @@ name: Refresh Headshots
 
 on:
   schedule:
-    - cron: '15 4 * * *'  # Daily at 4:15 AM UTC
+    - cron: '15 */2 * * *'  # Every 2 hours at :15
   workflow_dispatch:       # Manual trigger
 
 permissions:
