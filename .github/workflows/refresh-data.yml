@@ -83,4 +83,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --quiet --staged || git commit -m "Auto-refresh $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase origin main
           git push

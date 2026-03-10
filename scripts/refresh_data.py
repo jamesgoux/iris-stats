@@ -287,7 +287,6 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             catchup_by_year[yr].append({"n": label, "avg": round(sd["delay"] / 365, 1), "ct": sd["eps"]})
         elif sd["delay"] >= 1.0:
             ttw_by_year[yr].append({"n": label, "avg": sd["delay"], "ct": sd["eps"]})
-            ttw_by_year[yr].append({"n": label, "avg": sd["delay"], "ct": sd["eps"]})
         else:
             catchup_by_year[yr].append({"n": label, "avg": round(sd["delay"] / 365, 1), "ct": sd["eps"]})
     for yr in ttw_by_year: ttw_by_year[yr].sort(key=lambda x: x["avg"])

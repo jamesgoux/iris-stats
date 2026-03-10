@@ -227,6 +227,7 @@ def fetch_logos(budget):
 # ============================================================
 def fetch_headshots_for(label, priority, source_files, budget):
     hs = load_json("data/headshots.json")
+    skip = load_json("data/headshots_skip.json")  # names confirmed to have no TMDB image
     slug_recency = load_json("data/slug_recency.json")
     vis = load_json("data/visible_priority.json")
 
@@ -244,14 +245,18 @@ def fetch_headshots_for(label, priority, source_files, budget):
         titles = all_people.get(slug, {}).get("titles", [])
         return max((slug_recency.get(t, 0) for t in titles), default=0)
 
-    need = [(slug, info) for slug, info in all_people.items() if info["name"] not in hs]
+    # Exclude names already cached AND names confirmed to have no image
+    skip_names = set(skip.keys())
+    need = [(slug, info) for slug, info in all_people.items()
+            if info["name"] not in hs and info["name"] not in skip_names]
     need.sort(key=lambda x: (1 if x[0] in vis_pids else 0, person_recency(x[0])), reverse=True)
     need = need[:budget]
 
-    print(f"\n[{priority}/5] {label}: {sum(1 for p in all_people.values() if p['name'] in hs)} cached, {len(need)} to fetch")
+    skipped_count = sum(1 for p in all_people.values() if p["name"] in skip_names)
+    print(f"\n[{priority}/5] {label}: {sum(1 for p in all_people.values() if p['name'] in hs)} cached, {skipped_count} skipped (no image), {len(need)} to fetch")
     if not need: return 0
 
-    count = 0; used = 0
+    count = 0; used = 0; new_skips = 0
     for i, (slug, info) in enumerate(need):
         try:
             # Get TMDB ID from Trakt
@@ -269,21 +274,35 @@ def fetch_headshots_for(label, priority, source_files, budget):
                         used += 1
                         if url:
                             hs[info["name"]] = url; count += 1
+                        else:
+                            # Confirmed no TMDB image — skip in future runs
+                            skip[info["name"]] = tmdb_id
+                            new_skips += 1
                     else:
                         h = fetch_tmdb_image_scrape(f"https://www.themoviedb.org/person/{tmdb_id}")
                         used += 1
                         if h:
                             hs[info["name"]] = f"https://image.tmdb.org/t/p/w185/{h}"
                             count += 1
+                        else:
+                            skip[info["name"]] = tmdb_id
+                            new_skips += 1
+                elif not tmdb_id:
+                    # No TMDB ID at all — skip
+                    skip[info["name"]] = 0
+                    new_skips += 1
         except Exception as e:
+            # Don't skip on errors — might be transient
             if i < 3: print(f"  Error on {slug}: {e}")
         if (i+1) % 100 == 0:
-            print(f"  {i+1}/{len(need)}, {count} found")
+            print(f"  {i+1}/{len(need)}, {count} found, {new_skips} skipped")
             save_json("data/headshots.json", hs)
+            save_json("data/headshots_skip.json", skip)
         time.sleep(0.15 if USE_TMDB_API else 0.1)
 
     save_json("data/headshots.json", hs)
-    print(f"  +{count} {label.lower()} ({len(hs)} total headshots), {used} requests")
+    save_json("data/headshots_skip.json", skip)
+    print(f"  +{count} {label.lower()} ({len(hs)} total headshots), {new_skips} new skips, {used} requests")
     return used
 
 # ============================================================
