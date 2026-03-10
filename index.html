@@ -577,7 +577,6 @@ function baseCharts(){
     if(showBk){tlSeries.push({name:'Books',type:'bar',stack:'t',data:wkData.books,itemStyle:{color:'#fbbf24'},barMaxWidth:tlBarW});tlLeg.push('Books')}
     if(showCo){tlSeries.push({name:'Concerts',type:'bar',stack:'t',data:wkData.concerts,itemStyle:{color:'#3b82f6'},barMaxWidth:tlBarW});tlLeg.push('Concerts')}
     if(showTh){tlSeries.push({name:'Theater',type:'bar',stack:'t',data:wkData.theater,itemStyle:{color:'#a78bfa'},barMaxWidth:tlBarW});tlLeg.push('Theater')}
-    if(showPc){tlSeries.push({name:'Podcasts',type:'bar',stack:'t',data:wkData.podcasts,itemStyle:{color:'#ef4444'},barMaxWidth:tlBarW});tlLeg.push('Podcasts')}
   }else{
     tlLabels=mf.map(function(d){return d.month});tlBarW=30;
     if(showMo){tlSeries.push({name:'Movies',type:'bar',stack:'t',data:mf.map(function(d){return d.movies}),itemStyle:{color:'#fb923c'},barMaxWidth:tlBarW});tlLeg.push('Movies')}
@@ -585,7 +584,6 @@ function baseCharts(){
     if(showBk&&Object.keys(grM).length){tlSeries.push({name:'Books',type:'bar',stack:'t',data:mf.map(function(d){return grM[d.month]||0}),itemStyle:{color:'#fbbf24'},barMaxWidth:tlBarW});tlLeg.push('Books')}
     if(showCo&&Object.keys(conM).length){tlSeries.push({name:'Concerts',type:'bar',stack:'t',data:mf.map(function(d){return conM[d.month]||0}),itemStyle:{color:'#3b82f6'},barMaxWidth:tlBarW});tlLeg.push('Concerts')}
     if(showTh&&Object.keys(thM).length){tlSeries.push({name:'Theater',type:'bar',stack:'t',data:mf.map(function(d){return thM[d.month]||0}),itemStyle:{color:'#a78bfa'},barMaxWidth:tlBarW});tlLeg.push('Theater')}
-    if(showPc&&Object.keys(pcM).length){tlSeries.push({name:'Podcasts',type:'bar',stack:'t',data:mf.map(function(d){return pcM[d.month]||0}),itemStyle:{color:'#ef4444'},barMaxWidth:tlBarW});tlLeg.push('Podcasts')}
   }
   // Scrobbles line overlay (secondary y-axis) for monthly/weekly
   var lfmMo=D.lfm&&D.lfm.monthly?D.lfm.monthly:[];
@@ -916,7 +914,6 @@ function baseCharts(){
   if(yBk&&Object.keys(grY).length){yrSeries.push({name:'Books',type:'bar',stack:'t',data:yr.map(function(d){return grY[d.year]||0}),itemStyle:{color:'#fbbf24'}});yrLeg.push('Books')}
   if(yCo&&Object.keys(conY).length){yrSeries.push({name:'Concerts',type:'bar',stack:'t',data:yr.map(function(d){return conY[d.year]||0}),itemStyle:{color:'#3b82f6'}});yrLeg.push('Concerts')}
   if(yTh&&Object.keys(thY).length){yrSeries.push({name:'Theater',type:'bar',stack:'t',data:yr.map(function(d){return thY[d.year]||0}),itemStyle:{color:'#a78bfa'}});yrLeg.push('Theater')}
-  if(yPc&&Object.keys(pcY).length){yrSeries.push({name:'Podcasts',type:'bar',stack:'t',data:yr.map(function(d){return pcY[d.year]||0}),itemStyle:{color:'#ef4444'}});yrLeg.push('Podcasts')}
   // Scrobbles line overlay (secondary y-axis)
   var lfmYr=D.lfm&&D.lfm.yearly?D.lfm.yearly:[];
   var lfmYrMap={};lfmYr.forEach(function(y){lfmYrMap[y.yr]=y.s||0});
@@ -1814,7 +1811,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 06:25 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 06:27 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
