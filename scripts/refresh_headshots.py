@@ -257,6 +257,10 @@ def fetch_headshots_for(label, priority, source_files, budget):
             # Get TMDB ID from Trakt
             r1 = requests.get(f"{BASE_URL}/people/{slug}?extended=full", headers=TRAKT_HEADERS, timeout=5)
             used += 1
+            if r1.status_code == 429:
+                time.sleep(10)  # rate limited, wait longer
+                r1 = requests.get(f"{BASE_URL}/people/{slug}?extended=full", headers=TRAKT_HEADERS, timeout=5)
+                used += 1
             if r1.status_code == 200:
                 tmdb_id = r1.json().get("ids", {}).get("tmdb")
                 if tmdb_id:
@@ -271,12 +275,12 @@ def fetch_headshots_for(label, priority, source_files, budget):
                         if h:
                             hs[info["name"]] = f"https://image.tmdb.org/t/p/w185/{h}"
                             count += 1
-        except Exception:
-            pass
+        except Exception as e:
+            if i < 3: print(f"  Error on {slug}: {e}")
         if (i+1) % 100 == 0:
             print(f"  {i+1}/{len(need)}, {count} found")
             save_json("data/headshots.json", hs)
-        time.sleep(0.05 if USE_TMDB_API else 0.1)
+        time.sleep(0.15 if USE_TMDB_API else 0.1)
 
     save_json("data/headshots.json", hs)
     print(f"  +{count} {label.lower()} ({len(hs)} total headshots), {used} requests")
