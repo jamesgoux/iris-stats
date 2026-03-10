@@ -1327,6 +1327,22 @@ if pc_data:
                 pc_poll_yearly[d[:4]] += 1
     data["c"]["pc_m"] = dict(pc_poll_monthly)
     data["c"]["pc_y"] = dict(pc_poll_yearly)
+    # Add podcast series to monthly title data (mt) for click detail
+    for ev in _pch.values():
+        if ev.get("src") == "poll" and ev.get("d"):
+            mo = ev["d"][:7]
+            pod_name = ev.get("p", "Unknown Podcast")
+            if mo not in data["c"]["mt"]:
+                data["c"]["mt"][mo] = []
+            # Find existing podcast entry for this month or create one
+            found = False
+            for item in data["c"]["mt"][mo]:
+                if item["t"] == pod_name and item.get("type") == "podcast":
+                    item["c"] += 1
+                    found = True
+                    break
+            if not found:
+                data["c"]["mt"][mo].append({"t": pod_name, "type": "podcast", "c": 1})
     print(f"  Podcasts: {pc_data.get('total_podcasts', 0)} shows, {pc_data.get('total_listened_hrs', 0)}h listened, {sum(pc_poll_yearly.values())} polled episodes")
 
 # Merge concert + theater titles into monthly title lists (mt)
