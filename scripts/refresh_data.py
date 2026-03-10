@@ -101,15 +101,15 @@ def fetch_cast_and_studios(entries):
         for k, v in raw.items():
             slug_studios[k] = v if isinstance(v, list) else [v]
     total = len(show_slugs) + len(movie_slugs); done = 0; skipped = 0
-    # Track which slugs already have people data to skip them
-    existing_people_slugs = set()
+    # Track which slugs already have sufficient people data to skip them
+    slug_people_count = Counter()
     for pid, info in people.items():
         for t in info["titles"]:
-            existing_people_slugs.add(t)
+            slug_people_count[t] += 1
     for slugs, kind in [(show_slugs, "shows"), (movie_slugs, "movies")]:
         for slug in slugs:
-            # Skip if we already have people for this slug
-            if slug in existing_people_slugs and slug in slug_studios:
+            # Skip only if we have a reasonable cast size (>=10) AND studios
+            if slug_people_count.get(slug, 0) >= 10 and slug in slug_studios:
                 done += 1; skipped += 1; continue
             try:
                 r = retry_request("get", f"{BASE_URL}/{kind}/{slug}/people?extended=full", headers=HEADERS, timeout=10)
