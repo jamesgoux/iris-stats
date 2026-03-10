@@ -130,13 +130,10 @@ body{overflow-x:hidden}
 <div class="g2 med-s" data-med="all movie">
 <div id="sec-mov" class="cd fw s-m"><h3 id="mdh"><span class="i">🎞️</span>Movies <span class="vtog" style="float:right"><button class="vb vb-on mv-mode" data-v="long" onclick="window._mvMode='long';movieCharts(true)">Longest</button><button class="vb mv-mode" data-v="short" onclick="window._mvMode='short';movieCharts(true)">Shortest</button><button class="vb mv-mode" data-v="rewatch" onclick="window._mvMode='rewatch';movieCharts(true)">Rewatched</button></span></h3><div id="mdc" class="cover-grid"></div></div>
 </div>
-<div class="g2 med-s" data-med="all movie show">
-<div id="sec-time" class="cd s-t"><h3><span class="i">📅</span>Day of Week</h3><div id="dwc" style="height:280px"></div></div>
-<div class="cd s-t"><h3><span class="i">🕐</span>Time of Day</h3><div id="hodc" style="height:280px"></div></div>
-</div>
-<!-- GENRES + NETWORKS + STUDIOS -->
 <div class="g3 med-s" data-med="all movie show">
 <div id="sec-meta" class="cd s-g"><h3 id="gnh"><span class="i">🎯</span>Genres</h3><div id="gnc" style="height:360px"></div></div>
+<div id="sec-time" class="cd s-t"><h3><span class="i">📅</span>Day of Week</h3><div id="dwc" style="height:360px"></div></div>
+<div class="cd s-t"><h3><span class="i">🕐</span>Time of Day</h3><div id="hodc" style="height:360px"></div></div>
 </div>
 <div class="g2 med-s" data-med="all movie show" id="gt-wrap">
 <div class="cd fw s-g"><h3><span class="i">📈</span>Genre Trends (year over year %)</h3><div id="gtc" style="height:350px"></div></div>
@@ -438,10 +435,10 @@ function movieCharts(animate){
   var da=[],ra=[];MYD.forEach(function(m){var w=0;if(cy==='all'){Object.values(m.yd).forEach(function(c){w+=c})}else if(m.yd[cy]){w=m.yd[cy]}if(w>0){da.push({n:m.n,min:m.rt*w,w:w,yr:m.yr});if(w>1)ra.push({n:m.n,w:w,yr:m.yr,min:m.rt*w})}});
   var items;
   if(mode==='rewatch'){
-    ra.sort(function(a,b){return b.w-a.w});items=ra.slice(0,20);
+    ra.sort(function(a,b){return b.w-a.w});items=ra.slice(0,mob?20:24);
   }else{
     if(mode==='short') da.sort(function(a,b){return a.min-b.min}); else da.sort(function(a,b){return b.min-a.min});
-    items=da.slice(0,20);
+    items=da.slice(0,mob?20:24);
   }
   document.querySelectorAll('.mv-mode').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v===mode)});
   function mvSlug(n){return n.toLowerCase().replace(/[^a-z0-9]/g,'-')}
@@ -1041,7 +1038,7 @@ function renderPosters(animate){
     if(e>0)shows.push({n:s.n,e:e,h:Math.round(m/60*10)/10})
   });
   shows.sort(function(a,b){return window._showSort==='dur'?(b.h-a.h):(b.e-a.e)});
-  var top=shows.slice(0,20);
+  var top=shows.slice(0,mob?20:24);
   function slug(n){return n.toLowerCase().replace(/[^a-z0-9]/g,'-')}
   function findImg(s){var sl=slug(s);for(var k in PS){if(k===sl||sl===k)return PS[k]}for(var k in PS){if(sl.length>5&&k.indexOf(sl)>=0)return PS[k]}return null}
   // Check poster coverage — if <50%, use bar chart instead
@@ -1818,7 +1815,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 06:37 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 06:43 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
