@@ -285,15 +285,17 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     vintage_seen = set()
     for e in entries:
         ry = str(e.get("year", ""))
-        if not ry or not e["trakt_slug"]: continue
+        if not ry: continue
         wy = e["watched_at"][:4] if e["watched_at"] else ""
-        # Only count if watched in filtered year (or all)
-        vkey = (e["trakt_slug"], wy)
+        # Use slug if available, else title+year for dedup
+        vid = e["trakt_slug"] if e["trakt_slug"] else (e.get("title","") + "|" + ry)
+        if not vid: continue
+        vkey = (vid, wy)
         if vkey not in vintage_seen:
             vintage_seen.add(vkey)
             if e["type"] == "movie":
                 vintage_movies[ry] += 1
-            elif e["show_title"]:
+            elif e.get("show_title"):
                 vintage_shows[ry] += 1
 
     # Build vintage data grouped by decade for cleaner display
