@@ -436,10 +436,15 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             from zoneinfo import ZoneInfo
             dt_local = dt.astimezone(ZoneInfo("America/Los_Angeles"))
             dw_name = dwn[dt_local.weekday()]
-            dwc[dw_name] += 1
-            if e["type"] == "movie": dwc_m[dw_name] += 1; dwc_my[y][dw_name] += 1
-            else: dwc_s[dw_name] += 1; dwc_sy[y][dw_name] += 1
             dwc_y[y][dw_name] += 1
+            # All-time counters exclude 2016 (bulk-import outlier)
+            if y != "2016":
+                dwc[dw_name] += 1
+                if e["type"] == "movie": dwc_m[dw_name] += 1
+                else: dwc_s[dw_name] += 1
+            # Per-year counters always include
+            if e["type"] == "movie": dwc_my[y][dw_name] += 1
+            else: dwc_sy[y][dw_name] += 1
             h_key = f"{dt_local.hour}_{e['type']}"
             hod[y][h_key] += 1
         except Exception: pass
