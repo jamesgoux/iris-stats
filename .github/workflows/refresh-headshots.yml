@@ -68,5 +68,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --quiet --staged || git commit -m "Daily headshot refresh $(date -u +'%Y-%m-%d')"
-          git pull --rebase origin main
+          # Pull with ours strategy for data conflicts (this workflow has fresher data)
+          git pull --no-rebase -X ours origin main || true
           git push
