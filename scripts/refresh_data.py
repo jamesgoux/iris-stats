@@ -452,8 +452,10 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             season_data[key]["months"].add(m)
         elif e["type"] == "movie" or (e["type"] == "episode" and not e.get("season")):
             name = e.get("show_title") or e.get("title") or ""
+            etype = "movie" if e["type"] == "movie" else "show"
             if name:
-                movie_month[m][name] = movie_month[m].get(name, 0) + 1
+                mkey = (m, name, etype)
+                movie_month[mkey] = movie_month.get(mkey, 0) + 1
 
     # Assign each season to its completion month (last month with a watched episode)
     # Also count seasons per month and year for the timeline bars
@@ -473,13 +475,16 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     for y in yearly:
         yearly[y]["seasons"] = season_count_yearly.get(y, 0)
 
-    # Build mt_out: seasons (at completion month) + movies
+    # Build mt_out: seasons (at completion month) + movies + seasonless episodes
     mt_out = {}
-    all_months = set(list(season_by_month.keys()) + list(movie_month.keys()))
+    # Group movie_month by month
+    mm_by_month = defaultdict(list)
+    for (m, name, etype), count in movie_month.items():
+        mm_by_month[m].append({"t": name, "type": etype, "c": count})
+    all_months = set(list(season_by_month.keys()) + list(mm_by_month.keys()))
     for m in all_months:
         items = list(season_by_month.get(m, []))
-        for name, count in movie_month.get(m, {}).items():
-            items.append({"t": name, "type": "movie", "c": count})
+        items.extend(mm_by_month.get(m, []))
         items.sort(key=lambda x: x["c"], reverse=True)
         mt_out[m] = items[:25]
 
