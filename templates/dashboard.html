@@ -159,17 +159,15 @@ body{overflow-x:hidden}
 <div class="cd s-m"><h3><span class="i">📺</span>Streaming Services</h3><div id="strc" style="height:280px"></div></div>
 <div class="cd s-m"><h3><span class="i">📱</span>Devices &amp; Formats</h3><div id="devc" style="height:280px"></div></div>
 </div>
-<!-- RATINGS: distribution charts side by side, then lists below -->
-<div class="g2 med-s" data-med="all movie show">
+<!-- RATINGS: movie row then TV row -->
+<div class="g3 med-s" data-med="all movie">
 <div id="sec-ratings" class="cd s-m"><h3><span class="i">⭐</span>My Ratings (Letterboxd)</h3><div id="lbc" style="height:280px"></div></div>
-<div id="sec-sz-ratings" class="cd s-m"><h3><span class="i">⭐</span>My TV Ratings (Serializd)</h3><div id="szc" style="height:280px"></div></div>
-</div>
-<div class="g2 med-s" data-med="all movie show">
 <div class="cd s-m"><h3><span class="i">⭐</span>My Movies (Letterboxd) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="my-rat" style="font-size:12px"></div></div>
-<div class="cd s-m"><h3><span class="i">📺</span>My Shows (Serializd) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="sz-rat" style="font-size:12px"></div></div>
-</div>
-<div class="g2 med-s" data-med="all movie show">
 <div class="cd s-m"><h3><span class="i">🎞️</span>Movies (Trakt Community) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="mc-rat" style="font-size:12px"></div></div>
+</div>
+<div class="g3 med-s" data-med="all show">
+<div id="sec-sz-ratings" class="cd s-s"><h3><span class="i">⭐</span>My TV Ratings (Serializd)</h3><div id="szc" style="height:280px"></div></div>
+<div class="cd s-s"><h3><span class="i">📺</span>My Shows (Serializd) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="sz-rat" style="font-size:12px"></div></div>
 <div class="cd s-s"><h3><span class="i">📺</span>TV (Trakt Community) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="sc-rat" style="font-size:12px"></div></div>
 </div>
 <!-- FIRST + LAST WATCHES (same row) -->
@@ -1166,7 +1164,7 @@ function renderLetterboxd(){
       title:{text:ratedCount+' rated, '+avgRating+'★ avg',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
       xAxis:{type:'category',data:fullDist.map(function(d){return d.r+'★'}),axisLabel:{color:'#ccc',fontSize:9},axisLine:{lineStyle:{color:'#333'}}},
       yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
-      series:[{type:'bar',data:fullDist.map(function(d){return{value:d.c,itemStyle:{color:parseFloat(d.r)>=4?'#4ade80':parseFloat(d.r)>=3?'#60a5fa':parseFloat(d.r)>=2?'#fb923c':'#e94560'}}}),barMaxWidth:24}]});
+      series:[{type:'bar',data:fullDist.map(function(d){var v=parseFloat(d.r);var t=v/5;return{value:d.c,itemStyle:{color:'rgba(251,146,60,'+Math.max(0.25,t)+')'}}}),barMaxWidth:24}]});
     ch.push(clb);
   }
 
@@ -1184,7 +1182,7 @@ function renderLetterboxd(){
       title:{text:szCount+' rated, '+szAvg+'★ avg',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
       xAxis:{type:'category',data:szFull.map(function(d){return d.r+'★'}),axisLabel:{color:'#ccc',fontSize:9},axisLine:{lineStyle:{color:'#333'}}},
       yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
-      series:[{type:'bar',data:szFull.map(function(d){return{value:d.c,itemStyle:{color:parseFloat(d.r)>=4?'#14b8a6':parseFloat(d.r)>=3?'#60a5fa':parseFloat(d.r)>=2?'#fb923c':'#e94560'}}}),barMaxWidth:24}]});
+      series:[{type:'bar',data:szFull.map(function(d){var v=parseFloat(d.r);var t=v/5;return{value:d.c,itemStyle:{color:'rgba(20,184,166,'+Math.max(0.25,t)+')'}}}),barMaxWidth:24}]});
     ch.push(csz);
   }
 
