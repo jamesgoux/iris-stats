@@ -1256,6 +1256,54 @@ data["lb"] = {
     "myl": my_rated_low,
 }
 
+# Serializd TV ratings
+sz = {}
+if os.path.exists("data/serializd.json"):
+    with open("data/serializd.json") as f:
+        sz = json.load(f)
+
+if sz:
+    # Build per-show average rating and collect all ratings with dates
+    sz_shows = []  # {t, r, wy} for highest/lowest lists
+    sz_dist = Counter()  # rating -> count (half-star buckets)
+    sz_dist_y = defaultdict(Counter)  # year -> rating -> count
+    sz_total = 0
+
+    for sid, show in sz.items():
+        ratings = show.get("ratings", [])
+        if not ratings:
+            continue
+        # Average rating across all seasons
+        avg_r = round(sum(r["r"] for r in ratings) / len(ratings), 1)
+        # Watch years from rating dates
+        wy = sorted(set(r["date"][:4] for r in ratings if r.get("date")))
+        sz_shows.append({"t": show["name"], "r": avg_r, "wy": wy, "yr": "", "ct": len(ratings)})
+
+        for r in ratings:
+            bucket = str(r["r"])
+            sz_dist[bucket] += 1
+            sz_total += 1
+            if r.get("date"):
+                yr = r["date"][:4]
+                sz_dist_y[yr][bucket] += 1
+
+    sz_high = sorted(sz_shows, key=lambda x: x["r"], reverse=True)
+    sz_low = sorted(sz_shows, key=lambda x: x["r"])
+    sz_avg = round(sum(s["r"] for s in sz_shows) / max(1, len(sz_shows)), 1)
+
+    data["sz"] = {
+        "dist": [{"r": r, "c": c} for r, c in sorted(sz_dist.items(), key=lambda x: float(x[0]))],
+        "dist_y": {y: [{"r": r, "c": c} for r, c in sorted(ct.items(), key=lambda x: float(x[0]))] for y, ct in sz_dist_y.items()},
+        "total": len(sz_shows),
+        "rated": sz_total,
+        "avg": sz_avg,
+        "szh": sz_high,
+        "szl": sz_low,
+    }
+    print(f"  Serializd: {len(sz_shows)} shows, {sz_total} ratings, avg {sz_avg}★")
+else:
+    data["sz"] = {}
+
 # Concert data from setlist.fm
 from collections import Counter as Ctr2
 if concerts:

@@ -159,12 +159,16 @@ body{overflow-x:hidden}
 <div class="cd s-m"><h3><span class="i">📺</span>Streaming Services</h3><div id="strc" style="height:280px"></div></div>
 <div class="cd s-m"><h3><span class="i">📱</span>Devices &amp; Formats</h3><div id="devc" style="height:280px"></div></div>
 </div>
-<!-- RATINGS: 3 combined tiles with highest/lowest toggle -->
+<!-- RATINGS: combined tiles with highest/lowest toggle -->
 <div class="g2 med-s" data-med="all movie">
 <div id="sec-ratings" class="cd fw s-m"><h3><span class="i">⭐</span>My Ratings (Letterboxd)</h3><div id="lbc" style="height:280px"></div></div>
 </div>
+<div class="g2 med-s" data-med="all show">
+<div id="sec-sz-ratings" class="cd fw s-m"><h3><span class="i">⭐</span>My TV Ratings (Serializd)</h3><div id="szc" style="height:280px"></div></div>
+</div>
 <div class="g3 med-s" data-med="all movie show">
 <div class="cd s-m"><h3><span class="i">⭐</span>My Movies (Letterboxd) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="my-rat" style="font-size:12px"></div></div>
+<div class="cd s-m"><h3><span class="i">📺</span>My Shows (Serializd) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="sz-rat" style="font-size:12px"></div></div>
 <div class="cd s-m"><h3><span class="i">🎞️</span>Movies (Trakt Community) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="mc-rat" style="font-size:12px"></div></div>
 <div class="cd s-s"><h3><span class="i">📺</span>TV (Trakt Community) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="sc-rat" style="font-size:12px"></div></div>
 </div>
@@ -1163,6 +1167,24 @@ function renderLetterboxd(){
     ch.push(clb);
   }else{lbEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No Letterboxd data'+(cy!=='all'?' for '+cy:'')+'</div>'}
 
+  // Serializd TV rating distribution
+  var sz=D.sz||{};var szDist=cy==='all'?(sz.dist||[]):((sz.dist_y||{})[cy]||[]);var szEl=document.getElementById('szc');
+  if(szEl){
+    if(szDist.length>0){
+      var szCount=szDist.reduce(function(s,d){return s+d.c},0);
+      var szSum=szDist.reduce(function(s,d){return s+parseFloat(d.r)*d.c},0);
+      var szAvg=szCount?Math.round(szSum/szCount*10)/10:0;
+      var csz=echarts.init(szEl);
+      csz.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return tp(p).name+': '+tp(p).value+' seasons'}},
+        grid:{left:50,right:20,top:30,bottom:24},
+        title:{text:szCount+' rated, '+szAvg+'★ avg',left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+        xAxis:{type:'category',data:szDist.map(function(d){return d.r+'★'}),axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},
+        yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+        series:[{type:'bar',data:szDist.map(function(d){return{value:d.c,itemStyle:{color:parseFloat(d.r)>=4?'#14b8a6':parseFloat(d.r)>=3?'#60a5fa':parseFloat(d.r)>=2?'#fb923c':'#e94560'}}}),barMaxWidth:30}]});
+      ch.push(csz);
+    }else{szEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No Serializd data'+(cy!=='all'?' for '+cy:'')+'</div>'}
+  }
+
   // Rating lists rendered by standalone renderRatings()
   renderRatings();
 
@@ -1305,6 +1327,8 @@ function renderRatings(){
   window._rtMode=window._rtMode||'high';
   var isHigh=window._rtMode==='high';
   ratingList('my-rat',isHigh?(lb.myh||[]):(lb.myl||[]),'★',isHigh?'#4ade80':'#e94560',20);
+  var sz=D.sz||{};
+  ratingList('sz-rat',isHigh?(sz.szh||[]):(sz.szl||[]),'★',isHigh?'#14b8a6':'#e94560',20);
   ratingList('mc-rat',isHigh?(D.c.mch||[]):(D.c.mcl||[]),'Rating',isHigh?'#60a5fa':'#e94560',20);
   ratingList('sc-rat',isHigh?(D.c.sch||[]):(D.c.scl||[]),'Rating',isHigh?'#a78bfa':'#e94560',20);
 }
