@@ -308,7 +308,7 @@ function stats(){
   else{
     // Row 1: Watches, Days, Movies, Shows, Episodes, Books
     var seasonCount=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){seasonCount+=m.seasons||0});
-    h2=sc((mw+ew).toLocaleString(),'👁️ Watches','#b0b0b0')+sc(totalDays,'⏱️ Days','#b0b0b0')+sc(mw.toLocaleString(),'🎞️ Movies','var(--ac)')+sc(s.unique_shows,'📺 Shows','var(--pu)')+sc(seasonCount,'📦 Seasons','var(--pu)')+sc(ew.toLocaleString(),'🔢 Episodes','var(--pu)');
+    h2=sc((mw+ew).toLocaleString(),'👁️ Watches','#b0b0b0')+sc(totalDays,'⏱️ Days','#b0b0b0')+sc((cy==='all'?s.unique_movies:mw).toLocaleString(),'🎞️ Movies','var(--ac)')+sc(s.unique_shows,'📺 Shows','var(--pu)')+sc(seasonCount,'📦 Seasons','var(--pu)')+sc(ew.toLocaleString(),'🔢 Episodes','var(--pu)');
     if(D.pc&&D.pc.total_podcasts){var pcY=cy!=='all'&&D.pc.yearly?D.pc.yearly.find(function(y){return y.yr===cy}):null;var pcHrs=pcY?pcY.hrs:D.pc.total_listened_hrs;var pcEps=pcY?pcY.eps:D.pc.total_episodes;var pcDays=Math.round(pcHrs/24*10)/10;h2+=sc(D.pc.total_podcasts,'📡 Podcasts','#ef4444')+sc(pcEps,'📻 Pod Episodes','#ef4444')+sc(pcDays+'d','🎙️ Pod Days','#ef4444')}
     if(D.lfm&&D.lfm.total){var lfmY=cy!=='all'&&D.lfm.yearly?(D.lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:D.lfm.total,a:D.lfm.artists,al:D.lfm.albums};h2+=sc((lfmY.s||0).toLocaleString(),'🎧 Scrobbles','#1db954')+sc((lfmY.a||0).toLocaleString(),'🎤 Artists','#1db954')+sc((lfmY.al||0).toLocaleString(),'💿 Albums','#1db954')}
     if(D.con&&D.con.total){var conR=D.con.recent||[];var conF=cy==='all'?conR:conR.filter(function(e){return e.yr===cy});var conEv={};conF.forEach(function(e){conEv[e.date+'|'+e.venue]=true});var conUA=conF.map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;var conSongs=conF.reduce(function(s,e){return s+e.songs},0);h2+=sc(Object.keys(conEv).length,'🎸 Concerts','#3b82f6')+sc(conF.length,'🎤 Sets','#3b82f6')+sc(conUA,'🎙️ Artists','#3b82f6')+sc(conSongs,'🎵 Songs','#3b82f6')}
@@ -1815,7 +1815,7 @@ function renderStatus(){
   var hs_count=Object.keys(D.hs||{}).length;
   var ps_count=Object.keys(D.ps||{}).length;
   var el=document.getElementById('status');
-  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 06:45 UTC</span>';
+  el.innerHTML='<span>Actors: '+total_people+'</span><span>Headshots: '+hs_count+'</span><span>Posters: '+ps_count+'</span><span>Updated: 2026-03-10 07:02 UTC</span>';
 }
 
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];

@@ -177,6 +177,25 @@ for i, pod in enumerate(podcasts):
 
 stats.sort(key=lambda x: x["listened_sec"], reverse=True)
 
+# Merge podcast aliases (same show under different feed UUIDs)
+PODCAST_ALIASES = {
+    "The Filmcast's Patreon Feed": "The Filmcast",
+    "/Filmcast": "The Filmcast",
+    "slashfilmcast": "The Filmcast",
+}
+merged = {}
+for s in stats:
+    name = PODCAST_ALIASES.get(s["title"], s["title"])
+    if name in merged:
+        merged[name]["played"] += s["played"]
+        merged[name]["total_eps"] += s["total_eps"]
+        merged[name]["listened_sec"] += s["listened_sec"]
+        merged[name]["listened_hrs"] = round(merged[name]["listened_sec"] / 3600, 1)
+    else:
+        merged[name] = dict(s)
+        merged[name]["title"] = name
+stats = sorted(merged.values(), key=lambda x: x["listened_sec"], reverse=True)
+
 # Build yearly/monthly aggregates from history
 yearly = {}   # year -> {hrs, eps}
 monthly = {}  # YYYY-MM -> {hrs, eps}

@@ -984,6 +984,14 @@ if os.path.exists("data/setlist.json"):
     with open("data/setlist.json") as f: concerts = json.load(f)
 
 # Podcast data from Pocket Casts
+PODCAST_ALIASES = {
+    "The Filmcast's Patreon Feed": "The Filmcast",
+    "/Filmcast": "The Filmcast",
+    "slashfilmcast": "The Filmcast",
+}
+def _pc_name(n):
+    return PODCAST_ALIASES.get(n, n)
+
 pc_data = {}
 if os.path.exists("data/pocketcasts.json"):
     with open("data/pocketcasts.json") as f: pc_data = json.load(f)
@@ -1379,7 +1387,7 @@ if pc_data:
             if played > 0 and played < 300:
                 continue
             mo = ev["d"][:7]
-            pod_name = ev.get("p", "Unknown Podcast")
+            pod_name = _pc_name(ev.get("p", "Unknown Podcast"))
             if mo not in data["c"]["mt"]:
                 data["c"]["mt"][mo] = []
             # Find existing podcast entry for this month or create one
@@ -1400,7 +1408,7 @@ if pc_data:
             if played > 0 and played < 300:
                 continue
             yr = ev["d"][:4]
-            pod = ev.get("p", "Unknown")
+            pod = _pc_name(ev.get("p", "Unknown"))
             pc_by_year[yr][pod]["eps"] += 1
             pc_by_year[yr][pod]["sec"] += played
     
