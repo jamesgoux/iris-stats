@@ -100,12 +100,20 @@ def fetch_cast_and_studios(entries):
         # Migrate old format (string) to new (list)
         for k, v in raw.items():
             slug_studios[k] = v if isinstance(v, list) else [v]
-    total = len(show_slugs) + len(movie_slugs); done = 0
+    total = len(show_slugs) + len(movie_slugs); done = 0; skipped = 0
+    # Track which slugs already have people data to skip them
+    existing_people_slugs = set()
+    for pid, info in people.items():
+        for t in info["titles"]:
+            existing_people_slugs.add(t)
     for slugs, kind in [(show_slugs, "shows"), (movie_slugs, "movies")]:
         for slug in slugs:
+            # Skip if we already have people for this slug
+            if slug in existing_people_slugs and slug in slug_studios:
+                done += 1; skipped += 1; continue
             try:
                 r = retry_request("get", f"{BASE_URL}/{kind}/{slug}/people?extended=full", headers=HEADERS, timeout=10)
-                if r.status_code == 200:
+                if r and r.status_code == 200:
                     for c in r.json().get("cast", []):
                         p = c.get("person", {}); pid = p.get("ids", {}).get("slug", "")
                         if pid:
@@ -144,8 +152,13 @@ def fetch_cast_and_studios(entries):
                         slug_studios[slug] = list(existing)
             except Exception: pass
             done += 1
-            if done % 100 == 0: print(f"  cast+studios: {done}/{total}")
-            time.sleep(0.12)
+            if done % 100 == 0:
+                print(f"  cast+studios: {done}/{total} (skipped {skipped})")
+                # Save progress periodically
+                _p = {pid: {"name": i["name"], "gender": i["gender"], "titles": list(i["titles"])} for pid, i in people.items()}
+                with open("data/people.json", "w") as f: json.dump(_p, f, separators=(',', ':'))
+                with open("data/studios.json", "w") as f: json.dump(slug_studios, f, separators=(',', ':'))
+            time.sleep(0.3)  # respect Trakt rate limits
     print(f"  people: {len(people)}, studios: {len(slug_studios)}, directors: {len(directors)}, writers: {len(writers)}")
     people_out = {pid: {"name": i["name"], "gender": i["gender"], "titles": list(i["titles"])} for pid, i in people.items()}
     dir_out = {pid: {"name": i["name"], "titles": list(i["titles"])} for pid, i in directors.items()}
