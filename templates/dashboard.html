@@ -78,7 +78,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .ll-summary{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
 .ll-pill{font-size:11px;padding:4px 10px;border-radius:12px;font-weight:600}
 .un-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px;max-width:1200px;margin:0 auto}
-.un-card{background:var(--sf);border-radius:10px;border:1px solid rgba(255,255,255,.06);overflow:hidden;display:flex;gap:12px;padding:12px;padding-right:48px;position:relative;transition:background .2s;cursor:pointer}
+.un-card{background:var(--sf);border-radius:10px;border:1px solid rgba(255,255,255,.06);overflow:hidden;display:flex;gap:12px;padding:12px;padding-right:52px;position:relative;transition:background .2s;cursor:pointer}
 .un-card:hover{background:#1e1e3a}
 .un-poster{width:60px;height:90px;border-radius:6px;object-fit:cover;background:#222;flex-shrink:0}
 .un-poster-ph{width:60px;height:90px;border-radius:6px;background:linear-gradient(135deg,#1a1a2e,#0f3460);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--t2);flex-shrink:0}
@@ -100,11 +100,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .un-del-btn{position:absolute;top:0;right:0;width:48px;height:100%;border-radius:0 10px 10px 0;background:rgba(239,68,68,.04);border:none;border-left:1px solid rgba(255,255,255,.04);color:#ef4444;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;-webkit-tap-highlight-color:transparent}
 .un-del-btn:active{background:#ef4444;color:#fff}
 .un-del-btn:hover{background:#ef4444;color:#fff}
-.un-detail{background:var(--sf);border-radius:12px;border:1px solid rgba(255,255,255,.08);padding:20px;max-width:500px;margin:20px auto;transition:transform .25s ease,opacity .25s ease}
-.un-detail.slide-out-left{transform:translateX(-100%);opacity:0}
-.un-detail.slide-out-right{transform:translateX(100%);opacity:0}
-.un-detail.slide-in-left{transform:translateX(100%);opacity:0}
-.un-detail.slide-in-right{transform:translateX(-100%);opacity:0}
+.un-detail{background:var(--sf);border-radius:12px;border:1px solid rgba(255,255,255,.08);padding:20px;max-width:500px;margin:20px auto}
+.un-carousel{display:flex;width:300%;transform:translateX(-33.333%);transition:none;will-change:transform}
+.un-carousel.animating{transition:transform .3s ease}
+.un-carousel-panel{width:33.333%;flex-shrink:0;padding:0 12px;box-sizing:border-box}
 .un-detail img{width:100%;border-radius:8px;margin-bottom:12px;max-height:280px;object-fit:cover}
 @media(max-width:768px){.un-grid{grid-template-columns:1fr;padding:10px}}
 @media(max-width:768px){
@@ -2175,14 +2174,22 @@ function renderSports(){
   var el=document.getElementById('sp-chart');
   if(filtered.length===0){el.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No sports events'+(cy!=='all'?' in '+cy:'')+'. Click <b>+ Add Event</b> to get started!</div>';
   }else{
-    var byPeriod={};filtered.forEach(function(e){var k=cy==='all'?e.date.substring(0,4):e.date.substring(0,7);byPeriod[k]=(byPeriod[k]||0)+1});
+    // Group by league for stacked bar
+    var leagues={};filtered.forEach(function(e){var lg=e.league||'Other';if(!leagues[lg])leagues[lg]=[];leagues[lg].push(e)});
+    var lgNames=Object.keys(leagues).sort(function(a,b){return leagues[b].length-leagues[a].length});
+    var lgCols=['#0ea5e9','#fb923c','#4ade80','#a78bfa','#e94560','#fbbf24','#f472b6','#38bdf8'];
+    var byPeriod={};filtered.forEach(function(e){var k=cy==='all'?e.date.substring(0,4):e.date.substring(0,7);byPeriod[k]=1});
     var periods=Object.keys(byPeriod).sort();
     var spChart=echarts.init(el);
-    spChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt},grid:{left:50,right:20,top:30,bottom:24},
-      title:{text:filtered.length+' games'+(cy!=='all'?' in '+cy:''),left:'center',top:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+    var spSeries=lgNames.map(function(lg,i){
+      var counts={};leagues[lg].forEach(function(e){var k=cy==='all'?e.date.substring(0,4):e.date.substring(0,7);counts[k]=(counts[k]||0)+1});
+      return{name:lg,type:'bar',stack:'sp',data:periods.map(function(p){return counts[p]||0}),itemStyle:{color:lgCols[i%lgCols.length]},barMaxWidth:30};
+    });
+    spChart.setOption({tooltip:{trigger:'axis',...tt},legend:{data:lgNames,top:0,textStyle:{color:'#999',fontSize:10}},grid:{left:50,right:20,top:lgNames.length>1?36:30,bottom:24},
+      title:{text:filtered.length+' games'+(cy!=='all'?' in '+cy:''),left:'center',top:lgNames.length>1?20:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
       xAxis:{type:'category',data:periods,axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},
       yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
-      series:[{type:'bar',data:periods.map(function(p){return{value:byPeriod[p],itemStyle:{color:LG('#0f3460','#0ea5e9')}}}),barMaxWidth:30,label:{show:true,position:'top',color:'#999',fontSize:10}}]});
+      series:spSeries});
     ch.push(spChart);
   }
 
@@ -2217,12 +2224,12 @@ function renderSports(){
   // Recent events table
   var rEl=document.getElementById('sp-recent');
   var sorted=filtered.slice().sort(function(a,b){return b.date.localeCompare(a.date)});
-  var h='<table style="table-layout:fixed"><thead><tr><th style="width:58px">Date</th><th>Home</th><th style="width:42px;text-align:center"></th><th>Away</th><th style="width:28px">How</th><th style="width:24px"></th></tr></thead><tbody>';
+  var h='<table style="width:100%;table-layout:fixed"><thead><tr><th style="width:60px">Date</th><th>Home</th><th style="width:36px;text-align:center">Score</th><th>Away</th><th style="width:30px"></th><th style="width:24px"></th></tr></thead><tbody>';
   sorted.forEach(function(e){
     var score=(e.home_score!=null&&e.home_score!=='')?(e.home_score+'-'+e.away_score):'—';
     var icon=e.watch_type==='live'?'🏟️':e.watch_type==='tv'?'📺':'📡';
     var hWin=Number(e.home_score)>Number(e.away_score);var aWin=Number(e.away_score)>Number(e.home_score);
-    h+='<tr><td style="white-space:nowrap;color:var(--t2);font-size:10px">'+_spDate(e.date)+'</td><td style="font-weight:'+(hWin?'700':'400')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">'+_spBadge(e.home_badge,14)+' '+_spAbbr(e.home_team)+'</td><td style="text-align:center;font-weight:600;color:var(--sp);font-size:11px">'+score+'</td><td style="font-weight:'+(aWin?'700':'400')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">'+_spBadge(e.away_badge,14)+' '+_spAbbr(e.away_team)+'</td><td>'+icon+'</td><td><button onclick="deleteSportsEvent(\''+e.id+'\')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px" title="Remove">✕</button></td></tr>';
+    h+='<tr><td style="white-space:nowrap;color:var(--t2);font-size:10px">'+_spDate(e.date)+'</td><td style="font-weight:'+(hWin?'700':'400')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="'+e.home_team+'">'+_spBadge(e.home_badge,14)+' '+_spAbbr(e.home_team)+'</td><td style="text-align:center;font-weight:600;color:var(--sp);font-size:11px;white-space:nowrap">'+score+'</td><td style="font-weight:'+(aWin?'700':'400')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="'+e.away_team+'">'+_spBadge(e.away_badge,14)+' '+_spAbbr(e.away_team)+'</td><td style="text-align:center">'+icon+'</td><td><button onclick="deleteSportsEvent(\''+e.id+'\')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:4px" title="Remove">✕</button></td></tr>';
   });
   h+='</tbody></table>';rEl.innerHTML=h;
 }
