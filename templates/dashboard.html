@@ -2430,8 +2430,8 @@ function _unRenderDetail(allShows,idx){
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
   h+='<button onclick="openUpNext()" style="background:var(--sf);border:1px solid rgba(255,255,255,.1);color:var(--tx);border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">← Back</button>';
   h+='<div style="display:flex;gap:8px">';
-  if(show.episode>1)h+='<button onclick="_unFetchEp(window._unAllShows['+idx+'],'+(show.episode-1)+',window._unAllShows,'+idx+')" style="background:var(--sf);border:1px solid rgba(255,255,255,.1);color:var(--tx);border-radius:8px;padding:10px 16px;font-size:16px;cursor:pointer;min-width:48px;-webkit-tap-highlight-color:transparent">◀</button>';
-  h+='<button onclick="_unFetchEp(window._unAllShows['+idx+'],'+(show.episode+1)+',window._unAllShows,'+idx+')" style="background:var(--sf);border:1px solid rgba(255,255,255,.1);color:var(--tx);border-radius:8px;padding:10px 16px;font-size:16px;cursor:pointer;min-width:48px;-webkit-tap-highlight-color:transparent">▶</button>';
+  if(show.episode>1)h+='<button onclick="_unNavEp(window._unAllShows['+idx+'],'+(show.episode-1)+',window._unAllShows,'+idx+')" style="background:var(--sf);border:1px solid rgba(255,255,255,.1);color:var(--tx);border-radius:8px;padding:10px 16px;font-size:16px;cursor:pointer;min-width:48px;-webkit-tap-highlight-color:transparent">◀</button>';
+  h+='<button onclick="_unNavEp(window._unAllShows['+idx+'],'+(show.episode+1)+',window._unAllShows,'+idx+')" style="background:var(--sf);border:1px solid rgba(255,255,255,.1);color:var(--tx);border-radius:8px;padding:10px 16px;font-size:16px;cursor:pointer;min-width:48px;-webkit-tap-highlight-color:transparent">▶</button>';
   h+='</div></div>';
   window._unAllShows=allShows;
   if(show.ep_still)h+='<img src="'+show.ep_still+'" alt="" style="width:100%;border-radius:10px;margin-bottom:14px;max-height:280px;object-fit:cover">';
@@ -2465,8 +2465,7 @@ function _unRenderDetail(allShows,idx){
     if(Math.abs(dx)<40||Math.abs(dy)>Math.abs(dx))return;
     var targetEp=dx>0?show.episode-1:show.episode+1;
     if(targetEp<1)return;
-    // Fetch episode info from TMDB on-the-fly
-    _unFetchEp(show,targetEp,allShows,idx);
+    _unNavEp(show,targetEp,allShows,idx);
   };
   // Remove old listeners before adding new
   if(ov._prevSwStart){ov.removeEventListener('touchstart',ov._prevSwStart);ov.removeEventListener('touchend',ov._prevSwEnd)}
@@ -2475,27 +2474,72 @@ function _unRenderDetail(allShows,idx){
   ov._prevSwStart=ov._swStart;ov._prevSwEnd=ov._swEnd;
   // Scroll to top
   ov.scrollTop=0;
+  // Prefetch adjacent episodes
+  _unPrefetch(show,show.episode-1);
+  _unPrefetch(show,show.episode+1);
+}
+
+// Episode cache: keyed by "tmdb_id|season|episode"
+var _epCache={};
+
+function _epCacheKey(tmdbId,season,ep){return tmdbId+'|'+season+'|'+ep}
+
+function _unPrefetch(baseShow,epNum){
+  if(epNum<1||!baseShow.tmdb_id)return;
+  var key=_epCacheKey(baseShow.tmdb_id,baseShow.season,epNum);
+  if(_epCache[key])return; // already cached
+  var tmdbKey=(D.un||{}).tmdb_key||'';
+  if(!tmdbKey)return;
+  var url='https://api.themoviedb.org/3/tv/'+baseShow.tmdb_id+'/season/'+baseShow.season+'/episode/'+epNum+'?api_key='+tmdbKey;
+  fetch(url).then(function(r){return r.json()}).then(function(d){
+    if(d.status_code)return; // TMDB error
+    _epCache[key]={
+      ep_title:d.name||'',
+      ep_overview:(d.overview||'').substring(0,200),
+      ep_still:d.still_path?'https://image.tmdb.org/t/p/w780'+d.still_path:'',
+      ep_aired:d.air_date||'',
+      ep_runtime:d.runtime||baseShow.ep_runtime
+    };
+  }).catch(function(){});
+}
+
+function _unNavEp(baseShow,epNum,allShows,origIdx){
+  if(epNum<1||!baseShow.tmdb_id)return;
+  var key=_epCacheKey(baseShow.tmdb_id,baseShow.season,epNum);
+  var cached=_epCache[key];
+  var newShow=JSON.parse(JSON.stringify(baseShow));
+  newShow.episode=epNum;
+  if(cached){
+    newShow.ep_title=cached.ep_title;
+    newShow.ep_overview=cached.ep_overview;
+    newShow.ep_still=cached.ep_still;
+    newShow.ep_aired=cached.ep_aired;
+    newShow.ep_runtime=cached.ep_runtime;
+    var tempShows=allShows.slice();tempShows[origIdx]=newShow;
+    _unRenderDetail(tempShows,origIdx);
+  }else{
+    // Not cached yet — fetch and render
+    _unFetchEp(baseShow,epNum,allShows,origIdx);
+  }
 }
 
 function _unFetchEp(baseShow,epNum,allShows,origIdx){
   if(!baseShow.tmdb_id)return;
-  var url='https://api.themoviedb.org/3/tv/'+baseShow.tmdb_id+'/season/'+baseShow.season+'/episode/'+epNum+'?api_key='+((D.un||{}).tmdb_key||'');
-  // If no TMDB key embedded, just update the episode number without details
+  var tmdbKey=(D.un||{}).tmdb_key||'';
   var newShow=JSON.parse(JSON.stringify(baseShow));
   newShow.episode=epNum;
-  newShow.ep_title='';
-  newShow.ep_overview='';
-  newShow.ep_still='';
-  newShow.ep_aired='';
-  newShow.ep_runtime=baseShow.ep_runtime;
-  // Try TMDB fetch
-  if((D.un||{}).tmdb_key){
+  newShow.ep_title='';newShow.ep_overview='';newShow.ep_still='';newShow.ep_aired='';
+  if(tmdbKey){
+    var url='https://api.themoviedb.org/3/tv/'+baseShow.tmdb_id+'/season/'+baseShow.season+'/episode/'+epNum+'?api_key='+tmdbKey;
     fetch(url).then(function(r){return r.json()}).then(function(d){
       if(d.name)newShow.ep_title=d.name;
       if(d.overview)newShow.ep_overview=d.overview.substring(0,200);
       if(d.still_path)newShow.ep_still='https://image.tmdb.org/t/p/w780'+d.still_path;
       if(d.air_date)newShow.ep_aired=d.air_date;
       if(d.runtime)newShow.ep_runtime=d.runtime;
+      // Cache it
+      var key=_epCacheKey(baseShow.tmdb_id,baseShow.season,epNum);
+      _epCache[key]={ep_title:newShow.ep_title,ep_overview:newShow.ep_overview,ep_still:newShow.ep_still,ep_aired:newShow.ep_aired,ep_runtime:newShow.ep_runtime};
       var tempShows=allShows.slice();tempShows[origIdx]=newShow;
       _unRenderDetail(tempShows,origIdx);
     }).catch(function(){
