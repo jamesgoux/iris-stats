@@ -1965,24 +1965,80 @@ function searchSportsTeam(){
 function loadTeamEvents(teamId,teamName){
   document.getElementById('sp-step1').style.display='none';
   document.getElementById('sp-step2').style.display='';
-  var el=document.getElementById('sp-event-results');el.innerHTML='<div style="color:var(--t2)">Loading events...</div>';
-  // Fetch last + next events
-  Promise.all([
-    fetch('https://www.thesportsdb.com/api/v1/json/3/eventslast.php?id='+teamId).then(function(r){return r.json()}),
-    fetch('https://www.thesportsdb.com/api/v1/json/3/eventsnext.php?id='+teamId).then(function(r){return r.json()})
-  ]).then(function(res){
-    var past=(res[0].results||[]).reverse();var future=res[1].events||[];
-    var all=past.concat(future);
-    if(!all.length){el.innerHTML='<div style="color:var(--t2)">No events found for '+teamName+'</div>';return}
-    var h='<div style="font-size:11px;color:var(--t2);margin-bottom:8px">'+teamName+' — select a game:</div>';
-    all.forEach(function(ev){
-      var score=(ev.intHomeScore!=null&&ev.intHomeScore!=='')?(ev.intHomeScore+' - '+ev.intAwayScore):'Upcoming';
-      var evJson=JSON.stringify(ev).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
-      h+='<div onclick="selectSportsEvent(this)" data-ev="'+evJson+'" style="padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:6px;cursor:pointer" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'none\'">';
-      h+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600;font-size:13px">'+ev.strEvent+'</span><span class="badge" style="background:rgba(14,165,233,.15);color:var(--sp)">'+score+'</span></div>';
-      h+='<div style="font-size:11px;color:var(--t2);margin-top:2px">'+ev.dateEvent+(ev.strVenue?' — '+ev.strVenue:'')+'</div></div>';
-    });el.innerHTML=h;
-  }).catch(function(){el.innerHTML='<div style="color:#ef4444">Failed to load events</div>'});
+  window._spTeamId=teamId;window._spTeamName=teamName;
+  window._spAllEvents=[];window._spSeasonIdx=0;
+  // Build season list (current year back 10 years)
+  var now=new Date();var curYear=now.getFullYear();var curMonth=now.getMonth();
+  window._spSeasons=[];
+  for(var y=curYear;y>=curYear-10;y--){
+    // Most sports use "YYYY-YYYY+1" seasons
+    window._spSeasons.push(y+'-'+(y+1));
+    window._spSeasons.push(String(y));
+  }
+  var el=document.getElementById('sp-event-results');
+  el.innerHTML='<div style="margin-bottom:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    +'<span style="font-size:12px;font-weight:600">'+teamName+'</span>'
+    +'<input id="sp-ev-search" type="text" placeholder="Filter by opponent, venue, date..." oninput="filterSportsEvents()" style="flex:1;min-width:150px;padding:6px 10px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:var(--tx);font-size:12px">'
+    +'</div>'
+    +'<div id="sp-ev-list" style="max-height:50vh;overflow-y:auto"></div>'
+    +'<div id="sp-ev-loading" style="text-align:center;padding:10px;color:var(--t2);font-size:11px"></div>';
+  // Set up scroll-to-load
+  setTimeout(function(){
+    var listEl=document.getElementById('sp-ev-list');
+    if(listEl)listEl.onscroll=function(){if(listEl.scrollTop+listEl.clientHeight>=listEl.scrollHeight-100)loadMoreSportsEvents()};
+  },100);
+  loadMoreSportsEvents();
+}
+
+function loadMoreSportsEvents(){
+  if(window._spSeasonIdx>=window._spSeasons.length)return;
+  var loadEl=document.getElementById('sp-ev-loading');
+  if(loadEl._loading)return;loadEl._loading=true;
+  loadEl.textContent='Loading...';
+  var season=window._spSeasons[window._spSeasonIdx];
+  window._spSeasonIdx++;
+  fetch('https://www.thesportsdb.com/api/v1/json/3/searchevents.php?e='+encodeURIComponent(window._spTeamName)+'&s='+encodeURIComponent(season))
+    .then(function(r){return r.json()})
+    .then(function(d){
+      var events=d.event||[];
+      // Deduplicate by event ID
+      var existingIds={};window._spAllEvents.forEach(function(e){existingIds[e.idEvent]=true});
+      events.forEach(function(ev){if(!existingIds[ev.idEvent]){window._spAllEvents.push(ev);existingIds[ev.idEvent]=true}});
+      // Sort all by date descending
+      window._spAllEvents.sort(function(a,b){return b.dateEvent.localeCompare(a.dateEvent)});
+      filterSportsEvents();
+      loadEl._loading=false;
+      loadEl.textContent=window._spSeasonIdx<window._spSeasons.length?'Scroll for older events':'';
+      // If we got few results, auto-load next season
+      if(events.length<5&&window._spSeasonIdx<window._spSeasons.length)loadMoreSportsEvents();
+    }).catch(function(){loadEl._loading=false;loadEl.textContent='Load failed — scroll to retry'});
+}
+
+function filterSportsEvents(){
+  var q=(document.getElementById('sp-ev-search')||{}).value||'';
+  var ql=q.toLowerCase();
+  var filtered=window._spAllEvents.filter(function(ev){
+    if(!ql)return true;
+    return(ev.strEvent||'').toLowerCase().indexOf(ql)>=0
+      ||(ev.strVenue||'').toLowerCase().indexOf(ql)>=0
+      ||(ev.dateEvent||'').indexOf(ql)>=0
+      ||(ev.strHomeTeam||'').toLowerCase().indexOf(ql)>=0
+      ||(ev.strAwayTeam||'').toLowerCase().indexOf(ql)>=0;
+  });
+  var listEl=document.getElementById('sp-ev-list');if(!listEl)return;
+  // Already-added IDs
+  var addedIds={};SP.forEach(function(s){addedIds[s.id]=true});
+  var h='';
+  filtered.forEach(function(ev){
+    var score=(ev.intHomeScore!=null&&ev.intHomeScore!=='')?(ev.intHomeScore+' - '+ev.intAwayScore):'Upcoming';
+    var added=addedIds[ev.idEvent];
+    var evJson=JSON.stringify(ev).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+    h+='<div '+(added?'':'onclick="selectSportsEvent(this)" ')+' data-ev="'+evJson+'" style="padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:6px;'+(added?'opacity:.4':'cursor:pointer')+'" '+(added?'':'onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'none\'"')+'>';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600;font-size:13px">'+ev.strEvent+'</span><span class="badge" style="background:rgba(14,165,233,.15);color:var(--sp)">'+(added?'✓ Added':score)+'</span></div>';
+    h+='<div style="font-size:11px;color:var(--t2);margin-top:2px">'+ev.dateEvent+(ev.strVenue?' — '+ev.strVenue:'')+(ev.strSeason?' — '+ev.strSeason:'')+'</div></div>';
+  });
+  if(!filtered.length&&ql)h='<div style="color:var(--t2);padding:10px;text-align:center">No matches for "'+ql+'"</div>';
+  listEl.innerHTML=h;
 }
 
 function selectSportsEvent(el){
