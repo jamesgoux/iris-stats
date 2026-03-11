@@ -68,6 +68,13 @@ jobs:
         continue-on-error: true
 
       # Build dashboard from all collected data
+      - name: Refresh Up Next
+        env:
+          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
+          TRAKT_USERNAME: ${{ secrets.TRAKT_USERNAME }}
+        run: python scripts/refresh_upnext.py
+        continue-on-error: true
+
       - name: Refresh Trakt data + rebuild HTML
         env:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}

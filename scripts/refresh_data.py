@@ -1829,6 +1829,11 @@ for d in sorted(ll_counts.keys()):
         lifeline_all[d] = entry
 data["ll"] = lifeline_all
 
+# Up Next — load pre-computed show progress
+if os.path.exists("data/up_next.json"):
+    with open("data/up_next.json") as f:
+        data["un"] = json.load(f)
+
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:
     template = f.read()

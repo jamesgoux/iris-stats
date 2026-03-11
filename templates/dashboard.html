@@ -73,6 +73,22 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .ll-name{font-size:13px;line-height:1.4}
 .ll-summary{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
 .ll-pill{font-size:11px;padding:4px 10px;border-radius:12px;font-weight:600}
+.un-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px;max-width:1200px;margin:0 auto}
+.un-card{background:var(--sf);border-radius:10px;border:1px solid rgba(255,255,255,.06);overflow:hidden;display:flex;gap:12px;padding:12px;position:relative;transition:background .2s}
+.un-card:hover{background:#1e1e3a}
+.un-poster{width:60px;height:90px;border-radius:6px;object-fit:cover;background:#222;flex-shrink:0}
+.un-poster-ph{width:60px;height:90px;border-radius:6px;background:linear-gradient(135deg,#1a1a2e,#0f3460);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--t2);flex-shrink:0}
+.un-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.un-show{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.un-ep{font-size:12px;color:var(--t2);margin-top:2px}
+.un-ep-title{font-size:11px;color:#777;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.un-meta{display:flex;gap:8px;align-items:center;margin-top:6px;font-size:10px;color:var(--t2)}
+.un-prog{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.un-prog-bar{height:100%;background:var(--tv);border-radius:2px;transition:width .3s}
+.un-new{position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+.un-aired{font-size:10px;color:var(--t2)}
+.un-section{padding:8px 16px;max-width:1200px;margin:0 auto;font-size:12px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+@media(max-width:768px){.un-grid{grid-template-columns:1fr;padding:10px}}
 @media(max-width:768px){
 .g2,.g3{grid-template-columns:1fr}
 .sg{grid-template-columns:repeat(3,1fr)}
@@ -99,6 +115,7 @@ body{overflow-x:hidden}
 <div class="fbtn"><label>Year</label><select id="ys"><option value="all">All Time</option></select></div>
 <div class="fbtn"><label>Jump</label><select id="jmp" onchange="if(this.value){document.getElementById(this.value).scrollIntoView({behavior:'smooth',block:'start'});this.value=''}"><option value="">...</option><option value="sec-tl">📈 Timeline</option><option value="sec-ll">🧬 Lifeline</option><option value="sec-act">🎭 Actors</option><option value="sec-crew">🎬 Directors/Writers</option><option value="sec-shows">📺 Top Shows</option><option value="sec-ttw">⏱️ Time to Watch</option><option value="sec-mov">🎞️ Movies</option><option value="sec-eps">📺 Episodes</option><option value="sec-time">🕐 Day & Time</option><option value="sec-meta">🎯 Genres/Trends</option><option value="sec-geo">🌍 Countries/Languages</option><option value="sec-vy">📅 Release Years</option><option value="sec-how">🖥️ How I Watch</option><option value="sec-ratings">⭐ Ratings</option><option value="sec-first">🌅 First Watches</option><option value="sec-rec">👁️ Last Watches</option><option value="sec-gr">📚 Books</option><option value="sec-lfm">🎧 Music</option><option value="sec-con">🎸 Concerts</option><option value="sec-pc">🎙️ Podcasts</option><option value="sec-sp">🏀 Sports</option><option value="sec-th">🎭 Theater</option></select></div>
 <button class="rbtn" onclick="location.reload()">&#x21bb;</button>
+<button class="rbtn" onclick="openUpNext()" title="Up Next" style="font-size:13px">📺 Up Next</button>
 </div>
 </div>
 <div class="dash">
@@ -275,6 +292,14 @@ Drop CSV here or <span style="color:var(--bl);text-decoration:underline">click t
 </div>
 <div id="ll-feed-content" style="max-width:600px;margin:0 auto;padding:16px"></div>
 <div id="ll-feed-loading" style="text-align:center;padding:20px;color:var(--t2);font-size:12px;display:none">Loading more...</div>
+</div>
+<!-- Up Next Overlay -->
+<div id="un-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div style="position:sticky;top:0;z-index:301;background:rgba(15,15,15,.97);backdrop-filter:blur(8px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">
+<h2 style="font-size:18px;font-weight:700;margin:0"><span class="i">📺</span> Up Next</h2>
+<button onclick="closeUpNext()" style="background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer">✕ Close</button>
+</div>
+<div id="un-content"></div>
 </div>
 <script>
 var D=__DASHBOARD_DATA__;
@@ -2114,6 +2139,60 @@ function _llRenderBatch(){
   _llFeedIdx=end;
   loading.style.display=_llFeedIdx>=_llFeedDays.length?'none':'';
   if(_llFeedIdx>=_llFeedDays.length){loading.textContent='That\'s everything';loading.style.display=''}
+}
+
+// Up Next page
+function openUpNext(){
+  var un=D.un||[];
+  var el=document.getElementById('un-content');
+  if(!un.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div>No Up Next data yet.</div><div style="font-size:12px;margin-top:4px">Run the refresh workflow to populate show progress.</div></div>';document.getElementById('un-overlay').style.display='';document.body.style.overflow='hidden';return}
+
+  var newItems=un.filter(function(s){return s.is_new});
+  var rest=un.filter(function(s){return !s.is_new});
+  var h='';
+
+  function card(s){
+    var c='<div class="un-card">';
+    if(s.poster)c+='<img class="un-poster" src="'+s.poster+'" loading="lazy" onerror="this.style.display=\'none\'" alt="">';
+    else c+='<div class="un-poster-ph">📺</div>';
+    c+='<div class="un-info">';
+    c+='<div class="un-show">'+s.show+'</div>';
+    c+='<div class="un-ep">S'+String(s.season).padStart(2,'0')+'E'+String(s.episode).padStart(2,'0')+'</div>';
+    if(s.ep_title)c+='<div class="un-ep-title">'+s.ep_title+'</div>';
+    c+='<div class="un-meta">';
+    if(s.network)c+='<span>'+s.network+'</span>';
+    if(s.ep_aired){
+      if(s.is_aired)c+='<span class="un-aired">Aired '+s.ep_aired+'</span>';
+      else c+='<span class="un-aired" style="color:var(--sp)">Airs '+s.ep_aired+'</span>';
+    }
+    var pct=s.aired_total?Math.round(s.completed/s.aired_total*100):0;
+    c+='<span>'+pct+'%</span>';
+    c+='</div>';
+    c+='<div class="un-prog"><div class="un-prog-bar" style="width:'+pct+'%"></div></div>';
+    c+='</div>';
+    if(s.is_new)c+='<div class="un-new">New</div>';
+    c+='</div>';
+    return c;
+  }
+
+  if(newItems.length){
+    h+='<div class="un-section">🔴 New Episodes ('+newItems.length+')</div><div class="un-grid">';
+    newItems.forEach(function(s){h+=card(s)});
+    h+='</div>';
+  }
+  if(rest.length){
+    h+='<div class="un-section">📋 Continue Watching ('+rest.length+')</div><div class="un-grid">';
+    rest.forEach(function(s){h+=card(s)});
+    h+='</div>';
+  }
+  el.innerHTML=h;
+  document.getElementById('un-overlay').style.display='';
+  document.body.style.overflow='hidden';
+}
+
+function closeUpNext(){
+  document.getElementById('un-overlay').style.display='none';
+  document.body.style.overflow='';
 }
 
 function renderStatus(){

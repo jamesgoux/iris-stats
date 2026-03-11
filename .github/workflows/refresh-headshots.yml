@@ -60,7 +60,9 @@ jobs:
           LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
           LASTFM_USER: ${{ secrets.LASTFM_USER }}
           FULL_REFRESH: "1"
-        run: python scripts/refresh_data.py
+        run: |
+          python scripts/refresh_upnext.py
+          python scripts/refresh_data.py
 
       - name: Commit and push
         run: |
