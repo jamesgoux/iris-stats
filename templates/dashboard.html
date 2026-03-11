@@ -2059,7 +2059,9 @@ function _spCommitToRepo(){
   }
   // Merge repo + pending into full list
   var all=SP.slice();
-  var body=JSON.stringify(all,null,2);
+  var bodyStr=JSON.stringify(all,null,2);
+  // Base64 encode safely (handles Unicode)
+  var b64=btoa(Array.from(new TextEncoder().encode(bodyStr),function(b){return String.fromCharCode(b)}).join(''));
   // Get current file SHA first
   fetch('https://api.github.com/repos/jamesgoux/iris-stats/contents/data/sports.json',{headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github.v3+json'}})
     .then(function(r){return r.json()})
@@ -2067,11 +2069,20 @@ function _spCommitToRepo(){
       var sha=d.sha||'';
       return fetch('https://api.github.com/repos/jamesgoux/iris-stats/contents/data/sports.json',{
         method:'PUT',headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-        body:JSON.stringify({message:'Update sports events',content:btoa(unescape(encodeURIComponent(body))),sha:sha})
+        body:JSON.stringify({message:'Update sports events ('+all.length+' games)',content:b64,sha:sha})
       });
     })
-    .then(function(r){if(r.ok){_spPending=[];localStorage.setItem('iris_sports_pending','[]');console.log('Sports synced to repo')}else{console.warn('Sports sync failed:',r.status)}})
-    .catch(function(e){console.warn('Sports sync error:',e)});
+    .then(function(r){
+      if(r.ok){_spPending=[];localStorage.setItem('iris_sports_pending','[]');_spToast('✓ Saved to GitHub','#4ade80')}
+      else{r.json().then(function(d){console.warn('Sports sync failed:',r.status,d);if(r.status===401){localStorage.removeItem('iris_gh_pat');_spToast('Token invalid — tap + Add to re-enter','#ef4444')}else{_spToast('Sync failed ('+r.status+')','#ef4444')}})}
+    })
+    .catch(function(e){console.warn('Sports sync error:',e);_spToast('Sync error — check console','#ef4444')});
+}
+function _spToast(msg,color){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:'+color+';color:#000;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;pointer-events:none;opacity:1;transition:opacity .5s';
+  t.textContent=msg;document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove()},600)},2000);
 }
 
 function _spDate(d){if(!d)return'';var p=d.split('-');if(p.length!==3)return d;return p[1]+'/'+p[2]+'/'+p[0]}
@@ -2225,12 +2236,18 @@ function saveSportsEvent(){
   _spPending.push(newEv);
   localStorage.setItem('iris_sports_pending',JSON.stringify(_spPending));
   _spCommitToRepo();
-  // Go back to events list (so they can add more)
-  document.getElementById('sp-ov-confirm').style.display='none';
-  document.getElementById('sp-ov-events').style.display='';
-  filterSportsEvents();
-  renderSports();
-  window._spSelected=null;
+  // Show success flash on the confirm panel, then go back to events list
+  var confirmEl=document.getElementById('sp-ov-confirm');
+  var saveBtn=confirmEl.querySelector('button[onclick*="saveSportsEvent"]');
+  if(saveBtn){saveBtn.textContent='✓ Added!';saveBtn.style.background='#4ade80';saveBtn.style.color='#000'}
+  setTimeout(function(){
+    confirmEl.style.display='none';
+    document.getElementById('sp-ov-events').style.display='';
+    if(saveBtn){saveBtn.textContent='Save Event';saveBtn.style.background='var(--sp)';saveBtn.style.color='#fff'}
+    filterSportsEvents();
+    renderSports();
+    window._spSelected=null;
+  },800);
 }
 
 function renderSports(){
