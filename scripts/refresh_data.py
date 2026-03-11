@@ -17,6 +17,17 @@ USERNAME = os.environ.get("TRAKT_USERNAME")
 BASE_URL = "https://api.trakt.tv"
 HEADERS = {"Content-Type": "application/json", "trakt-api-version": "2", "trakt-api-key": CLIENT_ID}
 
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "")
+TMDB_BASE = "https://api.themoviedb.org/3"
+
+def _slugify(name):
+    """Convert a person name to a slug: 'Melanie Lynskey' -> 'melanie-lynskey'"""
+    import re
+    s = name.lower().strip()
+    s = re.sub(r"['\"]", "", s)  # Remove apostrophes/quotes
+    s = re.sub(r"[^a-z0-9]+", "-", s)  # Replace non-alphanumeric with hyphens
+    return s.strip("-")
+
 if not CLIENT_ID or not USERNAME:
     print("ERROR: Set TRAKT_CLIENT_ID and TRAKT_USERNAME"); exit(1)
 
@@ -70,9 +81,13 @@ def norm_show(e):
 
 def fetch_cast_and_studios(entries):
     show_slugs = set(); movie_slugs = set()
+    slug_tmdb = {}  # slug -> (tmdb_id, is_show)
     for e in entries:
         if e["trakt_slug"]:
-            (movie_slugs if e["type"] == "movie" else show_slugs).add(e["trakt_slug"])
+            is_show = e["type"] != "movie"
+            (show_slugs if is_show else movie_slugs).add(e["trakt_slug"])
+            if e.get("tmdb_id"):
+                slug_tmdb[e["trakt_slug"]] = (str(e["tmdb_id"]), is_show)
     # MERGE with existing people data so we never lose actors
     people = defaultdict(lambda: {"name": "", "gender": None, "titles": set()})
     directors = defaultdict(lambda: {"name": "", "titles": set()})
@@ -92,25 +107,64 @@ def fetch_cast_and_studios(entries):
             people[pid]["gender"] = info["gender"]
             people[pid]["titles"] = set(info.get("titles", []))
         print(f"  Loaded {len(existing)} existing people (merging)")
-    # Merge with existing studios too - now stores LIST of studios per slug
-    slug_studios = {}  # slug -> [studio1, studio2, ...]
+    # Merge with existing studios too
+    slug_studios = {}
     if os.path.exists("data/studios.json"):
         with open("data/studios.json") as f:
             raw = json.load(f)
-        # Migrate old format (string) to new (list)
         for k, v in raw.items():
             slug_studios[k] = v if isinstance(v, list) else [v]
-    total = len(show_slugs) + len(movie_slugs); done = 0; skipped = 0
-    # Track which slugs already have sufficient people data to skip them
+    total = len(show_slugs) + len(movie_slugs); done = 0; skipped = 0; tmdb_ok = 0; trakt_fallback = 0
     slug_people_count = Counter()
     for pid, info in people.items():
         for t in info["titles"]:
             slug_people_count[t] += 1
-    for slugs, kind in [(show_slugs, "shows"), (movie_slugs, "movies")]:
-        for slug in slugs:
-            # Skip only if we have a reasonable cast size (>=10) AND studios
-            if slug_people_count.get(slug, 0) >= 10 and slug in slug_studios:
-                done += 1; skipped += 1; continue
+    all_slugs = [(s, "shows") for s in show_slugs] + [(s, "movies") for s in movie_slugs]
+    for slug, kind in all_slugs:
+        # Skip if we have >=15 people AND studios (TMDB gives more, so raise threshold)
+        if slug_people_count.get(slug, 0) >= 15 and slug in slug_studios:
+            done += 1; skipped += 1; continue
+        fetched = False
+        # Try TMDB first (richer cast data: 30-50+ vs Trakt's 5-10)
+        tmdb_info = slug_tmdb.get(slug)
+        if TMDB_API_KEY and tmdb_info:
+            tmdb_id, is_show = tmdb_info
+            tmdb_type = "tv" if is_show else "movie"
+            try:
+                tr = retry_request("get", f"{TMDB_BASE}/{tmdb_type}/{tmdb_id}/credits?api_key={TMDB_API_KEY}", timeout=10)
+                if tr and tr.status_code == 200:
+                    data = tr.json()
+                    # Cast (limit to top 40 billed)
+                    for c in sorted(data.get("cast", []), key=lambda x: x.get("order", 999))[:40]:
+                        name = c.get("name", "")
+                        if not name: continue
+                        pid = _slugify(name)
+                        if not pid: continue
+                        people[pid]["name"] = name
+                        # TMDB gender: 1=female, 2=male, 0/3=other
+                        g = c.get("gender", 0)
+                        if g in (1, 2): people[pid]["gender"] = g
+                        people[pid]["titles"].add(slug)
+                    # Crew: directors + writers
+                    for c in data.get("crew", []):
+                        name = c.get("name", "")
+                        if not name: continue
+                        pid = _slugify(name)
+                        if not pid: continue
+                        job = c.get("job", "")
+                        dept = c.get("department", "")
+                        if dept == "Directing" and job in ("Director", "Co-Director"):
+                            directors[pid]["name"] = name
+                            directors[pid]["titles"].add(slug)
+                        elif dept == "Writing" and job in ("Writer", "Screenplay", "Author", "Original Story", "Story", "Novel"):
+                            writers[pid]["name"] = name
+                            writers[pid]["titles"].add(slug)
+                    fetched = True; tmdb_ok += 1
+            except Exception as e:
+                pass
+            time.sleep(0.05)  # TMDB rate limit: ~40/sec
+        # Fallback to Trakt if TMDB didn't work
+        if not fetched:
             try:
                 r = retry_request("get", f"{BASE_URL}/{kind}/{slug}/people?extended=full", headers=HEADERS, timeout=10)
                 if r and r.status_code == 200:
@@ -120,46 +174,37 @@ def fetch_cast_and_studios(entries):
                             people[pid]["name"] = p.get("name", "")
                             if p.get("gender") is not None: people[pid]["gender"] = p.get("gender")
                             people[pid]["titles"].add(slug)
-                    # Also extract directors and writers from crew
                     crew = r.json().get("crew", {})
-                    dir_roles = {"Director", "Co-Director"}
-                    wr_roles = {"Writer", "Screenplay", "Author", "Original Story", "Story"}
                     for cp in crew.get("directing", []):
-                        jobs = set(cp.get("jobs", []))
-                        if jobs & dir_roles:
+                        if set(cp.get("jobs", [])) & {"Director", "Co-Director"}:
                             pid2 = cp.get("person", {}).get("ids", {}).get("slug", "")
-                            if pid2:
-                                directors[pid2]["name"] = cp["person"].get("name", "")
-                                directors[pid2]["titles"].add(slug)
+                            if pid2: directors[pid2]["name"] = cp["person"].get("name", ""); directors[pid2]["titles"].add(slug)
                     for cp in crew.get("writing", []):
-                        jobs = set(cp.get("jobs", []))
-                        if jobs & wr_roles:
+                        if set(cp.get("jobs", [])) & {"Writer", "Screenplay", "Author", "Original Story", "Story"}:
                             pid2 = cp.get("person", {}).get("ids", {}).get("slug", "")
-                            if pid2:
-                                writers[pid2]["name"] = cp["person"].get("name", "")
-                                writers[pid2]["titles"].add(slug)
+                            if pid2: writers[pid2]["name"] = cp["person"].get("name", ""); writers[pid2]["titles"].add(slug)
+                    trakt_fallback += 1
             except Exception: pass
-            # Fetch studios (store ALL, not just first)
-            try:
-                r2 = retry_request("get", f"{BASE_URL}/{kind}/{slug}/studios", headers=HEADERS, timeout=5)
-                if r2.status_code == 200:
-                    st = r2.json()
-                    if st:
-                        names = [s["name"] for s in st]
-                        # Merge: keep any existing studios + new ones
-                        existing = set(slug_studios.get(slug, []))
-                        existing.update(names)
-                        slug_studios[slug] = list(existing)
-            except Exception: pass
-            done += 1
-            if done % 100 == 0:
-                print(f"  cast+studios: {done}/{total} (skipped {skipped})")
-                # Save progress periodically
-                _p = {pid: {"name": i["name"], "gender": i["gender"], "titles": list(i["titles"])} for pid, i in people.items()}
-                with open("data/people.json", "w") as f: json.dump(_p, f, separators=(',', ':'))
-                with open("data/studios.json", "w") as f: json.dump(slug_studios, f, separators=(',', ':'))
+        # Fetch studios from Trakt (TMDB doesn't have good studio data)
+        try:
+            r2 = retry_request("get", f"{BASE_URL}/{kind}/{slug}/studios", headers=HEADERS, timeout=5)
+            if r2 and r2.status_code == 200:
+                st = r2.json()
+                if st:
+                    names = [s["name"] for s in st]
+                    existing_st = set(slug_studios.get(slug, []))
+                    existing_st.update(names)
+                    slug_studios[slug] = list(existing_st)
+        except Exception: pass
+        done += 1
+        if done % 100 == 0:
+            print(f"  cast+studios: {done}/{total} (skipped {skipped}, TMDB: {tmdb_ok}, Trakt: {trakt_fallback})")
+            _p = {pid: {"name": i["name"], "gender": i["gender"], "titles": list(i["titles"])} for pid, i in people.items()}
+            with open("data/people.json", "w") as f: json.dump(_p, f, separators=(',', ':'))
+            with open("data/studios.json", "w") as f: json.dump(slug_studios, f, separators=(',', ':'))
             time.sleep(0.8)  # respect Trakt rate limits (0.3 caused frequent 429s)
     print(f"  people: {len(people)}, studios: {len(slug_studios)}, directors: {len(directors)}, writers: {len(writers)}")
+    print(f"  Sources: TMDB={tmdb_ok}, Trakt fallback={trakt_fallback}, Skipped={skipped}")
     people_out = {pid: {"name": i["name"], "gender": i["gender"], "titles": list(i["titles"])} for pid, i in people.items()}
     dir_out = {pid: {"name": i["name"], "titles": list(i["titles"])} for pid, i in directors.items()}
     wr_out = {pid: {"name": i["name"], "titles": list(i["titles"])} for pid, i in writers.items()}
