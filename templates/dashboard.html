@@ -242,36 +242,42 @@ body{overflow-x:hidden}
 </div>
 <!-- SPORTS -->
 <div class="g2 med-s" data-med="all sports" id="sp-wrap" style="display:none">
-<div id="sec-sp" class="cd fw s-sp"><h3><span class="i">🏀</span>Sports <span style="float:right"><button class="vb" id="sp-add-btn" onclick="document.getElementById('sp-modal').style.display='flex'" style="background:var(--sp);color:#fff;border-color:var(--sp)">+ Add Event</button></span></h3><div id="sp-chart" style="height:280px"></div></div>
+<div id="sec-sp" class="cd fw s-sp"><h3><span class="i">🏀</span>Sports <span style="float:right"><button class="vb" onclick="openSportsAdd()" style="background:var(--sp);color:#fff;border-color:var(--sp)">+ Add Event</button></span></h3><div id="sp-chart" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">🏟️</span>Teams</h3><div id="sp-teams" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">📺</span>How I Watched</h3><div id="sp-how" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">🏟️</span>Venues</h3><div id="sp-venues" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">🏅</span>Leagues</h3><div id="sp-leagues" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">📋</span>Recent Events</h3><div class="stb" id="sp-recent" style="font-size:12px;max-height:350px"></div></div>
 </div>
-<!-- Sports Add Event Modal -->
-<div id="sp-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:16px">
-<div style="background:var(--sf);border-radius:12px;padding:20px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid rgba(255,255,255,.1)">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0"><span class="i">🏀</span> Add Sports Event</h3><button onclick="document.getElementById('sp-modal').style.display='none'" style="background:none;border:none;color:var(--t2);font-size:20px;cursor:pointer">✕</button></div>
-<div id="sp-step1">
-<input id="sp-team-input" type="text" placeholder="Search team name (e.g. Los Angeles Lakers)" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--tx);font-size:14px;margin-bottom:8px" onkeydown="if(event.key==='Enter')searchSportsTeam()">
-<button onclick="searchSportsTeam()" style="width:100%;padding:10px;background:var(--sp);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">Search Teams</button>
-<div id="sp-team-results" style="margin-top:10px"></div>
+<!-- Sports Add Event Overlay -->
+<div id="sp-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div style="position:sticky;top:0;z-index:301;background:rgba(15,15,15,.97);backdrop-filter:blur(8px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">
+<h2 style="font-size:18px;font-weight:700;margin:0" id="sp-ov-title"><span class="i">🏀</span> Add Sports Event</h2>
+<button onclick="closeSportsAdd()" style="background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer">✕</button>
 </div>
-<div id="sp-step2" style="display:none">
-<button onclick="document.getElementById('sp-step1').style.display='';document.getElementById('sp-step2').style.display='none'" style="background:none;border:none;color:var(--sp);cursor:pointer;font-size:12px;margin-bottom:8px">← Back to search</button>
-<div id="sp-event-results"></div>
+<div style="max-width:700px;margin:0 auto;padding:16px">
+<div id="sp-ov-search">
+<input id="sp-team-input" type="text" placeholder="Search team name (e.g. Los Angeles Lakers)" style="width:100%;padding:12px;background:var(--sf);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--tx);font-size:15px;margin-bottom:10px" onkeydown="if(event.key==='Enter')searchSportsTeam()">
+<div id="sp-team-results"></div>
 </div>
-<div id="sp-step3" style="display:none">
-<button onclick="document.getElementById('sp-step2').style.display='';document.getElementById('sp-step3').style.display='none'" style="background:none;border:none;color:var(--sp);cursor:pointer;font-size:12px;margin-bottom:8px">← Back to events</button>
-<div id="sp-event-detail" style="margin-bottom:12px"></div>
-<p style="color:var(--t2);font-size:12px;margin-bottom:8px">How did you watch?</p>
-<div style="display:flex;gap:8px;margin-bottom:12px">
-<button class="vb sp-wt" data-v="live" onclick="document.querySelectorAll('.sp-wt').forEach(function(b){b.classList.remove('vb-on')});this.classList.add('vb-on')" style="flex:1;padding:10px">🏟️ Live</button>
-<button class="vb sp-wt" data-v="tv" onclick="document.querySelectorAll('.sp-wt').forEach(function(b){b.classList.remove('vb-on')});this.classList.add('vb-on')" style="flex:1;padding:10px">📺 TV</button>
-<button class="vb sp-wt" data-v="remote" onclick="document.querySelectorAll('.sp-wt').forEach(function(b){b.classList.remove('vb-on')});this.classList.add('vb-on')" style="flex:1;padding:10px">📡 Remote</button>
+<div id="sp-ov-events" style="display:none">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+<button onclick="document.getElementById('sp-ov-search').style.display='';document.getElementById('sp-ov-events').style.display='none';document.getElementById('sp-ov-title').innerHTML='<span class=i>🏀</span> Add Sports Event'" style="background:none;border:none;color:var(--sp);cursor:pointer;font-size:13px">← Teams</button>
+<input id="sp-ev-search" type="text" placeholder="Filter opponent, venue, date..." oninput="filterSportsEvents()" style="flex:1;padding:8px 12px;background:var(--sf);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:var(--tx);font-size:13px">
 </div>
-<button onclick="saveSportsEvent()" style="width:100%;padding:10px;background:var(--sp);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">Save Event</button>
+<div id="sp-ev-list"></div>
+<div id="sp-ev-loading" style="text-align:center;padding:16px;color:var(--t2);font-size:12px"></div>
+</div>
+<div id="sp-ov-confirm" style="display:none">
+<button onclick="document.getElementById('sp-ov-events').style.display='';document.getElementById('sp-ov-confirm').style.display='none'" style="background:none;border:none;color:var(--sp);cursor:pointer;font-size:13px;margin-bottom:12px">← Events</button>
+<div id="sp-event-detail" style="margin-bottom:16px"></div>
+<p style="color:var(--t2);font-size:13px;margin-bottom:10px">How did you watch?</p>
+<div style="display:flex;gap:8px;margin-bottom:16px">
+<button class="vb sp-wt" data-v="live" onclick="document.querySelectorAll('.sp-wt').forEach(function(b){b.classList.remove('vb-on')});this.classList.add('vb-on')" style="flex:1;padding:12px;font-size:14px">🏟️ Live</button>
+<button class="vb sp-wt" data-v="tv" onclick="document.querySelectorAll('.sp-wt').forEach(function(b){b.classList.remove('vb-on')});this.classList.add('vb-on')" style="flex:1;padding:12px;font-size:14px">📺 TV</button>
+<button class="vb sp-wt" data-v="remote" onclick="document.querySelectorAll('.sp-wt').forEach(function(b){b.classList.remove('vb-on')});this.classList.add('vb-on')" style="flex:1;padding:12px;font-size:14px">📡 Remote</button>
+</div>
+<button onclick="saveSportsEvent()" style="width:100%;padding:12px;background:var(--sp);color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;font-weight:600">Save Event</button>
 </div>
 </div>
 </div>
@@ -1948,45 +1954,52 @@ function renderPodcasts(){
 var SP=JSON.parse(localStorage.getItem('iris_sports')||'[]');
 window._spSelected=null;
 
+function _spDate(d){if(!d)return'';var p=d.split('-');if(p.length!==3)return d;return p[1]+'/'+p[2]+'/'+p[0]}
+
+function openSportsAdd(){
+  document.getElementById('sp-overlay').style.display='';
+  document.body.style.overflow='hidden';
+  document.getElementById('sp-ov-search').style.display='';
+  document.getElementById('sp-ov-events').style.display='none';
+  document.getElementById('sp-ov-confirm').style.display='none';
+  document.getElementById('sp-ov-title').innerHTML='<span class="i">🏀</span> Add Sports Event';
+  document.getElementById('sp-team-input').value='';
+  document.getElementById('sp-team-results').innerHTML='';
+  // Scroll-to-load on the overlay
+  var ov=document.getElementById('sp-overlay');
+  ov.onscroll=function(){if(ov.scrollTop+ov.clientHeight>=ov.scrollHeight-200)loadMoreSportsEvents()};
+}
+
+function closeSportsAdd(){
+  document.getElementById('sp-overlay').style.display='none';
+  document.body.style.overflow='';
+}
+
 function searchSportsTeam(){
   var q=document.getElementById('sp-team-input').value.trim();if(!q)return;
-  var el=document.getElementById('sp-team-results');el.innerHTML='<div style="color:var(--t2)">Searching...</div>';
+  var el=document.getElementById('sp-team-results');el.innerHTML='<div style="color:var(--t2);padding:10px">Searching...</div>';
   fetch('https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t='+encodeURIComponent(q)).then(function(r){return r.json()}).then(function(d){
     var teams=d.teams||[];
-    if(!teams.length){el.innerHTML='<div style="color:var(--t2)">No teams found. Try the full name (e.g. "Los Angeles Lakers")</div>';return}
+    if(!teams.length){el.innerHTML='<div style="color:var(--t2);padding:10px">No teams found. Try the full name (e.g. "Los Angeles Lakers")</div>';return}
     var h='';teams.slice(0,8).forEach(function(t){
-      h+='<div onclick="loadTeamEvents(\''+t.idTeam+'\',\''+t.strTeam.replace(/'/g,"\\'")+'\')" style="padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'none\'">';
-      if(t.strTeamBadge)h+='<img src="'+t.strTeamBadge+'" style="width:32px;height:32px;object-fit:contain">';
-      h+='<div><div style="font-weight:600">'+t.strTeam+'</div><div style="font-size:11px;color:var(--t2)">'+t.strSport+' — '+t.strLeague+'</div></div></div>';
+      h+='<div onclick="loadTeamEvents(\''+t.idTeam+'\',\''+t.strTeam.replace(/'/g,"\\'")+'\')" style="padding:12px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;gap:10px" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'none\'">';
+      if(t.strTeamBadge)h+='<img src="'+t.strTeamBadge+'" style="width:28px;height:28px;object-fit:contain">';
+      h+='<div><div style="font-weight:600;font-size:14px">'+t.strTeam+'</div><div style="font-size:11px;color:var(--t2)">'+t.strSport+' · '+t.strLeague+'</div></div></div>';
     });el.innerHTML=h;
-  }).catch(function(){el.innerHTML='<div style="color:#ef4444">Search failed — try again</div>'});
+  }).catch(function(){el.innerHTML='<div style="color:#ef4444;padding:10px">Search failed — try again</div>'});
 }
 
 function loadTeamEvents(teamId,teamName){
-  document.getElementById('sp-step1').style.display='none';
-  document.getElementById('sp-step2').style.display='';
+  document.getElementById('sp-ov-search').style.display='none';
+  document.getElementById('sp-ov-events').style.display='';
+  document.getElementById('sp-ov-title').innerHTML='<span class="i">🏀</span> '+teamName;
   window._spTeamId=teamId;window._spTeamName=teamName;
   window._spAllEvents=[];window._spSeasonIdx=0;
-  // Build season list (current year back 10 years)
-  var now=new Date();var curYear=now.getFullYear();var curMonth=now.getMonth();
+  var curYear=new Date().getFullYear();
   window._spSeasons=[];
-  for(var y=curYear;y>=curYear-10;y--){
-    // Most sports use "YYYY-YYYY+1" seasons
-    window._spSeasons.push(y+'-'+(y+1));
-    window._spSeasons.push(String(y));
-  }
-  var el=document.getElementById('sp-event-results');
-  el.innerHTML='<div style="margin-bottom:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
-    +'<span style="font-size:12px;font-weight:600">'+teamName+'</span>'
-    +'<input id="sp-ev-search" type="text" placeholder="Filter by opponent, venue, date..." oninput="filterSportsEvents()" style="flex:1;min-width:150px;padding:6px 10px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:var(--tx);font-size:12px">'
-    +'</div>'
-    +'<div id="sp-ev-list" style="max-height:50vh;overflow-y:auto"></div>'
-    +'<div id="sp-ev-loading" style="text-align:center;padding:10px;color:var(--t2);font-size:11px"></div>';
-  // Set up scroll-to-load
-  setTimeout(function(){
-    var listEl=document.getElementById('sp-ev-list');
-    if(listEl)listEl.onscroll=function(){if(listEl.scrollTop+listEl.clientHeight>=listEl.scrollHeight-100)loadMoreSportsEvents()};
-  },100);
+  for(var y=curYear;y>=curYear-10;y--){window._spSeasons.push(y+'-'+(y+1));window._spSeasons.push(String(y))}
+  document.getElementById('sp-ev-list').innerHTML='';
+  document.getElementById('sp-ev-search').value='';
   loadMoreSportsEvents();
 }
 
@@ -2001,15 +2014,12 @@ function loadMoreSportsEvents(){
     .then(function(r){return r.json()})
     .then(function(d){
       var events=d.event||[];
-      // Deduplicate by event ID
       var existingIds={};window._spAllEvents.forEach(function(e){existingIds[e.idEvent]=true});
       events.forEach(function(ev){if(!existingIds[ev.idEvent]){window._spAllEvents.push(ev);existingIds[ev.idEvent]=true}});
-      // Sort all by date descending
       window._spAllEvents.sort(function(a,b){return b.dateEvent.localeCompare(a.dateEvent)});
       filterSportsEvents();
       loadEl._loading=false;
-      loadEl.textContent=window._spSeasonIdx<window._spSeasons.length?'Scroll for older events':'';
-      // If we got few results, auto-load next season
+      loadEl.textContent=window._spSeasonIdx<window._spSeasons.length?'Scroll for older events':'All events loaded';
       if(events.length<5&&window._spSeasonIdx<window._spSeasons.length)loadMoreSportsEvents();
     }).catch(function(){loadEl._loading=false;loadEl.textContent='Load failed — scroll to retry'});
 }
@@ -2019,56 +2029,53 @@ function filterSportsEvents(){
   var ql=q.toLowerCase();
   var filtered=window._spAllEvents.filter(function(ev){
     if(!ql)return true;
-    return(ev.strEvent||'').toLowerCase().indexOf(ql)>=0
-      ||(ev.strVenue||'').toLowerCase().indexOf(ql)>=0
-      ||(ev.dateEvent||'').indexOf(ql)>=0
-      ||(ev.strHomeTeam||'').toLowerCase().indexOf(ql)>=0
-      ||(ev.strAwayTeam||'').toLowerCase().indexOf(ql)>=0;
+    return(ev.strEvent||'').toLowerCase().indexOf(ql)>=0||(ev.strVenue||'').toLowerCase().indexOf(ql)>=0||(ev.dateEvent||'').indexOf(ql)>=0||(ev.strHomeTeam||'').toLowerCase().indexOf(ql)>=0||(ev.strAwayTeam||'').toLowerCase().indexOf(ql)>=0;
   });
   var listEl=document.getElementById('sp-ev-list');if(!listEl)return;
-  // Already-added IDs
   var addedIds={};SP.forEach(function(s){addedIds[s.id]=true});
-  var h='';
+  var h='<table style="width:100%;font-size:12px"><thead><tr><th style="width:75px">Date</th><th>Home</th><th style="width:40px;text-align:center">Score</th><th>Away</th><th style="width:70px">Venue</th><th style="width:30px"></th></tr></thead><tbody>';
   filtered.forEach(function(ev){
-    var score=(ev.intHomeScore!=null&&ev.intHomeScore!=='')?(ev.intHomeScore+' - '+ev.intAwayScore):'Upcoming';
+    var score=(ev.intHomeScore!=null&&ev.intHomeScore!=='')?ev.intHomeScore+'-'+ev.intAwayScore:'—';
     var added=addedIds[ev.idEvent];
     var evJson=JSON.stringify(ev).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
-    h+='<div '+(added?'':'onclick="selectSportsEvent(this)" ')+' data-ev="'+evJson+'" style="padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:6px;'+(added?'opacity:.4':'cursor:pointer')+'" '+(added?'':'onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'none\'"')+'>';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600;font-size:13px">'+ev.strEvent+'</span><span class="badge" style="background:rgba(14,165,233,.15);color:var(--sp)">'+(added?'✓ Added':score)+'</span></div>';
-    h+='<div style="font-size:11px;color:var(--t2);margin-top:2px">'+ev.dateEvent+(ev.strVenue?' — '+ev.strVenue:'')+(ev.strSeason?' — '+ev.strSeason:'')+'</div></div>';
+    var localDate=_spDate(ev.dateEventLocal||ev.dateEvent);
+    h+='<tr style="cursor:'+(added?'default':'pointer')+';opacity:'+(added?'.35':'1')+'" '+(added?'':'onclick="selectSportsEvent(this)" ')+'data-ev="'+evJson+'">';
+    h+='<td style="white-space:nowrap;color:var(--t2);font-size:11px">'+localDate+'</td>';
+    h+='<td style="font-weight:'+(ev.intHomeScore>ev.intAwayScore?'700':'400')+'">'+ev.strHomeTeam+'</td>';
+    h+='<td style="text-align:center;font-weight:600;color:var(--sp)">'+(added?'✓':score)+'</td>';
+    h+='<td style="font-weight:'+(ev.intAwayScore>ev.intHomeScore?'700':'400')+'">'+ev.strAwayTeam+'</td>';
+    h+='<td style="font-size:10px;color:var(--t2);max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(ev.strVenue||'')+'</td>';
+    h+='<td></td></tr>';
   });
-  if(!filtered.length&&ql)h='<div style="color:var(--t2);padding:10px;text-align:center">No matches for "'+ql+'"</div>';
+  h+='</tbody></table>';
+  if(!filtered.length&&ql)h='<div style="color:var(--t2);padding:20px;text-align:center">No matches for "'+ql+'"</div>';
   listEl.innerHTML=h;
 }
 
 function selectSportsEvent(el){
   var ev=JSON.parse(el.dataset.ev);window._spSelected=ev;
-  document.getElementById('sp-step2').style.display='none';
-  document.getElementById('sp-step3').style.display='';
+  document.getElementById('sp-ov-events').style.display='none';
+  document.getElementById('sp-ov-confirm').style.display='';
   document.querySelectorAll('.sp-wt').forEach(function(b){b.classList.remove('vb-on')});
   var score=(ev.intHomeScore!=null&&ev.intHomeScore!=='')?(ev.intHomeScore+' - '+ev.intAwayScore):'Upcoming';
-  var badges='';if(ev.strHomeTeamBadge)badges+='<img src="'+ev.strHomeTeamBadge+'" style="width:28px;height:28px;object-fit:contain">';
-  badges+='<span style="font-size:18px;font-weight:700;margin:0 8px">'+score+'</span>';
-  if(ev.strAwayTeamBadge)badges+='<img src="'+ev.strAwayTeamBadge+'" style="width:28px;height:28px;object-fit:contain">';
-  document.getElementById('sp-event-detail').innerHTML='<div style="text-align:center;margin-bottom:8px">'+badges+'</div><div style="text-align:center;font-weight:600">'+ev.strEvent+'</div><div style="text-align:center;font-size:12px;color:var(--t2)">'+ev.dateEvent+(ev.strVenue?' — '+ev.strVenue:'')+'</div><div style="text-align:center;font-size:11px;color:var(--t2)">'+ev.strSport+' — '+ev.strLeague+'</div>';
+  var badges='';if(ev.strHomeTeamBadge)badges+='<img src="'+ev.strHomeTeamBadge+'" style="width:36px;height:36px;object-fit:contain">';
+  badges+='<span style="font-size:22px;font-weight:700;margin:0 12px">'+score+'</span>';
+  if(ev.strAwayTeamBadge)badges+='<img src="'+ev.strAwayTeamBadge+'" style="width:36px;height:36px;object-fit:contain">';
+  document.getElementById('sp-event-detail').innerHTML='<div style="text-align:center;margin-bottom:10px">'+badges+'</div><div style="text-align:center;font-weight:600;font-size:16px">'+ev.strEvent+'</div><div style="text-align:center;font-size:13px;color:var(--t2);margin-top:4px">'+_spDate(ev.dateEventLocal||ev.dateEvent)+(ev.strVenue?' · '+ev.strVenue:'')+'</div><div style="text-align:center;font-size:12px;color:var(--t2)">'+ev.strSport+' · '+ev.strLeague+'</div>';
 }
 
 function saveSportsEvent(){
   var ev=window._spSelected;if(!ev)return;
   var wt=document.querySelector('.sp-wt.vb-on');if(!wt){alert('Pick how you watched');return}
-  // Check for duplicate
   if(SP.some(function(s){return s.id===ev.idEvent})){alert('Already added');return}
-  SP.push({id:ev.idEvent,date:ev.dateEvent,sport:ev.strSport,league:ev.strLeague,home_team:ev.strHomeTeam,away_team:ev.strAwayTeam,home_score:ev.intHomeScore,away_score:ev.intAwayScore,venue:ev.strVenue||'',home_badge:ev.strHomeTeamBadge||'',away_badge:ev.strAwayTeamBadge||'',watch_type:wt.dataset.v});
+  SP.push({id:ev.idEvent,date:ev.dateEventLocal||ev.dateEvent,sport:ev.strSport,league:ev.strLeague,home_team:ev.strHomeTeam,away_team:ev.strAwayTeam,home_score:ev.intHomeScore,away_score:ev.intAwayScore,venue:ev.strVenue||'',home_badge:ev.strHomeTeamBadge||'',away_badge:ev.strAwayTeamBadge||'',watch_type:wt.dataset.v});
   localStorage.setItem('iris_sports',JSON.stringify(SP));
-  // Reset modal
-  document.getElementById('sp-modal').style.display='none';
-  document.getElementById('sp-step1').style.display='';
-  document.getElementById('sp-step2').style.display='none';
-  document.getElementById('sp-step3').style.display='none';
-  document.getElementById('sp-team-input').value='';
-  document.getElementById('sp-team-results').innerHTML='';
-  window._spSelected=null;
+  // Go back to events list (so they can add more)
+  document.getElementById('sp-ov-confirm').style.display='none';
+  document.getElementById('sp-ov-events').style.display='';
+  filterSportsEvents();
   renderSports();
+  window._spSelected=null;
 }
 
 function renderSports(){
@@ -2125,11 +2132,11 @@ function renderSports(){
   // Recent events table
   var rEl=document.getElementById('sp-recent');
   var sorted=filtered.slice().sort(function(a,b){return b.date.localeCompare(a.date)});
-  var h='<table><thead><tr><th>Date</th><th>Event</th><th>Score</th><th>How</th><th></th></tr></thead><tbody>';
-  sorted.forEach(function(e,i){
+  var h='<table><thead><tr><th>Date</th><th>Home</th><th style="text-align:center">Score</th><th>Away</th><th>How</th><th></th></tr></thead><tbody>';
+  sorted.forEach(function(e){
     var score=(e.home_score!=null&&e.home_score!=='')?(e.home_score+'-'+e.away_score):'—';
     var icon=e.watch_type==='live'?'🏟️':e.watch_type==='tv'?'📺':'📡';
-    h+='<tr><td style="white-space:nowrap;color:var(--t2)">'+e.date+'</td><td style="font-weight:600;font-size:11px">'+e.home_team+' vs '+e.away_team+'</td><td class="nm nm-a">'+score+'</td><td>'+icon+'</td><td><button onclick="deleteSportsEvent(\''+e.id+'\')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px" title="Remove">✕</button></td></tr>';
+    h+='<tr><td style="white-space:nowrap;color:var(--t2);font-size:11px">'+_spDate(e.date)+'</td><td style="font-weight:'+(e.home_score>e.away_score?'700':'400')+';font-size:11px">'+e.home_team+'</td><td style="text-align:center;font-weight:600;color:var(--sp)">'+score+'</td><td style="font-weight:'+(e.away_score>e.home_score?'700':'400')+';font-size:11px">'+e.away_team+'</td><td>'+icon+'</td><td><button onclick="deleteSportsEvent(\''+e.id+'\')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px" title="Remove">✕</button></td></tr>';
   });
   h+='</tbody></table>';rEl.innerHTML=h;
 }
