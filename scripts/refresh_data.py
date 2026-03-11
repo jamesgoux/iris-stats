@@ -1831,7 +1831,12 @@ data["ll"] = lifeline_all
 # Up Next — load pre-computed show progress
 if os.path.exists("data/up_next.json"):
     with open("data/up_next.json") as f:
-        data["un"] = json.load(f)
+        un_raw = json.load(f)
+        # Support both old (list) and new (dict) format
+        if isinstance(un_raw, list):
+            data["un"] = {"shows": un_raw, "recent": []}
+        else:
+            data["un"] = un_raw
 
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:

@@ -78,24 +78,29 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .ll-summary{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
 .ll-pill{font-size:11px;padding:4px 10px;border-radius:12px;font-weight:600}
 .un-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px;max-width:1200px;margin:0 auto}
-.un-card{background:var(--sf);border-radius:10px;border:1px solid rgba(255,255,255,.06);overflow:hidden;display:flex;gap:12px;padding:12px;padding-right:48px;position:relative;transition:background .2s}
+.un-card{background:var(--sf);border-radius:10px;border:1px solid rgba(255,255,255,.06);overflow:hidden;display:flex;gap:12px;padding:12px;padding-right:48px;position:relative;transition:background .2s;cursor:pointer}
 .un-card:hover{background:#1e1e3a}
 .un-poster{width:60px;height:90px;border-radius:6px;object-fit:cover;background:#222;flex-shrink:0}
 .un-poster-ph{width:60px;height:90px;border-radius:6px;background:linear-gradient(135deg,#1a1a2e,#0f3460);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--t2);flex-shrink:0}
 .un-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .un-show{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .un-ep{font-size:12px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.un-meta{display:flex;gap:8px;align-items:center;margin-top:4px;font-size:10px;color:var(--t2)}
+.un-meta{display:flex;gap:6px;align-items:center;margin-top:4px;font-size:10px;color:var(--t2)}
+.un-stream{display:flex;gap:4px;align-items:center;position:absolute;top:8px;right:52px}
+.un-stream img{width:18px;height:18px;border-radius:4px}
 .un-prog-wrap{margin-top:6px}
-.un-prog{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
-.un-prog-bar{height:100%;background:var(--tv);border-radius:3px;transition:width .3s}
-.un-prog-info{display:flex;justify-content:space-between;margin-top:3px;font-size:10px;color:var(--t2)}
-.un-new{position:absolute;top:8px;right:48px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
-.un-aired{font-size:10px;color:var(--t2)}
+.un-prog{height:18px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.08);position:relative}
+.un-prog-bar{height:100%;background:linear-gradient(90deg,var(--tv),rgba(20,184,166,.5));border-radius:3px;transition:width .3s}
+.un-prog-text{position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:9px;color:rgba(255,255,255,.7);font-weight:600;pointer-events:none}
+.un-new{position:absolute;top:8px;right:52px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
 .un-section{padding:8px 16px;max-width:1200px;margin:0 auto;font-size:12px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
 .un-watch-btn{position:absolute;top:0;right:0;width:44px;height:100%;border-radius:0 10px 10px 0;background:rgba(20,184,166,.08);border:none;border-left:1px solid rgba(255,255,255,.06);color:var(--tv);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .un-watch-btn:hover{background:var(--tv);color:#fff}
-@media(max-width:768px){.un-grid{grid-template-columns:1fr;padding:10px}}
+.un-del-btn{position:absolute;top:0;right:0;width:44px;height:100%;border-radius:0 10px 10px 0;background:rgba(239,68,68,.06);border:none;border-left:1px solid rgba(255,255,255,.06);color:#ef4444;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.un-del-btn:hover{background:#ef4444;color:#fff}
+.un-detail{background:var(--sf);border-radius:12px;border:1px solid rgba(255,255,255,.08);padding:20px;max-width:500px;margin:20px auto}
+.un-detail img{width:100%;border-radius:8px;margin-bottom:12px;max-height:280px;object-fit:cover}
+@media(max-width:768px){.un-grid{grid-template-columns:1fr;padding:10px}.un-stream{top:auto;bottom:8px;right:52px}}
 @media(max-width:768px){
 .g2,.g3{grid-template-columns:1fr}
 .sg{grid-template-columns:repeat(3,1fr)}
@@ -2314,40 +2319,29 @@ function _llRenderBatch(){
 
 // Up Next page
 var _unWatched=JSON.parse(localStorage.getItem('iris_un_watched')||'{}');
-var _unToken=localStorage.getItem('iris_trakt_token')||'';
 
 function _unFmtMin(m){if(!m)return'';var h=Math.floor(m/60);var mn=m%60;return h?h+'h'+(mn?' '+mn+'m':''):mn+'m'}
+function _unData(){var d=D.un||{};return{shows:d.shows||d||[],recent:d.recent||[]}}
 
 function openUpNext(){
-  // Filter: remove locally watched, remove 100% complete, remove shows with no next episode
-  var un=(D.un||[]).filter(function(s){
+  var ud=_unData();
+  var shows=ud.shows.filter(function(s){
     if(_unWatched[s.slug+'|'+s.season+'|'+s.episode])return false;
     if(s.aired_total&&s.completed>=s.aired_total)return false;
     return true;
   });
+  var recent=ud.recent||[];
   var el=document.getElementById('un-content');
-  if(!un.length&&!(D.un||[]).length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div style="font-size:16px;margin-bottom:8px">No Up Next data yet</div><div style="font-size:12px;max-width:400px;margin:0 auto">The Up Next data is generated by the GitHub Actions workflow. It will populate after the next refresh, or trigger it from the <a href="https://github.com/jamesgoux/iris-stats/actions" style="color:var(--sp)">Actions tab</a>.</div></div>';document.getElementById('un-overlay').style.display='';document.body.style.overflow='hidden';return}
+  if(!shows.length&&!recent.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div style="font-size:16px;margin-bottom:8px">No Up Next data yet</div><div style="font-size:12px;max-width:400px;margin:0 auto">Trigger a refresh from the <a href="https://github.com/jamesgoux/iris-stats/actions" style="color:var(--sp)">Actions tab</a>.</div></div>';document.getElementById('un-overlay').style.display='';document.body.style.overflow='hidden';return}
 
-  var newItems=un.filter(function(s){return s.is_new});
-  var rest=un.filter(function(s){return !s.is_new});
+  var newItems=shows.filter(function(s){return s.is_new});
+  var rest=shows.filter(function(s){return !s.is_new});
   var h='';
 
-  // Trakt auth — just need access token (client ID comes from the pipeline)
-  h+='<div style="padding:8px 16px;max-width:1200px;margin:0 auto">';
-  if(_unToken){
-    h+='<div style="font-size:11px;color:var(--gr)">✓ Trakt connected <button onclick="localStorage.removeItem(\'iris_trakt_token\');_unToken=\'\';openUpNext()" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:10px">(disconnect)</button></div>';
-  }else{
-    h+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--t2)">Paste Trakt access token to mark watched:</span>';
-    h+='<input id="un-tok" type="password" placeholder="Access Token" style="padding:6px 10px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:var(--tx);font-size:12px;width:180px">';
-    h+='<button onclick="saveTraktAuth()" style="padding:6px 12px;background:var(--sp);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">Connect</button></div>';
-  }
-  h+='</div>';
-
-  function card(s){
+  function card(s,isRecent){
     var key=s.slug+'|'+s.season+'|'+s.episode;
     var pct=s.aired_total?Math.round(s.completed/s.aired_total*100):0;
-    var epsLeft=s.aired_total-s.completed;
-    var c='<div class="un-card" id="un-'+key.replace(/[|]/g,'-')+'">';
+    var c='<div class="un-card" onclick="'+(isRecent?'':'showEpDetail(this)')+'" data-slug="'+s.slug+'" data-s="'+s.season+'" data-e="'+s.episode+'" data-eid="'+(s.ep_trakt_id||0)+'" data-tmdb="'+(s.tmdb_id||'')+'">';
     if(s.poster)c+='<img class="un-poster" src="'+s.poster+'" loading="lazy" onerror="this.style.display=\'none\'" alt="">';
     else c+='<div class="un-poster-ph">📺</div>';
     c+='<div class="un-info">';
@@ -2355,44 +2349,87 @@ function openUpNext(){
     c+='<div class="un-ep">S'+String(s.season).padStart(2,'0')+'E'+String(s.episode).padStart(2,'0');
     if(s.ep_title)c+=' — '+s.ep_title;
     c+='</div>';
-    c+='<div class="un-meta">';
-    if(s.network)c+='<span>'+s.network+'</span>';
-    if(s.ep_aired){
-      if(s.is_aired)c+='<span class="un-aired">Aired '+s.ep_aired+'</span>';
-      else c+='<span class="un-aired" style="color:var(--sp)">Airs '+s.ep_aired+'</span>';
+    if(!isRecent){
+      // Streaming icons
+      if(s.stream&&s.stream.length){
+        c+='<div class="un-stream">';
+        s.stream.forEach(function(st){c+='<img src="'+st.i+'" title="'+st.n+'" loading="lazy">'});
+        c+='</div>';
+      }
+      // Progress bar with text inside
+      c+='<div class="un-prog-wrap"><div class="un-prog"><div class="un-prog-bar" style="width:'+pct+'%"></div>';
+      c+='<div class="un-prog-text"><span>'+(s.ep_runtime?_unFmtMin(s.ep_runtime):'')+'</span><span>'+(s.eps_left||0)+' eps · '+_unFmtMin(s.remaining_min)+'</span></div>';
+      c+='</div></div>';
+      if(s.is_new)c+='<div class="un-new">New</div>';
+      c+='<button onclick="event.stopPropagation();markWatched(\''+s.slug.replace(/'/g,"\\'")+'\','+s.season+','+s.episode+','+(s.ep_trakt_id||0)+',this)" class="un-watch-btn" title="Mark watched">✓</button>';
+    }else{
+      var wa=s.watched_at?s.watched_at.substring(0,10):'';
+      c+='<div class="un-meta"><span>'+wa+'</span></div>';
+      c+='<button onclick="event.stopPropagation();removeRecent('+s.ep_id+',this)" class="un-del-btn" title="Remove">✕</button>';
     }
-    c+='</div>';
-    // Progress bar with inline info
-    c+='<div class="un-prog-wrap">';
-    c+='<div class="un-prog"><div class="un-prog-bar" style="width:'+pct+'%"></div></div>';
-    c+='<div class="un-prog-info"><span>'+(s.ep_runtime?_unFmtMin(s.ep_runtime):'')+'</span><span>'+epsLeft+' ep'+(epsLeft!==1?'s':'')+' left'+(s.remaining_min?' · '+_unFmtMin(s.remaining_min):'')+'</span></div>';
-    c+='</div>';
-    // Watch button
-    c+='<button onclick="markWatched(\''+s.slug.replace(/'/g,"\\'")+'\','+s.season+','+s.episode+','+(s.ep_trakt_id||0)+',this)" class="un-watch-btn" title="Mark watched">✓</button>';
-    c+='</div>';
-    if(s.is_new)c+='<div class="un-new">New</div>';
-    c+='</div>';
+    c+='</div></div>';
     return c;
   }
 
+  // Recently watched (scrolled up from default)
+  if(recent.length){
+    h+='<div class="un-section">🕐 Recently Watched</div><div class="un-grid">';
+    recent.forEach(function(s){h+=card(s,true)});
+    h+='</div>';
+  }
   if(newItems.length){
-    h+='<div class="un-section">🔴 New Episodes ('+newItems.length+')</div><div class="un-grid">';
-    newItems.forEach(function(s){h+=card(s)});
+    h+='<div class="un-section" id="un-default-scroll">🔴 New Episodes ('+newItems.length+')</div><div class="un-grid">';
+    newItems.forEach(function(s){h+=card(s,false)});
     h+='</div>';
   }
   if(rest.length){
-    h+='<div class="un-section">📋 Continue Watching ('+rest.length+')</div><div class="un-grid">';
-    rest.forEach(function(s){h+=card(s)});
+    h+='<div class="un-section">'+(newItems.length?'':'<span id="un-default-scroll"></span>')+'📋 Continue Watching ('+rest.length+')</div><div class="un-grid">';
+    rest.forEach(function(s){h+=card(s,false)});
     h+='</div>';
   }
   el.innerHTML=h;
   document.getElementById('un-overlay').style.display='';
   document.body.style.overflow='hidden';
+  // Scroll to the "new" or "continue" section (past recently watched)
+  setTimeout(function(){var anchor=document.getElementById('un-default-scroll');if(anchor)anchor.scrollIntoView({behavior:'auto',block:'start'})},50);
 }
 
-function saveTraktAuth(){
-  var tok=document.getElementById('un-tok').value.trim();
-  if(tok){localStorage.setItem('iris_trakt_token',tok);_unToken=tok}
+function showEpDetail(card){
+  var slug=card.dataset.slug,s=card.dataset.s,e=card.dataset.e,eid=card.dataset.eid,tmdb=card.dataset.tmdb;
+  var ud=_unData();
+  var show=ud.shows.find(function(x){return x.slug===slug&&x.season==s&&x.episode==e});
+  if(!show)return;
+  // Build detail overlay content
+  var el=document.getElementById('un-content');
+  var h='<div class="un-detail">';
+  h+='<button onclick="openUpNext()" style="background:none;border:none;color:var(--sp);cursor:pointer;font-size:13px;margin-bottom:12px">← Back</button>';
+  // Episode still from TMDB
+  if(tmdb)h+='<img src="https://image.tmdb.org/t/p/w500/'+slug+'.jpg" onerror="this.style.display=\'none\'" alt="" style="display:none">';
+  h+='<div style="font-size:20px;font-weight:700;margin-bottom:4px">'+show.show+'</div>';
+  h+='<div style="font-size:14px;color:var(--t2);margin-bottom:8px">S'+String(show.season).padStart(2,'0')+'E'+String(show.episode).padStart(2,'0');
+  if(show.ep_title)h+=' — '+show.ep_title;
+  h+='</div>';
+  if(show.stream&&show.stream.length){
+    h+='<div style="display:flex;gap:6px;margin-bottom:12px">';
+    show.stream.forEach(function(st){h+='<img src="'+st.i+'" title="'+st.n+'" style="width:24px;height:24px;border-radius:4px">'});
+    h+='</div>';
+  }
+  if(show.ep_runtime)h+='<div style="font-size:12px;color:var(--t2);margin-bottom:8px">'+_unFmtMin(show.ep_runtime)+' episode</div>';
+  if(show.ep_overview)h+='<p style="font-size:13px;color:var(--t2);line-height:1.5;margin-bottom:16px">'+show.ep_overview+'</p>';
+  // Mark watched options
+  h+='<div style="font-size:13px;font-weight:600;margin-bottom:8px">Mark as watched:</div>';
+  h+='<div style="display:flex;flex-direction:column;gap:8px">';
+  h+='<button onclick="markWatchedAt(\''+slug.replace(/'/g,"\\'")+'\','+s+','+e+','+eid+',\'now\')" style="padding:12px;background:var(--tv);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600">✓ Just Now</button>';
+  if(show.ep_aired)h+='<button onclick="markWatchedAt(\''+slug.replace(/'/g,"\\'")+'\','+s+','+e+','+eid+',\''+show.ep_aired+'\')" style="padding:12px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:14px;cursor:pointer">📅 On Air Date ('+show.ep_aired+')</button>';
+  h+='<div style="display:flex;gap:8px"><input type="datetime-local" id="un-custom-date" style="flex:1;padding:10px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--tx);font-size:13px"><button onclick="markWatchedAt(\''+slug.replace(/'/g,"\\'")+'\','+s+','+e+','+eid+',document.getElementById(\'un-custom-date\').value)" style="padding:10px 16px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:13px;cursor:pointer">Set</button></div>';
+  h+='</div></div>';
+  el.innerHTML=h;
+}
+
+function markWatchedAt(slug,season,episode,epTraktId,when){
+  var key=slug+'|'+season+'|'+episode;
+  _unWatched[key]=when==='now'?new Date().toISOString():when;
+  localStorage.setItem('iris_un_watched',JSON.stringify(_unWatched));
   openUpNext();
 }
 
@@ -2400,23 +2437,16 @@ function markWatched(slug,season,episode,epTraktId,btn){
   var key=slug+'|'+season+'|'+episode;
   var card=btn.closest('.un-card');
   card.style.opacity='0.3';card.style.pointerEvents='none';
-  btn.textContent='...';
   _unWatched[key]=new Date().toISOString();
   localStorage.setItem('iris_un_watched',JSON.stringify(_unWatched));
-  var cid=D._trakt_cid||localStorage.getItem('iris_trakt_client_id')||'';
-  if(_unToken&&epTraktId){
-    fetch('https://api.trakt.tv/sync/history',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','trakt-api-version':'2','trakt-api-key':cid,'Authorization':'Bearer '+_unToken},
-      body:JSON.stringify({episodes:[{ids:{trakt:epTraktId}}]})
-    }).then(function(r){
-      if(r.ok){_unSlideOut(card)}
-      else{card.style.opacity='1';card.style.pointerEvents='';btn.textContent='✓';btn.style.borderColor='#ef4444'}
-    }).catch(function(){_unSlideOut(card)});
-  }else{setTimeout(function(){_unSlideOut(card)},200)}
+  setTimeout(function(){card.style.transition='all .3s';card.style.maxHeight='0';card.style.overflow='hidden';card.style.padding='0';card.style.margin='0';card.style.border='none';setTimeout(function(){card.remove()},350)},150);
 }
 
-function _unSlideOut(card){card.style.transition='all .3s';card.style.maxHeight='0';card.style.overflow='hidden';card.style.padding='0';card.style.margin='0';card.style.border='none';setTimeout(function(){card.remove()},350)}
+function removeRecent(epId,btn){
+  var card=btn.closest('.un-card');
+  card.style.transition='all .3s';card.style.opacity='0';
+  setTimeout(function(){card.style.maxHeight='0';card.style.padding='0';card.style.margin='0';card.style.border='none';setTimeout(function(){card.remove()},300)},200);
+}
 
 function closeUpNext(){
   document.getElementById('un-overlay').style.display='none';
