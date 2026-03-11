@@ -157,6 +157,13 @@ for i, pod in enumerate(podcasts):
                         "src": "pub" if published else "init"
                     }
                     new_events += 1
+            else:
+                # D2: Update date to latest listen when progress changes
+                if old_played >= 0 and played > old_played and min(played, dur) >= 300:
+                    history[ep_uuid]["d"] = now_date
+                    history[ep_uuid]["played"] = min(played, dur)
+                    if history[ep_uuid].get("src") in ("pub", "init"):
+                        history[ep_uuid]["src"] = "poll"
 
     if played_count > 0:
         stats.append({

@@ -2081,6 +2081,23 @@ function _spCommitToRepo(){
     })
     .catch(function(e){console.warn('Sports sync error:',e);_spToast('Sync error — check console','#ef4444')});
 }
+// CSV auto-commit to repo (reuses sports PAT)
+function _csvCommitToRepo(path,content,msg,cb){
+  var pat=localStorage.getItem('iris_gh_pat');
+  if(!pat){if(cb)cb(false);return}
+  var b64=btoa(Array.from(new TextEncoder().encode(content),function(b){return String.fromCharCode(b)}).join(''));
+  fetch('https://api.github.com/repos/jamesgoux/iris-stats/contents/'+path,{headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github.v3+json'}})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      return fetch('https://api.github.com/repos/jamesgoux/iris-stats/contents/'+path,{
+        method:'PUT',headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+        body:JSON.stringify({message:msg,content:b64,sha:d.sha||''})
+      });
+    })
+    .then(function(r){if(cb)cb(r.ok)})
+    .catch(function(){if(cb)cb(false)});
+}
+
 function _spToast(msg,color){
   var t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:'+color+';color:#000;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;pointer-events:none;opacity:1;transition:opacity .5s';
@@ -2786,12 +2803,16 @@ function renderStatus(){
 function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
   // Show/hide sections based on medium filter
   document.querySelectorAll('.med-s').forEach(function(el){var meds=el.dataset.med||'';el.style.display=meds.indexOf(ct)>=0?'':'none'});
-  // Critical (above fold): stats, timeline, lifeline, posters
+  // Critical (above fold): stats, timeline, lifeline, posters — render immediately
   stats();renderLifeline();baseCharts();renderPosters();
-  // Deferred (below fold): render after first paint
-  requestAnimationFrame(function(){ptbl('atb',D.a);ptbl('xtb',D.x);ptbl('dtb',D.d||[]);ptbl('wtb',D.w||[]);movieCharts();renderLetterboxd();renderGoodreads();renderLastfm();renderConcerts();renderTheater();renderPodcasts();renderSports();renderStatus();
-  // N1: Dismiss loading screen once all charts are rendered
-  var loader=document.getElementById('iris-loader');if(loader){loader.classList.add('fade-out');setTimeout(function(){loader.remove()},600)}
+  // Deferred: split below-fold work into 2 batches to avoid blocking UI
+  requestAnimationFrame(function(){
+    ptbl('atb',D.a);ptbl('xtb',D.x);ptbl('dtb',D.d||[]);ptbl('wtb',D.w||[]);movieCharts();renderLetterboxd();
+    // Second batch after a paint frame
+    requestAnimationFrame(function(){
+      renderGoodreads();renderLastfm();renderConcerts();renderTheater();renderPodcasts();renderSports();renderStatus();
+      var loader=document.getElementById('iris-loader');if(loader){loader.classList.add('fade-out');setTimeout(function(){loader.remove()},600)}
+    });
   })}
 var _rzt,_lastW=window.innerWidth;
 function _rz(){clearTimeout(_rzt);_rzt=setTimeout(function(){mob=window.innerWidth<768;ch.forEach(function(c){try{c.resize()}catch(e){}})},200)}
@@ -2913,8 +2934,12 @@ function processCSV(file){
     D.lb=D.lb||{};
     D.lb.tags={years:yrsArr,people:buildCat(people,yrsArr),loc:buildCat(loc,yrsArr),locd:buildCat(locd,yrsArr),stream:buildCat(stream,yrsArr),dev:buildCat(dev,yrsArr)};
 
-    stat.innerHTML='<span style="color:var(--gr)">✓</span> Imported '+total+' entries, '+Object.keys(entries).length+' films. Charts updated! <br><span style="color:var(--t2)">To persist: push diary.csv to data/letterboxd_tags.csv in your GitHub repo.</span>';
+    stat.innerHTML='<span style="color:var(--gr)">✓</span> Imported '+total+' entries, '+Object.keys(entries).length+' films. Syncing...';
     renderLetterboxd();
+    // CSV1: Auto-commit to repo
+    _csvCommitToRepo('data/letterboxd_tags.csv',reader.result,'Update Letterboxd tags ('+total+' entries)',function(ok){
+      stat.innerHTML=ok?'<span style="color:var(--gr)">✓</span> Imported & synced to GitHub!':'<span style="color:var(--gr)">✓</span> Imported. <span style="color:#ef4444">Sync failed — push diary.csv manually.</span>';
+    });
   };
   reader.readAsText(file);
 }
@@ -2968,7 +2993,10 @@ function processMezzanine(lines,headers){
   var rated=distArr.reduce(function(s,d){return s+d.c},0);
   var avgSum=distArr.reduce(function(s,d){return s+parseFloat(d.r)*d.c},0);
   D.th={total:total,rated:rated,avg:rated?Math.round(avgSum/rated*10)/10:0,theaters:theaterArr,people:peopleArr,tags:tagsArr,dist:distArr,locations:[],recent:[]};
-  stat.innerHTML='<span style="color:var(--gr)">✓</span> Imported '+total+' theater shows. Charts updated!<br><span style="color:var(--t2)">To persist: push CSV to data/mezzanine.csv in your GitHub repo.</span>';
+  stat.innerHTML='<span style="color:var(--gr)">✓</span> Imported '+total+' theater shows. Syncing...';
+  _csvCommitToRepo('data/mezzanine.csv',reader.result,'Update theater data ('+total+' shows)',function(ok){
+    stat.innerHTML=ok?'<span style="color:var(--gr)">✓</span> Imported & synced to GitHub!':'<span style="color:var(--gr)">✓</span> Imported. <span style="color:#ef4444">Sync failed — push CSV manually.</span>';
+  });
   renderTheater();
 }
 })();
