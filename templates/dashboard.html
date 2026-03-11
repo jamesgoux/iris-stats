@@ -284,7 +284,7 @@ function writeHash(){var p=new URLSearchParams();if(cy!=='all')p.set('y',cy);if(
 
 var ys=document.getElementById('ys');var yrs=new Set();D.c.m.forEach(function(m){yrs.add(m.month.substr(0,4))});
 Array.from(yrs).sort().reverse().forEach(function(y){var o=document.createElement('option');o.value=y;o.textContent=y;ys.appendChild(o)});
-ys.onchange=function(){cy=ys.value;writeHash();render()};
+ys.onchange=function(){cy=ys.value;window._llMonthExplicit=false;writeHash();render()};
 document.getElementById('gs').onchange=function(){ct=this.value;writeHash();render()};
 readHash();
 
@@ -363,10 +363,14 @@ function renderLifeline(){
     if(cy===curYr)opts+='<button class="vb ll-mo '+(window._llMonth==='last30'?'vb-on':'')+'" data-v="last30" style="font-size:9px">Last 30</button>';
     moList.forEach(function(m){opts+='<button class="vb ll-mo '+(window._llMonth===m?'vb-on':'')+'" data-v="'+m+'" style="font-size:9px">'+m.substring(5)+'</button>'});
     llSel.innerHTML=opts;
-    llSel.querySelectorAll('.ll-mo').forEach(function(btn){btn.onclick=function(){window._llMonth=btn.dataset.v;renderLifeline()}});
-    // Default: last30 for current year, last month for past years
-    if(cy!==curYr)window._llMonth=moList[moList.length-1]||'last30';
-    else if(window._llMonth!=='last30'&&moList.indexOf(window._llMonth)<0)window._llMonth='last30';
+    llSel.querySelectorAll('.ll-mo').forEach(function(btn){btn.onclick=function(){window._llMonth=btn.dataset.v;window._llMonthExplicit=true;renderLifeline()}});
+    // Default: last30 for current year, last month for past years — only if not explicitly set by user
+    if(!window._llMonthExplicit){
+      if(cy!==curYr)window._llMonth=moList[moList.length-1]||'last30';
+      else if(window._llMonth!=='last30'&&moList.indexOf(window._llMonth)<0)window._llMonth='last30';
+    }else if(moList.indexOf(window._llMonth)<0&&window._llMonth!=='last30'){
+      window._llMonth=moList[moList.length-1]||'last30';
+    }
   }else{
     window._llMonth='last30';
     llSel.innerHTML='';
