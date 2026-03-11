@@ -257,7 +257,7 @@ body{overflow-x:hidden}
 <div class="cd s-sp"><h3><span class="i">📋</span>Recent Events</h3><div class="stb" id="sp-recent" style="font-size:12px;max-height:350px"></div></div>
 </div>
 <!-- Sports Add Event Overlay -->
-<div id="sp-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch">
+<div id="sp-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain">
 <div style="position:sticky;top:0;z-index:301;background:rgba(15,15,15,.97);backdrop-filter:blur(8px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">
 <h2 style="font-size:18px;font-weight:700;margin:0" id="sp-ov-title"><span class="i">🏀</span> Add Sports Event</h2>
 <button onclick="closeSportsAdd()" style="background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer">✕</button>
@@ -300,7 +300,7 @@ Drop CSV here or <span style="color:var(--bl);text-decoration:underline">click t
 <div class="status" id="status"></div>
 </div>
 <!-- Lifeline Full Feed Overlay -->
-<div id="ll-feed" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div id="ll-feed" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain">
 <div style="position:sticky;top:0;z-index:301;background:rgba(15,15,15,.97);backdrop-filter:blur(8px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
 <h2 style="font-size:18px;font-weight:700;margin:0"><span class="i">🧬</span> Lifeline Feed</h2>
 <div style="display:flex;gap:6px;align-items:center">
@@ -313,7 +313,7 @@ Drop CSV here or <span style="color:var(--bl);text-decoration:underline">click t
 <div id="ll-feed-loading" style="text-align:center;padding:20px;color:var(--t2);font-size:12px;display:none">Loading more...</div>
 </div>
 <!-- Up Next Overlay -->
-<div id="un-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div id="un-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain">
 <div style="position:sticky;top:0;z-index:301;background:rgba(15,15,15,.97);backdrop-filter:blur(8px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">
 <h2 style="font-size:18px;font-weight:700;margin:0"><span class="i">📺</span> Up Next</h2>
 <button onclick="closeUpNext()" style="background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer">✕ Close</button>
@@ -2010,7 +2010,7 @@ function _spDate(d){if(!d)return'';var p=d.split('-');if(p.length!==3)return d;r
 
 function openSportsAdd(){
   document.getElementById('sp-overlay').style.display='';
-  document.body.style.overflow='hidden';
+  _lockBody();
   document.getElementById('sp-ov-search').style.display='';
   document.getElementById('sp-ov-events').style.display='none';
   document.getElementById('sp-ov-confirm').style.display='none';
@@ -2024,7 +2024,7 @@ function openSportsAdd(){
 
 function closeSportsAdd(){
   document.getElementById('sp-overlay').style.display='none';
-  document.body.style.overflow='';
+  _unlockBody();
 }
 
 function searchSportsTeam(){
@@ -2257,7 +2257,7 @@ function openLifelineFeed(){
   var filterHtml=filterText.length?'<div style="padding:8px 16px;max-width:600px;margin:0 auto;font-size:11px;color:var(--t2)">Filtered: '+filterText.join(' · ')+' <button onclick="cy=\'all\';ct=\'all\';document.getElementById(\'ys\').value=\'all\';document.getElementById(\'gs\').value=\'all\';writeHash();openLifelineFeed()" style="background:none;border:none;color:var(--sp);cursor:pointer;font-size:11px">Clear</button></div>':'';
   content.innerHTML=filterHtml;
   document.getElementById('ll-feed').style.display='';
-  document.body.style.overflow='hidden';
+  _lockBody();
   // Sync filter dropdowns
   var feedType=document.getElementById('ll-feed-type');if(feedType)feedType.value=ct;
   var feedYear=document.getElementById('ll-feed-year');
@@ -2276,7 +2276,7 @@ function openLifelineFeed(){
 
 function closeLifelineFeed(){
   document.getElementById('ll-feed').style.display='none';
-  document.body.style.overflow='';
+  _unlockBody();
 }
 
 function _llRenderBatch(){
@@ -2319,6 +2319,9 @@ function _llRenderBatch(){
 
 // Up Next page
 var _unWatched=JSON.parse(localStorage.getItem('iris_un_watched')||'{}');
+var _scrollY=0;
+function _lockBody(){_scrollY=window.scrollY;document.body.style.position='fixed';document.body.style.top='-'+_scrollY+'px';document.body.style.width='100%';document.body.style.overflow='hidden'}
+function _unlockBody(){document.body.style.position='';document.body.style.top='';document.body.style.width='';document.body.style.overflow='';window.scrollTo(0,_scrollY)}
 
 function _unFmtMin(m){if(!m)return'';var h=Math.floor(m/60);var mn=m%60;return h?h+'h'+(mn?' '+mn+'m':''):mn+'m'}
 function _unData(){var d=D.un||{};return{shows:d.shows||d||[],recent:d.recent||[]}}
@@ -2332,7 +2335,7 @@ function openUpNext(){
   });
   var recent=ud.recent||[];
   var el=document.getElementById('un-content');
-  if(!shows.length&&!recent.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div style="font-size:16px;margin-bottom:8px">No Up Next data yet</div><div style="font-size:12px;max-width:400px;margin:0 auto">Trigger a refresh from the <a href="https://github.com/jamesgoux/iris-stats/actions" style="color:var(--sp)">Actions tab</a>.</div></div>';document.getElementById('un-overlay').style.display='';document.body.style.overflow='hidden';return}
+  if(!shows.length&&!recent.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div style="font-size:16px;margin-bottom:8px">No Up Next data yet</div><div style="font-size:12px;max-width:400px;margin:0 auto">Trigger a refresh from the <a href="https://github.com/jamesgoux/iris-stats/actions" style="color:var(--sp)">Actions tab</a>.</div></div>';document.getElementById('un-overlay').style.display='';_lockBody();return}
 
   var newItems=shows.filter(function(s){return s.is_new});
   var rest=shows.filter(function(s){return !s.is_new});
@@ -2389,22 +2392,31 @@ function openUpNext(){
   }
   el.innerHTML=h;
   document.getElementById('un-overlay').style.display='';
-  document.body.style.overflow='hidden';
+  _lockBody();
   // Scroll to the "new" or "continue" section (past recently watched)
   setTimeout(function(){var anchor=document.getElementById('un-default-scroll');if(anchor)anchor.scrollIntoView({behavior:'auto',block:'start'})},50);
 }
 
 function showEpDetail(card){
-  var slug=card.dataset.slug,s=card.dataset.s,e=card.dataset.e,eid=card.dataset.eid,tmdb=card.dataset.tmdb;
+  var slug=card.dataset.slug,s=parseInt(card.dataset.s),e=parseInt(card.dataset.e),eid=card.dataset.eid,tmdb=card.dataset.tmdb;
   var ud=_unData();
-  var show=ud.shows.find(function(x){return x.slug===slug&&x.season==s&&x.episode==e});
-  if(!show)return;
-  // Build detail overlay content
+  var allShows=ud.shows.filter(function(x){
+    if(_unWatched[x.slug+'|'+x.season+'|'+x.episode])return false;
+    if(x.aired_total&&x.completed>=x.aired_total)return false;
+    return true;
+  });
+  var idx=allShows.findIndex(function(x){return x.slug===slug&&x.season==s&&x.episode==e});
+  if(idx<0)return;
+  _unRenderDetail(allShows,idx);
+}
+
+function _unRenderDetail(allShows,idx){
+  var show=allShows[idx];
   var el=document.getElementById('un-content');
-  var h='<div class="un-detail">';
+  var h='<div class="un-detail" id="un-detail-wrap">';
   h+='<button onclick="openUpNext()" style="background:none;border:none;color:var(--sp);cursor:pointer;font-size:13px;margin-bottom:12px">← Back</button>';
-  // Episode still from TMDB
-  if(tmdb)h+='<img src="https://image.tmdb.org/t/p/w500/'+slug+'.jpg" onerror="this.style.display=\'none\'" alt="" style="display:none">';
+  // Episode still
+  if(show.ep_still)h+='<img src="'+show.ep_still+'" alt="" style="width:100%;border-radius:8px;margin-bottom:12px;max-height:280px;object-fit:cover">';
   h+='<div style="font-size:20px;font-weight:700;margin-bottom:4px">'+show.show+'</div>';
   h+='<div style="font-size:14px;color:var(--t2);margin-bottom:8px">S'+String(show.season).padStart(2,'0')+'E'+String(show.episode).padStart(2,'0');
   if(show.ep_title)h+=' — '+show.ep_title;
@@ -2416,14 +2428,33 @@ function showEpDetail(card){
   }
   if(show.ep_runtime)h+='<div style="font-size:12px;color:var(--t2);margin-bottom:8px">'+_unFmtMin(show.ep_runtime)+' episode</div>';
   if(show.ep_overview)h+='<p style="font-size:13px;color:var(--t2);line-height:1.5;margin-bottom:16px">'+show.ep_overview+'</p>';
-  // Mark watched options
+  // Swipe hint
+  var hasPrev=idx>0,hasNext=idx<allShows.length-1;
+  h+='<div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:12px;color:var(--t2)">';
+  h+='<span>'+(hasPrev?'← swipe right: '+allShows[idx-1].show:'')+'</span>';
+  h+='<span>'+(hasNext?allShows[idx+1].show+' →':'')+'</span>';
+  h+='</div>';
+  // Mark watched
+  var slug2=show.slug.replace(/'/g,"\\'");
   h+='<div style="font-size:13px;font-weight:600;margin-bottom:8px">Mark as watched:</div>';
   h+='<div style="display:flex;flex-direction:column;gap:8px">';
-  h+='<button onclick="markWatchedAt(\''+slug.replace(/'/g,"\\'")+'\','+s+','+e+','+eid+',\'now\')" style="padding:12px;background:var(--tv);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600">✓ Just Now</button>';
-  if(show.ep_aired)h+='<button onclick="markWatchedAt(\''+slug.replace(/'/g,"\\'")+'\','+s+','+e+','+eid+',\''+show.ep_aired+'\')" style="padding:12px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:14px;cursor:pointer">📅 On Air Date ('+show.ep_aired+')</button>';
-  h+='<div style="display:flex;gap:8px"><input type="datetime-local" id="un-custom-date" style="flex:1;padding:10px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--tx);font-size:13px"><button onclick="markWatchedAt(\''+slug.replace(/'/g,"\\'")+'\','+s+','+e+','+eid+',document.getElementById(\'un-custom-date\').value)" style="padding:10px 16px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:13px;cursor:pointer">Set</button></div>';
+  h+='<button onclick="markWatchedAt(\''+slug2+'\','+show.season+','+show.episode+','+(show.ep_trakt_id||0)+',\'now\')" style="padding:12px;background:var(--tv);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600">✓ Just Now</button>';
+  if(show.ep_aired)h+='<button onclick="markWatchedAt(\''+slug2+'\','+show.season+','+show.episode+','+(show.ep_trakt_id||0)+',\''+show.ep_aired+'\')" style="padding:12px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:14px;cursor:pointer">📅 On Air Date ('+show.ep_aired+')</button>';
+  h+='<div style="display:flex;gap:8px"><input type="datetime-local" id="un-custom-date" style="flex:1;padding:10px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--tx);font-size:13px"><button onclick="markWatchedAt(\''+slug2+'\','+show.season+','+show.episode+','+(show.ep_trakt_id||0)+',document.getElementById(\'un-custom-date\').value)" style="padding:10px 16px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:13px;cursor:pointer">Set</button></div>';
   h+='</div></div>';
   el.innerHTML=h;
+  // Swipe handling
+  var wrap=document.getElementById('un-detail-wrap');
+  var startX=0,startY=0,swiping=false;
+  wrap.addEventListener('touchstart',function(ev){startX=ev.touches[0].clientX;startY=ev.touches[0].clientY;swiping=true});
+  wrap.addEventListener('touchend',function(ev){
+    if(!swiping)return;swiping=false;
+    var dx=ev.changedTouches[0].clientX-startX;
+    var dy=ev.changedTouches[0].clientY-startY;
+    if(Math.abs(dx)<50||Math.abs(dy)>Math.abs(dx))return;
+    if(dx>0&&idx>0){_unRenderDetail(allShows,idx-1)}
+    else if(dx<0&&idx<allShows.length-1){_unRenderDetail(allShows,idx+1)}
+  });
 }
 
 function markWatchedAt(slug,season,episode,epTraktId,when){
@@ -2450,7 +2481,7 @@ function removeRecent(epId,btn){
 
 function closeUpNext(){
   document.getElementById('un-overlay').style.display='none';
-  document.body.style.overflow='';
+  _unlockBody();
 }
 
 function renderStatus(){

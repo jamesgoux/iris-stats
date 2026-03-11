@@ -10,6 +10,7 @@ from utils import retry_request
 CLIENT_ID = os.environ.get("TRAKT_CLIENT_ID")
 USERNAME = os.environ.get("TRAKT_USERNAME")
 ACCESS_TOKEN = os.environ.get("TRAKT_ACCESS_TOKEN", "")
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "")
 BASE = "https://api.trakt.tv"
 HEADERS = {"Content-Type": "application/json", "trakt-api-version": "2", "trakt-api-key": CLIENT_ID}
 AUTH_HEADERS = {**HEADERS, "Authorization": f"Bearer {ACCESS_TOKEN}"} if ACCESS_TOKEN else HEADERS
@@ -44,6 +45,21 @@ def fetch_streaming(slug):
         return result[:3]  # Top 3 streaming options
     except Exception:
         return []
+
+
+def fetch_ep_still(tmdb_id, season, episode):
+    """Get episode still image from TMDB."""
+    if not TMDB_API_KEY or not tmdb_id:
+        return ""
+    try:
+        url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{season}/episode/{episode}?api_key={TMDB_API_KEY}"
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        resp = urllib.request.urlopen(req, timeout=5)
+        d = json.loads(resp.read())
+        still = d.get("still_path", "")
+        return f"https://image.tmdb.org/t/p/w780{still}" if still else ""
+    except Exception:
+        return ""
 
 
 def fetch_recent_history():
@@ -153,6 +169,13 @@ def run():
         # Episode overview from extended data
         ep_overview = next_ep.get("overview", "")
 
+        # Episode still image from TMDB
+        tmdb_id = show.get("ids", {}).get("tmdb", "")
+        ep_still = ""
+        if tmdb_id and TMDB_API_KEY:
+            ep_still = fetch_ep_still(tmdb_id, next_s, next_n)
+            time.sleep(0.15)
+
         # Streaming info (cache to avoid hammering JustWatch)
         stream = stream_cache.get(slug)
         if stream is None and stream_fetched < 50:
@@ -173,6 +196,7 @@ def run():
             "ep_title": next_ep.get("title", ""),
             "ep_runtime": ep_runtime,
             "ep_overview": ep_overview[:200] if ep_overview else "",
+            "ep_still": ep_still,
             "ep_trakt_id": next_ep.get("ids", {}).get("trakt", ""),
             "is_new": is_new,
             "last_watched": last_watched,
