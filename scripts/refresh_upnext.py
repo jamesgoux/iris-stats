@@ -198,6 +198,7 @@ def run():
             "ep_runtime": ep_runtime,
             "ep_overview": ep_overview[:200] if ep_overview else "",
             "ep_still": ep_still,
+            "ep_aired": ep_aired[:10] if ep_aired else "",
             "ep_trakt_id": next_ep.get("ids", {}).get("trakt", ""),
             "is_new": is_new,
             "last_watched": last_watched,
