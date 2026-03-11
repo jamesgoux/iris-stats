@@ -288,9 +288,13 @@ Drop CSV here or <span style="color:var(--bl);text-decoration:underline">click t
 </div>
 <!-- Lifeline Full Feed Overlay -->
 <div id="ll-feed" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch">
-<div style="position:sticky;top:0;z-index:301;background:rgba(15,15,15,.97);backdrop-filter:blur(8px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">
+<div style="position:sticky;top:0;z-index:301;background:rgba(15,15,15,.97);backdrop-filter:blur(8px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
 <h2 style="font-size:18px;font-weight:700;margin:0"><span class="i">🧬</span> Lifeline Feed</h2>
-<button onclick="closeLifelineFeed()" style="background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer">✕ Close</button>
+<div style="display:flex;gap:6px;align-items:center">
+<select id="ll-feed-type" onchange="ct=this.value;writeHash();openLifelineFeed()" style="padding:6px 8px;background:var(--sf);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--tx);font-size:12px"><option value="all">🌐 All</option><option value="movie">🎞️ Movies</option><option value="show">📺 Shows</option><option value="book">📚 Books</option><option value="music">🎧 Music</option><option value="concert">🎸 Concerts</option><option value="podcast">🎙️ Podcasts</option><option value="theater">🎭 Theater</option></select>
+<select id="ll-feed-year" onchange="cy=this.value;writeHash();openLifelineFeed()" style="padding:6px 8px;background:var(--sf);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--tx);font-size:12px"><option value="all">All Time</option></select>
+<button onclick="closeLifelineFeed()" style="background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer">✕</button>
+</div>
 </div>
 <div id="ll-feed-content" style="max-width:600px;margin:0 auto;padding:16px"></div>
 <div id="ll-feed-loading" style="text-align:center;padding:20px;color:var(--t2);font-size:12px;display:none">Loading more...</div>
@@ -2015,7 +2019,8 @@ function renderSports(){
   var wrap=document.getElementById('sp-wrap');
   if(ct!=='all'&&ct!=='sports'){wrap.style.display='none';return}
   var filtered=cy==='all'?SP:SP.filter(function(e){return e.date&&e.date.substring(0,4)===cy});
-  if(filtered.length===0&&ct==='all'){wrap.style.display='none';return}
+  // Always show when sports filter is active (so user can add events)
+  if(filtered.length===0&&ct!=='sports'){wrap.style.display='none';return}
   wrap.style.display='';
 
   // Games by year/month chart
@@ -2084,19 +2089,41 @@ var _llFeedDays=[];var _llFeedIdx=0;var _llFeedBatch=15;
 var _llTypeInfo={ep:{icon:'📺',color:'#14b8a6',label:'Episodes'},mv:{icon:'🎞️',color:'#fb923c',label:'Movies'},sc:{icon:'🎧',color:'#1db954',label:'Scrobbles'},bk:{icon:'📚',color:'#fbbf24',label:'Books'},co:{icon:'🎸',color:'#3b82f6',label:'Concerts'},th:{icon:'🎭',color:'#a78bfa',label:'Plays'},pc:{icon:'🎙️',color:'#ef4444',label:'Podcasts'}};
 var _llDayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var _llMonthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// Map dashboard type filter values to lifeline event types
+var _llTypeMap={all:null,movie:['mv'],show:['ep'],book:['bk'],music:['sc'],concert:['co'],theater:['th'],podcast:['pc'],sports:null};
 
 function _llFormatDate(ds){var d=new Date(ds+'T12:00:00');return _llDayNames[d.getDay()]+', '+_llMonthNames[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
 
+function _llFilterTypes(){return _llTypeMap[ct]||null}
+
 function openLifelineFeed(){
   var ll=D.ll||{};
+  var allowedTypes=_llFilterTypes();
   _llFeedDays=Object.keys(ll).filter(function(d){
     if(cy!=='all'&&!d.startsWith(cy))return false;
-    var v=ll[d];return(v.ep||v.mv||v.sc||v.bk||v.co||v.th||v.pc);
+    var v=ll[d];
+    if(allowedTypes){return allowedTypes.some(function(ty){return v[ty]})}
+    return(v.ep||v.mv||v.sc||v.bk||v.co||v.th||v.pc);
   }).sort().reverse();
   _llFeedIdx=0;
-  document.getElementById('ll-feed-content').innerHTML='';
+  var content=document.getElementById('ll-feed-content');content.innerHTML='';
+  // Show active filters
+  var filterText=[];
+  if(cy!=='all')filterText.push(cy);
+  if(ct!=='all')filterText.push(ct.charAt(0).toUpperCase()+ct.slice(1));
+  var filterHtml=filterText.length?'<div style="padding:8px 16px;max-width:600px;margin:0 auto;font-size:11px;color:var(--t2)">Filtered: '+filterText.join(' · ')+' <button onclick="cy=\'all\';ct=\'all\';document.getElementById(\'ys\').value=\'all\';document.getElementById(\'gs\').value=\'all\';writeHash();openLifelineFeed()" style="background:none;border:none;color:var(--sp);cursor:pointer;font-size:11px">Clear</button></div>':'';
+  content.innerHTML=filterHtml;
   document.getElementById('ll-feed').style.display='';
   document.body.style.overflow='hidden';
+  // Sync filter dropdowns
+  var feedType=document.getElementById('ll-feed-type');if(feedType)feedType.value=ct;
+  var feedYear=document.getElementById('ll-feed-year');
+  if(feedYear){
+    // Populate year options from main dropdown
+    var mainYs=document.getElementById('ys');
+    feedYear.innerHTML=mainYs.innerHTML;
+    feedYear.value=cy;
+  }
   _llRenderBatch();
   document.getElementById('ll-feed').onscroll=function(){
     var el=document.getElementById('ll-feed');
@@ -2113,6 +2140,7 @@ function _llRenderBatch(){
   if(_llFeedIdx>=_llFeedDays.length)return;
   var ll=D.ll||{};var container=document.getElementById('ll-feed-content');
   var loading=document.getElementById('ll-feed-loading');loading.style.display='';
+  var allowedTypes=_llFilterTypes();
   var end=Math.min(_llFeedIdx+_llFeedBatch,_llFeedDays.length);
   for(var i=_llFeedIdx;i<end;i++){
     var day=_llFeedDays[i];var v=ll[day];if(!v)continue;
@@ -2121,15 +2149,18 @@ function _llRenderBatch(){
     var body='';
     var evts=v.e||[];
     if(evts.length){
-      // Detailed events — show each one
-      evts.forEach(function(e){
+      // Filter by type if active
+      var filtered=allowedTypes?evts.filter(function(e){return allowedTypes.indexOf(e.ty)>=0}):evts;
+      // Reverse: most recent first within the day
+      filtered.slice().reverse().forEach(function(e){
         var info=_llTypeInfo[e.ty]||{icon:'❓',color:'#666'};
         body+='<div class="ll-evt"><span class="ll-time">'+e.t+'</span><span class="ll-dot" style="background:'+info.color+'"></span><span class="ll-name" style="color:'+info.color+'">'+info.icon+' '+e.n+'</span></div>';
       });
     }else{
-      // Summary only — show pills
+      // Summary only — show pills, filtered
       body+='<div class="ll-summary">';
       ['ep','mv','bk','sc','co','th','pc'].forEach(function(ty){
+        if(allowedTypes&&allowedTypes.indexOf(ty)<0)return;
         var count=v[ty]||0;if(!count)return;
         var info=_llTypeInfo[ty];
         body+='<span class="ll-pill" style="background:'+info.color+'22;color:'+info.color+'">'+info.icon+' '+count+' '+info.label+'</span>';
@@ -2153,7 +2184,7 @@ function _unFmtMin(m){if(!m)return'';var h=Math.floor(m/60);var mn=m%60;return h
 function openUpNext(){
   var un=(D.un||[]).filter(function(s){return!_unWatched[s.slug+'|'+s.season+'|'+s.episode]});
   var el=document.getElementById('un-content');
-  if(!un.length&&!(D.un||[]).length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div>No Up Next data yet.</div><div style="font-size:12px;margin-top:4px">Run the refresh workflow to populate show progress.</div></div>';document.getElementById('un-overlay').style.display='';document.body.style.overflow='hidden';return}
+  if(!un.length&&!(D.un||[]).length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div style="font-size:16px;margin-bottom:8px">No Up Next data yet</div><div style="font-size:12px;max-width:400px;margin:0 auto">The Up Next data is generated by the GitHub Actions workflow. It will populate after the next <b>Refresh Headshots</b> run (every 2 hours), or you can trigger it manually from the <a href="https://github.com/jamesgoux/iris-stats/actions" style="color:var(--sp)">Actions tab</a>.</div></div>';document.getElementById('un-overlay').style.display='';document.body.style.overflow='hidden';return}
 
   var newItems=un.filter(function(s){return s.is_new});
   var rest=un.filter(function(s){return !s.is_new});
