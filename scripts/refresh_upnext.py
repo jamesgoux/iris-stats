@@ -91,14 +91,32 @@ def run():
         # Find poster
         poster = posters.get(slug, "")
 
+        # Compute remaining unwatched runtime from season data
+        remaining_min = 0
+        ep_runtime = next_ep.get("runtime", 0) or show.get("runtime", 0) or 0
+        seasons_data = prog.get("seasons", [])
+        next_s = next_ep.get("season", 0)
+        next_n = next_ep.get("number", 0)
+        for sn in seasons_data:
+            sn_num = sn.get("number", 0)
+            for ep in sn.get("episodes", []):
+                ep_num = ep.get("number", 0)
+                if not ep.get("completed", False):
+                    # Use episode runtime if available, else show default
+                    rt = ep.get("runtime") or ep_runtime
+                    remaining_min += rt
+
         entry = {
             "slug": slug,
             "show": show.get("title", ""),
             "network": show.get("network", ""),
-            "season": next_ep.get("season", 0),
-            "episode": next_ep.get("number", 0),
+            "trakt_id": show.get("ids", {}).get("trakt", ""),
+            "season": next_s,
+            "episode": next_n,
             "ep_title": next_ep.get("title", ""),
+            "ep_runtime": ep_runtime,
             "ep_aired": ep_aired[:10] if ep_aired else "",
+            "ep_trakt_id": next_ep.get("ids", {}).get("trakt", ""),
             "is_aired": is_aired,
             "aired_days_ago": aired_days_ago,
             "is_new": is_new,
@@ -106,6 +124,7 @@ def run():
             "poster": poster,
             "aired_total": prog.get("aired", 0),
             "completed": prog.get("completed", 0),
+            "remaining_min": remaining_min,
         }
         results.append(entry)
 

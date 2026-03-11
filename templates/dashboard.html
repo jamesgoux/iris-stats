@@ -88,6 +88,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .un-new{position:absolute;top:8px;right:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
 .un-aired{font-size:10px;color:var(--t2)}
 .un-section{padding:8px 16px;max-width:1200px;margin:0 auto;font-size:12px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.un-watch-btn{position:absolute;bottom:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(20,184,166,.15);border:1px solid var(--tv);color:var(--tv);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.un-watch-btn:hover{background:var(--tv);color:#fff}
 @media(max-width:768px){.un-grid{grid-template-columns:1fr;padding:10px}}
 @media(max-width:768px){
 .g2,.g3{grid-template-columns:1fr}
@@ -2142,22 +2144,43 @@ function _llRenderBatch(){
 }
 
 // Up Next page
+var _unWatched=JSON.parse(localStorage.getItem('iris_un_watched')||'{}');
+var _unToken=localStorage.getItem('iris_trakt_token')||'';
+var _unClientId=localStorage.getItem('iris_trakt_client_id')||'';
+
+function _unFmtMin(m){if(!m)return'';var h=Math.floor(m/60);var mn=m%60;return h?h+'h'+(mn?' '+mn+'m':''):mn+'m'}
+
 function openUpNext(){
-  var un=D.un||[];
+  var un=(D.un||[]).filter(function(s){return!_unWatched[s.slug+'|'+s.season+'|'+s.episode]});
   var el=document.getElementById('un-content');
-  if(!un.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div>No Up Next data yet.</div><div style="font-size:12px;margin-top:4px">Run the refresh workflow to populate show progress.</div></div>';document.getElementById('un-overlay').style.display='';document.body.style.overflow='hidden';return}
+  if(!un.length&&!(D.un||[]).length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:40px;margin-bottom:12px">📺</div><div>No Up Next data yet.</div><div style="font-size:12px;margin-top:4px">Run the refresh workflow to populate show progress.</div></div>';document.getElementById('un-overlay').style.display='';document.body.style.overflow='hidden';return}
 
   var newItems=un.filter(function(s){return s.is_new});
   var rest=un.filter(function(s){return !s.is_new});
   var h='';
 
+  // Trakt auth setup bar
+  h+='<div style="padding:12px 16px;max-width:1200px;margin:0 auto">';
+  if(_unToken&&_unClientId){
+    h+='<div style="font-size:11px;color:var(--gr)">✓ Trakt connected — mark episodes as watched</div>';
+  }else{
+    h+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--t2)">Connect Trakt to mark watched:</span>';
+    h+='<input id="un-cid" type="text" placeholder="Client ID" value="'+(_unClientId||'')+'" style="padding:4px 8px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:4px;color:var(--tx);font-size:11px;width:140px">';
+    h+='<input id="un-tok" type="password" placeholder="Access Token" value="'+(_unToken||'')+'" style="padding:4px 8px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:4px;color:var(--tx);font-size:11px;width:140px">';
+    h+='<button onclick="saveTraktAuth()" style="padding:4px 10px;background:var(--sp);color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer">Save</button></div>';
+  }
+  h+='</div>';
+
   function card(s){
-    var c='<div class="un-card">';
+    var key=s.slug+'|'+s.season+'|'+s.episode;
+    var c='<div class="un-card" id="un-'+key.replace(/[|]/g,'-')+'">';
     if(s.poster)c+='<img class="un-poster" src="'+s.poster+'" loading="lazy" onerror="this.style.display=\'none\'" alt="">';
     else c+='<div class="un-poster-ph">📺</div>';
     c+='<div class="un-info">';
     c+='<div class="un-show">'+s.show+'</div>';
-    c+='<div class="un-ep">S'+String(s.season).padStart(2,'0')+'E'+String(s.episode).padStart(2,'0')+'</div>';
+    c+='<div class="un-ep">S'+String(s.season).padStart(2,'0')+'E'+String(s.episode).padStart(2,'0');
+    if(s.ep_runtime)c+=' · '+_unFmtMin(s.ep_runtime);
+    c+='</div>';
     if(s.ep_title)c+='<div class="un-ep-title">'+s.ep_title+'</div>';
     c+='<div class="un-meta">';
     if(s.network)c+='<span>'+s.network+'</span>';
@@ -2166,9 +2189,13 @@ function openUpNext(){
       else c+='<span class="un-aired" style="color:var(--sp)">Airs '+s.ep_aired+'</span>';
     }
     var pct=s.aired_total?Math.round(s.completed/s.aired_total*100):0;
+    var remaining=s.remaining_min?_unFmtMin(s.remaining_min)+' left':'';
     c+='<span>'+pct+'%</span>';
+    if(remaining)c+='<span>'+remaining+'</span>';
     c+='</div>';
     c+='<div class="un-prog"><div class="un-prog-bar" style="width:'+pct+'%"></div></div>';
+    // Mark watched button
+    c+='<button onclick="markWatched(\''+s.slug.replace(/'/g,"\\'")+'\','+s.season+','+s.episode+','+(s.ep_trakt_id||0)+',this)" class="un-watch-btn" title="Mark watched">✓</button>';
     c+='</div>';
     if(s.is_new)c+='<div class="un-new">New</div>';
     c+='</div>';
@@ -2188,6 +2215,45 @@ function openUpNext(){
   el.innerHTML=h;
   document.getElementById('un-overlay').style.display='';
   document.body.style.overflow='hidden';
+}
+
+function saveTraktAuth(){
+  var cid=document.getElementById('un-cid').value.trim();
+  var tok=document.getElementById('un-tok').value.trim();
+  if(cid)localStorage.setItem('iris_trakt_client_id',cid);
+  if(tok)localStorage.setItem('iris_trakt_token',tok);
+  _unClientId=cid;_unToken=tok;
+  openUpNext();
+}
+
+function markWatched(slug,season,episode,epTraktId,btn){
+  var key=slug+'|'+season+'|'+episode;
+  // Animate out
+  var card=btn.closest('.un-card');
+  card.style.opacity='0.3';card.style.pointerEvents='none';
+  btn.textContent='...';
+
+  // Save locally immediately
+  _unWatched[key]=new Date().toISOString();
+  localStorage.setItem('iris_un_watched',JSON.stringify(_unWatched));
+
+  // If Trakt auth is set, sync to Trakt
+  if(_unToken&&_unClientId&&epTraktId){
+    fetch('https://api.trakt.tv/sync/history',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','trakt-api-version':'2','trakt-api-key':_unClientId,'Authorization':'Bearer '+_unToken},
+      body:JSON.stringify({episodes:[{ids:{trakt:epTraktId}}]})
+    }).then(function(r){
+      if(r.ok){card.style.transition='all .3s';card.style.maxHeight='0';card.style.overflow='hidden';card.style.padding='0';card.style.margin='0';card.style.border='none';setTimeout(function(){card.remove()},350)}
+      else{card.style.opacity='1';card.style.pointerEvents='';btn.textContent='✓';btn.style.borderColor='#ef4444';r.text().then(function(t){console.log('Trakt sync failed:',r.status,t)})}
+    }).catch(function(){
+      // Network error but saved locally — still remove from view
+      card.style.transition='all .3s';card.style.maxHeight='0';card.style.overflow='hidden';card.style.padding='0';card.style.margin='0';card.style.border='none';setTimeout(function(){card.remove()},350);
+    });
+  }else{
+    // No Trakt auth — just remove from view (saved locally)
+    setTimeout(function(){card.style.transition='all .3s';card.style.maxHeight='0';card.style.overflow='hidden';card.style.padding='0';card.style.margin='0';card.style.border='none';setTimeout(function(){card.remove()},350)},200);
+  }
 }
 
 function closeUpNext(){
