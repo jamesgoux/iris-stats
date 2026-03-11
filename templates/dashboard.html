@@ -272,6 +272,7 @@ body{overflow-x:hidden}
 <div id="sec-sp" class="cd fw s-sp"><h3><span class="i">🏟️</span>Sports <span style="float:right"><button class="vb" onclick="openSportsAdd()" style="background:var(--sp);color:#fff;border-color:var(--sp)">+ Add Event</button></span></h3><div id="sp-chart" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">🏟️</span>Teams</h3><div id="sp-teams" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">📺</span>How I Watched</h3><div id="sp-how" style="height:280px"></div></div>
+<div class="cd s-sp"><h3><span class="i">🏆</span>Win / Loss</h3><div id="sp-wl" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">🏟️</span>Venues</h3><div id="sp-venues" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">🏅</span>Leagues</h3><div id="sp-leagues" style="height:280px"></div></div>
 <div class="cd s-sp"><h3><span class="i">📋</span>Recent Events</h3><div class="stb" id="sp-recent" style="font-size:12px;max-height:350px"></div></div>
@@ -2033,8 +2034,45 @@ function renderPodcasts(){
 }
 
 // Sports — localStorage-backed tracker with TheSportsDB
-var SP=JSON.parse(localStorage.getItem('iris_sports')||'[]');
+// Sports: merge repo data (D.sp) + localStorage pending additions
+var _spRepo=D.sp||[];
+var _spPending=JSON.parse(localStorage.getItem('iris_sports_pending')||'[]');
+// Migrate old localStorage format (iris_sports) to pending if repo is empty
+(function(){var old=JSON.parse(localStorage.getItem('iris_sports')||'[]');if(old.length&&!_spRepo.length){_spPending=old;localStorage.setItem('iris_sports_pending',JSON.stringify(_spPending));localStorage.removeItem('iris_sports')}})();
+var SP=(function(){var ids={};var merged=[];_spRepo.forEach(function(e){ids[e.id]=true;merged.push(e)});_spPending.forEach(function(e){if(!ids[e.id]){ids[e.id]=true;merged.push(e)}});return merged})();
 window._spSelected=null;
+
+// League color map
+var _lgColors={'NBA':'#fb923c','MLB':'#3b82f6','NFL':'#4ade80','NHL':'#e2e8f0','MLS':'#a78bfa','NCAA':'#fbbf24','English Premier League':'#4ade80','La Liga':'#fb923c','Bundesliga':'#ef4444','Serie A':'#3b82f6','Ligue 1':'#a78bfa'};
+function _lgColor(league){if(!league)return'#0ea5e9';for(var k in _lgColors){if(league.indexOf(k)>=0)return _lgColors[k]}return'#0ea5e9'}
+
+// Auto-commit sports.json to GitHub repo
+function _spCommitToRepo(){
+  var pat=localStorage.getItem('iris_gh_pat');
+  if(!pat){
+    // Show clean one-time PAT prompt
+    var modal=document.createElement('div');
+    modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center';
+    modal.innerHTML='<div style="background:var(--sf);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:24px;max-width:400px;width:90%"><h3 style="margin:0 0 8px;font-size:16px;color:var(--tx)">Connect to GitHub</h3><p style="font-size:12px;color:var(--t2);margin:0 0 16px;line-height:1.5">Enter a GitHub Personal Access Token to sync sports events across devices. Create one at <a href="https://github.com/settings/tokens?type=beta" target="_blank" style="color:var(--sp)">github.com/settings/tokens</a> with <b>Contents: Read & Write</b> for iris-stats.</p><input id="sp-pat-input" type="password" placeholder="github_pat_..." style="width:100%;padding:12px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--tx);font-size:13px;font-family:monospace;margin-bottom:12px"><div style="display:flex;gap:8px"><button onclick="var v=document.getElementById(\'sp-pat-input\').value.trim();if(v){localStorage.setItem(\'iris_gh_pat\',v);this.closest(\'div\').closest(\'div\').closest(\'div\').remove();_spCommitToRepo()}" style="flex:1;padding:12px;background:var(--sp);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600">Save</button><button onclick="this.closest(\'div\').closest(\'div\').closest(\'div\').remove()" style="padding:12px 16px;background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;font-size:14px;cursor:pointer">Skip</button></div></div>';
+    document.body.appendChild(modal);
+    return;
+  }
+  // Merge repo + pending into full list
+  var all=SP.slice();
+  var body=JSON.stringify(all,null,2);
+  // Get current file SHA first
+  fetch('https://api.github.com/repos/jamesgoux/iris-stats/contents/data/sports.json',{headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github.v3+json'}})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      var sha=d.sha||'';
+      return fetch('https://api.github.com/repos/jamesgoux/iris-stats/contents/data/sports.json',{
+        method:'PUT',headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+        body:JSON.stringify({message:'Update sports events',content:btoa(unescape(encodeURIComponent(body))),sha:sha})
+      });
+    })
+    .then(function(r){if(r.ok){_spPending=[];localStorage.setItem('iris_sports_pending','[]');console.log('Sports synced to repo')}else{console.warn('Sports sync failed:',r.status)}})
+    .catch(function(e){console.warn('Sports sync error:',e)});
+}
 
 function _spDate(d){if(!d)return'';var p=d.split('-');if(p.length!==3)return d;return p[1]+'/'+p[2]+'/'+p[0]}
 
@@ -2182,8 +2220,11 @@ function saveSportsEvent(){
   var ev=window._spSelected;if(!ev)return;
   var wt=document.querySelector('.sp-wt.vb-on');if(!wt){alert('Pick how you watched');return}
   if(SP.some(function(s){return s.id===ev.idEvent})){alert('Already added');return}
-  SP.push({id:ev.idEvent,date:ev.dateEventLocal||ev.dateEvent,sport:ev.strSport,league:ev.strLeague,home_team:ev.strHomeTeam,away_team:ev.strAwayTeam,home_score:ev.intHomeScore,away_score:ev.intAwayScore,venue:ev.strVenue||'',home_badge:ev.strHomeTeamBadge||'',away_badge:ev.strAwayTeamBadge||'',watch_type:wt.dataset.v});
-  localStorage.setItem('iris_sports',JSON.stringify(SP));
+  var newEv={id:ev.idEvent,date:ev.dateEventLocal||ev.dateEvent,sport:ev.strSport,league:ev.strLeague,home_team:ev.strHomeTeam,away_team:ev.strAwayTeam,home_score:ev.intHomeScore,away_score:ev.intAwayScore,venue:ev.strVenue||'',home_badge:ev.strHomeTeamBadge||'',away_badge:ev.strAwayTeamBadge||'',watch_type:wt.dataset.v,my_team:window._spTeamName||''};
+  SP.push(newEv);
+  _spPending.push(newEv);
+  localStorage.setItem('iris_sports_pending',JSON.stringify(_spPending));
+  _spCommitToRepo();
   // Go back to events list (so they can add more)
   document.getElementById('sp-ov-confirm').style.display='none';
   document.getElementById('sp-ov-events').style.display='';
@@ -2207,13 +2248,12 @@ function renderSports(){
     // Group by league for stacked bar
     var leagues={};filtered.forEach(function(e){var lg=e.league||'Other';if(!leagues[lg])leagues[lg]=[];leagues[lg].push(e)});
     var lgNames=Object.keys(leagues).sort(function(a,b){return leagues[b].length-leagues[a].length});
-    var lgCols=['#0ea5e9','#fb923c','#4ade80','#a78bfa','#e94560','#fbbf24','#f472b6','#38bdf8'];
     var byPeriod={};filtered.forEach(function(e){var k=cy==='all'?e.date.substring(0,4):e.date.substring(0,7);byPeriod[k]=1});
     var periods=Object.keys(byPeriod).sort();
     var spChart=echarts.init(el);
-    var spSeries=lgNames.map(function(lg,i){
+    var spSeries=lgNames.map(function(lg){
       var counts={};leagues[lg].forEach(function(e){var k=cy==='all'?e.date.substring(0,4):e.date.substring(0,7);counts[k]=(counts[k]||0)+1});
-      return{name:lg,type:'bar',stack:'sp',data:periods.map(function(p){return counts[p]||0}),itemStyle:{color:lgCols[i%lgCols.length]},barMaxWidth:30};
+      return{name:lg,type:'bar',stack:'sp',data:periods.map(function(p){return counts[p]||0}),itemStyle:{color:_lgColor(lg)},barMaxWidth:30};
     });
     spChart.setOption({tooltip:{trigger:'axis',...tt},legend:{data:lgNames,top:0,textStyle:{color:'#999',fontSize:10}},grid:{left:50,right:20,top:lgNames.length>1?36:30,bottom:24},
       title:{text:filtered.length+' games'+(cy!=='all'?' in '+cy:''),left:'center',top:lgNames.length>1?20:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
@@ -2227,10 +2267,9 @@ function renderSports(){
   var teamLeague={};filtered.forEach(function(e){if(e.home_team&&e.league)teamLeague[e.home_team]=e.league;if(e.away_team&&e.league)teamLeague[e.away_team]=e.league});
   var teamCounts={};filtered.forEach(function(e){teamCounts[e.home_team]=(teamCounts[e.home_team]||0)+1;teamCounts[e.away_team]=(teamCounts[e.away_team]||0)+1});
   var teams=Object.entries(teamCounts).sort(function(a,b){return b[1]-a[1]}).slice(0,10).reverse();
-  var lgColMap={};var lgIdx=0;var lgCols2=['#0ea5e9','#fb923c','#4ade80','#a78bfa','#e94560','#fbbf24','#f472b6','#38bdf8'];
-  teams.forEach(function(t){var lg=teamLeague[t[0]]||'Other';if(!lgColMap[lg]){lgColMap[lg]=lgCols2[lgIdx%lgCols2.length];lgIdx++}});
+  // Use league color map for team bars
   var tEl=document.getElementById('sp-teams');
-  if(teams.length){var tChart=echarts.init(tEl);tChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var tn=tp(p).name;return'<b>'+tn+'</b> ('+((teamLeague[tn])||'')+')<br/>'+tp(p).value+' games'}},grid:{left:gl(140),right:30,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:teams.map(function(t){return t[0]}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:teams.map(function(t){return{value:t[1],itemStyle:{color:lgColMap[teamLeague[t[0]]||'Other']||'#0ea5e9'}}}),barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10}}]});ch.push(tChart)}
+  if(teams.length){var tChart=echarts.init(tEl);tChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var tn=tp(p).name;return'<b>'+tn+'</b> ('+((teamLeague[tn])||'')+')<br/>'+tp(p).value+' games'}},grid:{left:gl(140),right:30,top:8,bottom:8},xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},yAxis:{type:'category',data:teams.map(function(t){return t[0]}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},series:[{type:'bar',data:teams.map(function(t){return{value:t[1],itemStyle:{color:_lgColor(teamLeague[t[0]]||'')}}}),barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10}}]});ch.push(tChart)}
   else{tEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No data</div>'}
 
   // How I Watched pie
@@ -2251,22 +2290,45 @@ function renderSports(){
   var lgCounts={};filtered.forEach(function(e){if(e.league)lgCounts[e.league]=(lgCounts[e.league]||0)+1});
   var lgs=Object.entries(lgCounts).sort(function(a,b){return b[1]-a[1]}).slice(0,10).reverse();
   var lEl=document.getElementById('sp-leagues');
-  if(lgs.length){var lChart=echarts.init(lEl);var lgCols=['#fb923c','#0ea5e9','#4ade80','#a78bfa','#e94560','#fbbf24','#f472b6','#38bdf8'];lChart.setOption({tooltip:{trigger:'item',...tt,formatter:'{b}: {c} ({d}%)'},series:[{type:'pie',radius:['30%','65%'],data:lgs.map(function(l,i){return{value:l[1],name:l[0],itemStyle:{color:lgCols[i%lgCols.length]}}}),label:{color:'#ccc',fontSize:11,formatter:'{b}\n{d}%'},emphasis:{itemStyle:{shadowBlur:10}}}]});ch.push(lChart)}
+  if(lgs.length){var lChart=echarts.init(lEl);lChart.setOption({tooltip:{trigger:'item',...tt,formatter:'{b}: {c} ({d}%)'},series:[{type:'pie',radius:['30%','65%'],data:lgs.map(function(l){return{value:l[1],name:l[0],itemStyle:{color:_lgColor(l[0])}}}),label:{color:'#ccc',fontSize:11,formatter:'{b}\n{d}%'},emphasis:{itemStyle:{shadowBlur:10}}}]});ch.push(lChart)}
   else{lEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No data</div>'}
 
-  // Recent events table
+  // Win/Loss pie chart
+  var wlEl=document.getElementById('sp-wl');
+  var wlCounts={W:0,L:0,D:0};
+  filtered.forEach(function(e){
+    if(!e.my_team||e.home_score==null||e.home_score==='')return;
+    var myH=e.my_team===e.home_team;var myScore=Number(myH?e.home_score:e.away_score);var oppScore=Number(myH?e.away_score:e.home_score);
+    if(myScore>oppScore)wlCounts.W++;else if(myScore<oppScore)wlCounts.L++;else wlCounts.D++;
+  });
+  var wlTotal=wlCounts.W+wlCounts.L+wlCounts.D;
+  if(wlTotal>0){
+    var wlChart=echarts.init(wlEl);
+    wlChart.setOption({tooltip:{trigger:'item',...tt,formatter:'{b}: {c} ({d}%)'},series:[{type:'pie',radius:['30%','65%'],data:[
+      {value:wlCounts.W,name:'Wins',itemStyle:{color:'#4ade80'}},
+      {value:wlCounts.L,name:'Losses',itemStyle:{color:'#ef4444'}},
+      wlCounts.D?{value:wlCounts.D,name:'Draws',itemStyle:{color:'#666'}}:null
+    ].filter(Boolean),label:{color:'#ccc',fontSize:12,formatter:'{b}\n{c}'},emphasis:{itemStyle:{shadowBlur:10}}}]});
+    ch.push(wlChart);
+  }else{wlEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">Add events with a team search to track W/L</div>'}
+
+  // Recent events — color-coded by win/loss
   var rEl=document.getElementById('sp-recent');
   var sorted=filtered.slice().sort(function(a,b){return b.date.localeCompare(a.date)});
   var h='';
   sorted.forEach(function(e){
-    var score=(e.home_score!=null&&e.home_score!=='')?(e.home_score+'–'+e.away_score):'—';
     var icon=e.watch_type==='live'?'🏟️':e.watch_type==='tv'?'📺':'📡';
     var hWin=Number(e.home_score)>Number(e.away_score);var aWin=Number(e.away_score)>Number(e.home_score);
     var hs2=e.home_score!=null&&e.home_score!==''?e.home_score:'';
     var as3=e.away_score!=null&&e.away_score!==''?e.away_score:'';
-    h+='<div style="display:flex;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;gap:4px">';
+    // Win/loss coloring based on my_team
+    var rowBg='none';
+    if(e.my_team&&hs2!==''){
+      var myH=e.my_team===e.home_team;var myS=Number(myH?hs2:as3);var oppS=Number(myH?as3:hs2);
+      if(myS>oppS)rowBg='rgba(74,222,128,.08)';else if(myS<oppS)rowBg='rgba(239,68,68,.08)';
+    }
+    h+='<div style="display:flex;align-items:center;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;gap:4px;background:'+rowBg+';border-radius:4px;margin:1px 0">';
     h+='<span style="color:var(--t2);font-size:10px;width:42px;flex-shrink:0">'+_spDate(e.date)+'</span>';
-    // Away: abbrev logo score — home: score logo abbrev (centered block)
     h+='<span style="flex:1;display:flex;align-items:center;justify-content:center;gap:2px;font-variant-numeric:tabular-nums">';
     h+='<span style="font-weight:'+(aWin?'700':'400')+';font-size:11px;min-width:24px;text-align:right">'+_spAbbr(e.away_team)+'</span>';
     h+=_spBadge(e.away_badge,16);
@@ -2276,7 +2338,7 @@ function renderSports(){
     h+=_spBadge(e.home_badge,16);
     h+='<span style="font-weight:'+(hWin?'700':'400')+';font-size:11px;min-width:24px">'+_spAbbr(e.home_team)+'</span>';
     h+='</span>';
-    h+='<span style="color:var(--t2);font-size:9px;max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="'+(e.venue||'')+'">'+(e.venue?e.venue.split(',')[0]:'')+'</span>';
+    h+='<span style="color:var(--t2);font-size:9px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="'+(e.venue||'')+'">'+(e.venue?e.venue.split(',')[0]:'')+'</span>';
     h+='<span style="flex-shrink:0;font-size:10px">'+icon+'</span>';
     h+='<button onclick="deleteSportsEvent(\''+e.id+'\')" style="background:none;border:none;color:rgba(239,68,68,.5);cursor:pointer;font-size:10px;padding:2px;flex-shrink:0" title="Remove">✕</button>';
     h+='</div>';
@@ -2286,7 +2348,9 @@ function renderSports(){
 
 function deleteSportsEvent(id){
   SP=SP.filter(function(e){return e.id!==id});
-  localStorage.setItem('iris_sports',JSON.stringify(SP));
+  _spPending=_spPending.filter(function(e){return e.id!==id});
+  localStorage.setItem('iris_sports_pending',JSON.stringify(_spPending));
+  _spCommitToRepo();
   renderSports();
 }
 

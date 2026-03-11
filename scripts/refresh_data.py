@@ -1838,6 +1838,14 @@ if os.path.exists("data/up_next.json"):
         else:
             data["un"] = un_raw
 
+# Sports — load from repo-backed JSON
+if os.path.exists("data/sports.json"):
+    with open("data/sports.json") as f:
+        sp_raw = json.load(f)
+    if sp_raw:
+        data["sp"] = sp_raw
+        print(f"  Sports: {len(sp_raw)} events loaded from data/sports.json")
+
 data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
 with open("templates/dashboard.html") as f:
     template = f.read()
