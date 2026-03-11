@@ -141,9 +141,9 @@ body{overflow-x:hidden}
 <div class="cd s-s"><h3><span class="i">📺</span>Community TV (Trakt) <span class="vtog" style="float:right"><button class="vb vb-on rt-tog" data-v="high" onclick="window._rtMode='high';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='high')});renderRatings()">Highest</button><button class="vb rt-tog" data-v="low" onclick="window._rtMode='low';document.querySelectorAll('.rt-tog').forEach(function(b){b.classList.toggle('vb-on',b.dataset.v==='low')});renderRatings()">Lowest</button></span></h3><div class="stb" id="sc-rat" style="font-size:12px"></div></div>
 </div>
 <div class="g3 med-s" data-med="all movie show">
-<div id="sec-meta" class="cd s-g"><h3 id="gnh"><span class="i">🎯</span>Genres</h3><div id="gnc" style="height:360px"></div></div>
 <div id="sec-time" class="cd s-t"><h3><span class="i">📅</span>Day of Week</h3><div id="dwc" style="height:360px"></div></div>
 <div class="cd s-t"><h3><span class="i">🕐</span>Time of Day</h3><div id="hodc" style="height:360px"></div></div>
+<div id="sec-meta" class="cd s-g"><h3 id="gnh"><span class="i">🎯</span>Genres</h3><div id="gnc" style="height:360px"></div></div>
 </div>
 <div class="g2 med-s" data-med="all movie show" id="gt-wrap">
 <div class="cd fw s-g"><h3><span class="i">📈</span>Genre Trends (year over year %)</h3><div id="gtc" style="height:350px"></div></div>
@@ -346,7 +346,7 @@ if(ct==='movie'){if(m===0)return;sortVal=m}
 if(ct==='show'){if(s===0)return;sortVal=s}
 items.push({p:p,m:m,s:s,tot:m+s,sv:sortVal})});
 items.sort(function(a,b){return b.sv-a.sv});
-var rk=0;items.forEach(function(item){var p=item.p,m=item.m,s=item.s;rk++;var tot=item.tot;var img=HS[p.n]?'<img class="hs" src="'+HS[p.n]+'" loading="lazy" onerror="this.style.display=\'none\'" alt="">':'<div class="hp">'+p.n.charAt(0)+'</div>';var tr=document.createElement('tr');tr.className='pr';tr.innerHTML='<td style="color:var(--t2);font-size:10px;width:24px">'+rk+'</td><td><div class="pn">'+img+'<span>'+p.n+'</span></div></td><td class="nm" style="color:var(--mv)">'+m+'</td><td class="nm" style="color:var(--tv)">'+s+'</td><td class="nm" style="color:#999">'+tot+'</td>';tr.onclick=function(){var nx=tr.nextElementSibling;if(nx&&nx.classList.contains('dr')){nx.remove();return}document.querySelectorAll('.dr').forEach(function(r){r.remove()});if(!p.ti)return;var dr=document.createElement('tr');dr.className='dr';var h='<td colspan="5"><table>';p.ti.forEach(function(i){var t=TL[i];if(!t)return;var eb=cy==='all'?t.eby:fby(t.eby);var ct2=sm(eb);if(ct2===0&&cy!=='all')return;h+='<tr><td><span class="badge '+(t.type==='movie'?'b-m':'b-e')+'">'+t.type+'</span></td><td style="font-weight:600">'+t.t+'</td><td style="color:var(--t2)">'+(t.yr||'')+'</td><td class="nm '+(t.type==='show'?'nm-b':'nm-a')+'">'+(t.type==='show'?ct2+' eps':(ct2>1?ct2+'x':''))+'</td></tr>'});h+='</table></td>';dr.innerHTML=h;tr.after(dr)};tb.appendChild(tr)})}
+var rk=0;items.forEach(function(item){var p=item.p,m=item.m,s=item.s;rk++;var tot=item.tot;var img=HS[p.n]?'<img class="hs" src="'+HS[p.n]+'" loading="lazy" onerror="this.style.display=\'none\'" alt="">':'<div class="hp">'+p.n.charAt(0)+'</div>';var tr=document.createElement('tr');tr.className='pr';tr.innerHTML='<td style="color:var(--t2);font-size:10px;width:24px">'+rk+'</td><td><div class="pn">'+img+'<span>'+p.n+'</span></div></td><td class="nm" style="color:var(--mv)">'+m+'</td><td class="nm" style="color:var(--tv)">'+s+'</td><td class="nm" style="color:#999">'+tot+'</td>';tr.onclick=function(){var nx=tr.nextElementSibling;if(nx&&nx.classList.contains('dr')){nx.remove();return}document.querySelectorAll('.dr').forEach(function(r){r.remove()});if(!p.ti)return;var dr=document.createElement('tr');dr.className='dr';var h='<td colspan="5"><table>';p.ti.forEach(function(i){var t=TL[i];if(!t)return;var eb=cy==='all'?t.eby:fby(t.eby);var ct2=sm(eb);if(ct2===0&&cy!=='all')return;h+='<tr><td><span class="badge '+(t.type==='movie'?'b-m':'b-e')+'">'+t.type+'</span></td><td style="font-weight:600">'+t.t+'</td><td style="color:var(--t2)">'+(t.yr||'')+'</td><td class="nm '+(t.type==='show'?'nm-b':'nm-a')+'">'+(t.type==='movie'&&ct2>1?ct2+'x':'')+'</td></tr>'});h+='</table></td>';dr.innerHTML=h;tr.after(dr)};tb.appendChild(tr)})}
 
 function renderLifeline(){
   var ll=D.ll||{};var llEl=document.getElementById('llc');var llSel=document.getElementById('ll-sel');
@@ -419,7 +419,7 @@ function renderLifeline(){
 
   llChart.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){var day=days[p[0].dataIndex];var h='<b>'+day+'</b>';p.forEach(function(s){var v=Math.abs(s.value);if(v){if(s.seriesName==='Scrobbles'){v=Math.abs(negData.sc[p[0].dataIndex])}h+='<br/>'+s.marker+s.seriesName+': '+v}});return h}},
     legend:{data:llLeg,top:0,textStyle:{color:'#999',fontSize:9},type:'plain'},
-    grid:{left:40,right:10,top:35,bottom:30},
+    grid:{left:40,right:10,top:50,bottom:30},
     xAxis:{type:'category',data:days.map(function(d){return d.substring(5)}),axisLabel:{color:'#666',fontSize:8,rotate:45,interval:0},axisLine:{lineStyle:{color:'#444'}}},
     yAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return v>=0?v:''}},splitLine:{lineStyle:{color:'#222'}}},
     series:llSeries});
@@ -739,7 +739,7 @@ function baseCharts(){
       params.forEach(function(p){h+=p.marker+' '+p.seriesName+': '+p.value+'%<br/>'});
       return h}},
       legend:{data:gt.genres.map(function(g){return(GE[g.toLowerCase()]||'')+' '+g}),top:0,textStyle:{color:'#999',fontSize:10},type:'plain'},
-      grid:{left:50,right:20,top:40,bottom:30},
+      grid:{left:50,right:20,top:60,bottom:30},
       xAxis:{type:'category',data:xLabels,axisLabel:{color:'#666'},axisLine:{lineStyle:{color:'#333'}},boundaryGap:false},
       yAxis:{type:'value',axisLabel:{color:'#666',formatter:function(v){return v+'%'}},splitLine:{lineStyle:{color:'#222'}},max:100,min:0},
       series:gtSeries});
@@ -1239,7 +1239,7 @@ function renderLetterboxd(){
         var yd2=catData.y[y]||[];var found=yd2.find(function(d){return d.n===n});return found?found.c:0}),
         itemStyle:{color:colors[i%colors.length]},barMaxWidth:12}});
       tc.setOption({tooltip:{trigger:'axis',...tt},legend:{data:top,top:0,textStyle:{color:'#999',fontSize:9},type:'plain'},
-        grid:{left:40,right:10,top:35,bottom:24},
+        grid:{left:40,right:10,top:50,bottom:24},
         xAxis:{type:'category',data:yrs,axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},
         yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},series:series});
     }
@@ -1361,11 +1361,11 @@ function renderRatings(){
   }
   window._rtMode=window._rtMode||'high';
   var isHigh=window._rtMode==='high';
-  ratingList('my-rat',isHigh?(lb.myh||[]):(lb.myl||[]),'★',isHigh?'#4ade80':'#e94560',20);
+  ratingList('my-rat',isHigh?(lb.myh||[]):(lb.myl||[]),'★',isHigh?'#4ade80':'#fb923c',20);
   var sz=D.sz||{};
   ratingList('sz-rat',isHigh?(sz.szh||[]):(sz.szl||[]),'★',isHigh?'#14b8a6':'#e94560',20);
-  ratingList('mc-rat',isHigh?(D.c.mch||[]):(D.c.mcl||[]),'Rating',isHigh?'#60a5fa':'#e94560',20);
-  ratingList('sc-rat',isHigh?(D.c.sch||[]):(D.c.scl||[]),'Rating',isHigh?'#a78bfa':'#e94560',20);
+  ratingList('mc-rat',isHigh?(D.c.mch||[]):(D.c.mcl||[]),'Rating',isHigh?'#4ade80':'#fb923c',20);
+  ratingList('sc-rat',isHigh?(D.c.sch||[]):(D.c.scl||[]),'Rating',isHigh?'#14b8a6':'#e94560',20);
 }
 
 function renderGoodreads(){
@@ -1883,7 +1883,7 @@ function renderPodcasts(){
   var items=sorted.slice(0,15).reverse();
   var pcChart=echarts.init(el);
   pcChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){return'<b>'+tp(p).name+'</b><br/>'+(isHrs?tp(p).value+'h ('+tp(p).data.eps+' eps)':tp(p).value+' eps ('+tp(p).data.hrs+'h)')}},
-    grid:{left:gl(150),right:30,top:8,bottom:8},
+    grid:{left:gl(180),right:30,top:8,bottom:8},
     xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
     yAxis:{type:'category',data:items.map(function(d){return d.title}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
     series:[{type:'bar',data:items.map(function(d){return{value:isHrs?d.listened_hrs:d.played,eps:d.played,hrs:d.listened_hrs}}),itemStyle:{color:new echarts.graphic.LinearGradient(0,0,1,0,[{offset:0,color:'#0f3460'},{offset:1,color:'#ef4444'}])},barMaxWidth:18,label:{show:true,position:'right',color:'#ef4444',fontSize:10,formatter:function(p){return isHrs?p.value+'h':p.value+' eps'}}}]});
