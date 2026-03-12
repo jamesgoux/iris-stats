@@ -43,5 +43,20 @@
     "away_badge": "",
     "watch_type": "live",
     "my_team": "Los Angeles Dodgers"
+  },
+  {
+    "id": "2423873",
+    "date": "2026-02-08",
+    "sport": "American Football",
+    "league": "NFL",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "home_score": "13",
+    "away_score": "29",
+    "venue": "Levi's Stadium",
+    "home_badge": "https://r2.thesportsdb.com/images/media/team/badge/xtwxyt1421431860.png",
+    "away_badge": "https://r2.thesportsdb.com/images/media/team/badge/wwuqyr1421434817.png",
+    "watch_type": "tv",
+    "my_team": "Seattle Seahawks"
   }
 ]
