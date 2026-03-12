@@ -2481,6 +2481,7 @@ function _spSetWtFilter(v){
 }
 
 function renderHealth(){
+  try{
   var hw=D.health;var wrap=document.getElementById('hw-wrap');
   if(!hw||!hw.total){if(wrap)wrap.style.display='none';return}
   wrap.style.display='';
@@ -2559,6 +2560,7 @@ function renderHealth(){
     });
     rh+='</tbody></table>';recEl.innerHTML=rh;
   }else{recEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:20px">No recent workouts</div>'}
+  }catch(e){document.getElementById('hw-stats').innerHTML='<div style="color:#ef4444;padding:10px">Health error: '+e.message+'</div>'}
 }
 
 function renderSports(){
