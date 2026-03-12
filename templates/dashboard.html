@@ -403,7 +403,7 @@ function addClick(chart,el,field,arr,key){chart.on('click',function(p){
 document.addEventListener('click',function(e){if(!e.target.closest('.chart-detail')&&!e.target.closest('canvas')){document.querySelectorAll('.chart-detail').forEach(function(d){d.remove()})}})
 
 // URL hash persistence
-function readHash(){var h=location.hash.substring(1);var p=new URLSearchParams(h);cy=p.get('y')||'all';ct=p.get('t')||'all';document.getElementById('ys').value=cy;document.getElementById('gs').value=ct}
+function readHash(){var h=location.hash.substring(1);var p=new URLSearchParams(h);var ysEl=document.getElementById('ys');var curYr=new Date().getFullYear().toString();var defY=ysEl.querySelector('option[value="'+curYr+'"]')?curYr:(ysEl.options[1]?ysEl.options[1].value:'all');cy=p.get('y')||(h?'all':defY);ct=p.get('t')||'all';ysEl.value=cy;document.getElementById('gs').value=ct}
 function writeHash(){var p=new URLSearchParams();if(cy!=='all')p.set('y',cy);if(ct!=='all')p.set('t',ct);history.replaceState(null,'','#'+p.toString())}
 
 var ys=document.getElementById('ys');var yrs=new Set();D.c.m.forEach(function(m){yrs.add(m.month.substr(0,4))});
