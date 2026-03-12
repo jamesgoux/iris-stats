@@ -43,5 +43,20 @@
     "away_badge": "",
     "watch_type": "live",
     "my_team": "Los Angeles Dodgers"
+  },
+  {
+    "id": "2420688",
+    "date": "2026-01-25",
+    "sport": "American Football",
+    "league": "NFL",
+    "home_team": "Seattle Seahawks",
+    "away_team": "Los Angeles Rams",
+    "home_score": "31",
+    "away_score": "27",
+    "venue": "Lumen Field",
+    "home_badge": "https://r2.thesportsdb.com/images/media/team/badge/wwuqyr1421434817.png",
+    "away_badge": "https://r2.thesportsdb.com/images/media/team/badge/8e8v4i1599764614.png",
+    "watch_type": "live",
+    "my_team": "Seattle Seahawks"
   }
 ]
