@@ -2193,7 +2193,7 @@ function loadTeamEvents(teamId,teamName,teamBadge){
   document.getElementById('sp-ov-events').style.display='';
   document.getElementById('sp-ov-title').innerHTML='<span class="i">🏟️</span> '+teamName;
   window._spTeamId=teamId;window._spTeamName=teamName;window._spTeamBadge=teamBadge||'';
-  window._spAllEvents=[];window._spSeasonIdx=0;window._spAwaySearched={};
+  window._spAllEvents=[];window._spSeasonIdx=0;window._spAwaySearched={};window._spRoundsDone={};
   var curYear=new Date().getFullYear();
   window._spSeasons=[];
   for(var y=curYear;y>=curYear-10;y--){window._spSeasons.push(y+'-'+(y+1));window._spSeasons.push(String(y))}
@@ -2230,10 +2230,10 @@ function _spLoadBatch(count){
   if(loadEl._loading)return;loadEl._loading=true;
   loadEl.textContent='Loading...';
   var toLoad=Math.min(count,window._spSeasons.length-window._spSeasonIdx);
+  var batchSeasons=window._spSeasons.slice(window._spSeasonIdx,window._spSeasonIdx+toLoad);
   var fetches=[];
   for(var i=0;i<toLoad;i++){
-    var season=window._spSeasons[window._spSeasonIdx+i];
-    // Search both "TeamName" (home games) and try last-word variations
+    var season=batchSeasons[i];
     fetches.push(fetch('https://www.thesportsdb.com/api/v1/json/3/searchevents.php?e='+encodeURIComponent(window._spTeamName)+'&s='+encodeURIComponent(season)).then(function(r){return r.json()}).catch(function(){return{event:[]}}));
   }
   window._spSeasonIdx+=toLoad;
@@ -2241,7 +2241,7 @@ function _spLoadBatch(count){
     var existingIds={};window._spAllEvents.forEach(function(e){existingIds[e.idEvent]=true});
     var added=0;var tn=window._spTeamName;
     var homeRounds={};var leagueId=null;
-    var loadedSeasons=window._spSeasons.slice(window._spSeasonIdx-toLoad,window._spSeasonIdx);
+    var loadedSeasons=batchSeasons;
     results.forEach(function(d,di){(d.event||[]).forEach(function(ev){
       if(!existingIds[ev.idEvent]){
         if((ev.strHomeTeam||'').indexOf(tn)>=0||(ev.strAwayTeam||'').indexOf(tn)>=0){
