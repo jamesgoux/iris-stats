@@ -84,6 +84,7 @@ def fetch_cast_and_studios(entries):
     slug_tmdb = {}  # slug -> (tmdb_id, is_show)
     # Build show → seasons → episodes map from user's watch history
     show_episodes = defaultdict(lambda: defaultdict(set))  # slug -> season -> set of episode nums
+    ep_watch_year = {}  # (slug, season, episode) -> watch year
     for e in entries:
         if e["trakt_slug"]:
             is_show = e["type"] != "movie"
@@ -91,7 +92,11 @@ def fetch_cast_and_studios(entries):
             if e.get("tmdb_id"):
                 slug_tmdb[e["trakt_slug"]] = (str(e["tmdb_id"]), is_show)
             if is_show and e.get("season") and e.get("episode_number"):
-                show_episodes[e["trakt_slug"]][int(e["season"])].add(int(e["episode_number"]))
+                sn = int(e["season"]); en = int(e["episode_number"])
+                show_episodes[e["trakt_slug"]][sn].add(en)
+                wa = e.get("watched_at", "")
+                if wa and len(wa) >= 4:
+                    ep_watch_year[(e["trakt_slug"], sn, en)] = wa[:4]
     # MERGE with existing people data so we never lose actors
     people = defaultdict(lambda: {"name": "", "gender": None, "titles": set()})
     directors = defaultdict(lambda: {"name": "", "titles": set()})
@@ -212,7 +217,7 @@ def fetch_cast_and_studios(entries):
 
     # === EPISODE-LEVEL CREDITS: fetch per-season cast from TMDB ===
     # This gives accurate episode counts per person per show
-    ep_credits = defaultdict(lambda: defaultdict(set))  # person_slug -> show_slug -> set of (s,e) tuples
+    ep_credits = defaultdict(lambda: defaultdict(set))  # person_slug -> show_slug -> set of (s,e,year) tuples
     if TMDB_API_KEY and show_episodes:
         print(f"\n  Fetching episode-level credits for {len(show_episodes)} shows...")
         season_count = sum(len(seasons) for seasons in show_episodes.values())
@@ -234,7 +239,8 @@ def fetch_cast_and_studios(entries):
                         pid = _slugify(c.get("name", ""))
                         if not pid: continue
                         for ep_num in ep_nums:
-                            ep_credits[pid][slug].add((season_num, ep_num))
+                            wy = ep_watch_year.get((slug, season_num, ep_num), "")
+                            ep_credits[pid][slug].add((season_num, ep_num, wy))
                         # Ensure person exists in people dict
                         if pid not in people or not people[pid]["name"]:
                             people[pid]["name"] = c.get("name", "")
@@ -248,7 +254,8 @@ def fetch_cast_and_studios(entries):
                         for gs in ep_data.get("guest_stars", []):
                             pid = _slugify(gs.get("name", ""))
                             if not pid: continue
-                            ep_credits[pid][slug].add((season_num, ep_num))
+                            wy = ep_watch_year.get((slug, season_num, ep_num), "")
+                            ep_credits[pid][slug].add((season_num, ep_num, wy))
                             if pid not in people or not people[pid]["name"]:
                                 people[pid]["name"] = gs.get("name", "")
                                 g = gs.get("gender", 0)
@@ -334,11 +341,7 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
             sk = "show:" + ts
             if sk in ti:
                 tis.append(ti[sk])
-                # Use episode-level credits if available, otherwise count as 1
-                if ts in person_eps:
-                    sc += len(person_eps[ts])  # count actual episodes they appeared in
-                else:
-                    sc += 1
+                sc += 1  # Count 1 per show for ranking (episode detail shown on click)
         if mc + sc >= 2:
             entry = {"n": info["name"], "g": "m" if ism(info["gender"]) else "f", "m": mc, "s": sc, "tt": mc+sc, "ti": tis, "_rec": max_recency}
             # Add episode credits for year-accurate filtering
