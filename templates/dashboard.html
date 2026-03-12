@@ -2240,13 +2240,15 @@ function _spLoadBatch(count){
   Promise.all(fetches).then(function(results){
     var existingIds={};window._spAllEvents.forEach(function(e){existingIds[e.idEvent]=true});
     var added=0;var tn=window._spTeamName;
+    var opponents={};
     results.forEach(function(d){(d.event||[]).forEach(function(ev){
       if(!existingIds[ev.idEvent]){
-        // Only keep events that actually involve our team
         if((ev.strHomeTeam||'').indexOf(tn)>=0||(ev.strAwayTeam||'').indexOf(tn)>=0){
           window._spAllEvents.push(ev);existingIds[ev.idEvent]=true;added++;
         }
       }
+      // Track opponents for away game fetch
+      if(ev.strAwayTeam&&ev.strAwayTeam!==tn)opponents[ev.strAwayTeam]=1;
     })});
     window._spAllEvents.sort(function(a,b){return b.dateEvent.localeCompare(a.dateEvent)});
     filterSportsEvents();
@@ -2254,6 +2256,34 @@ function _spLoadBatch(count){
     var more=window._spSeasonIdx<window._spSeasons.length;
     loadEl.textContent=more?'Scroll for more':'All loaded';
     if(added<10&&more)_spLoadBatch(3);
+    // Auto-fetch away games: search each opponent's home games for the same seasons
+    var oppNames=Object.keys(opponents);
+    if(oppNames.length&&!window._spAwayDone){
+      window._spAwayDone={};
+      var loadedSeasons=window._spSeasons.slice(window._spSeasonIdx-toLoad,window._spSeasonIdx);
+      var awayFetches=[];
+      oppNames.forEach(function(opp){
+        loadedSeasons.forEach(function(s){
+          var key=opp+'|'+s;
+          if(!window._spAwayDone[key]){window._spAwayDone[key]=true;
+            awayFetches.push(fetch('https://www.thesportsdb.com/api/v1/json/3/searchevents.php?e='+encodeURIComponent(opp)+'&s='+encodeURIComponent(s)).then(function(r){return r.json()}).catch(function(){return{event:[]}}));
+          }
+        });
+      });
+      if(awayFetches.length){
+        loadEl.textContent='Loading away games...';
+        Promise.all(awayFetches).then(function(aResults){
+          var aAdded=0;
+          aResults.forEach(function(d){(d.event||[]).forEach(function(ev){
+            if(!existingIds[ev.idEvent]&&((ev.strAwayTeam||'').indexOf(tn)>=0)){
+              window._spAllEvents.push(ev);existingIds[ev.idEvent]=true;aAdded++;
+            }
+          })});
+          if(aAdded){window._spAllEvents.sort(function(a,b){return b.dateEvent.localeCompare(a.dateEvent)});filterSportsEvents()}
+          loadEl.textContent=aAdded?'Found '+aAdded+' away games':(more?'Scroll for more':'All loaded');
+        });
+      }
+    }
   });
 }
 
