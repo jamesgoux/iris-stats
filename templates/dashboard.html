@@ -145,7 +145,7 @@ body{overflow-x:hidden}
 <div class="fbtn"><select id="gs"><option value="all">🌐 All</option><option value="movie">🎞️ Movies</option><option value="show">📺 Shows</option><option value="book">📚 Books</option><option value="music">🎧 Music</option><option value="concert">🎸 Concerts</option><option value="podcast">🎙️ Podcasts</option><option value="sports">🏟️ Sports</option><option value="theater">🎭 Theater</option></select></div>
 <div class="fbtn"><select id="ys"><option value="all">All Time</option></select></div>
 <button class="hbtn" id="refresh-btn" onclick="this.querySelector('.rf-icon').classList.add('hbtn-spin');this.style.color='var(--ac)';document.querySelector('.fbar').classList.add('fbar-pulse');setTimeout(function(){location.reload()},900)" title="Refresh"><span class="rf-icon" style="display:inline-block">↻</span></button>
-<div style="position:relative"><button class="hbtn" onclick="var m=document.getElementById('jmp-menu');m.style.display=m.style.display==='block'?'none':'block'" title="Jump to section" style="font-size:16px;line-height:44px;padding:0 16px">☰</button><div id="jmp-menu" style="display:none;position:absolute;right:0;top:100%;margin-top:6px;background:var(--sf);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:6px 0;min-width:200px;max-height:70vh;overflow-y:auto;z-index:150;box-shadow:0 8px 30px rgba(0,0,0,.5)"></div></div>
+<div style="position:relative"><button class="hbtn" onclick="var m=document.getElementById('jmp-menu');m.style.display=m.style.display==='block'?'none':'block'" title="Jump to section"><span style="display:block;transform:translateY(-1px)">☰</span></button><div id="jmp-menu" style="display:none;position:absolute;right:0;top:100%;margin-top:6px;background:var(--sf);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:6px 0;min-width:200px;max-height:70vh;overflow-y:auto;z-index:150;box-shadow:0 8px 30px rgba(0,0,0,.5)"></div></div>
 <button class="hbtn" onclick="openUpNext()" title="Up Next">📺</button>
 </div>
 </div>
@@ -1778,7 +1778,7 @@ function renderLastfm(){
   var curArtists=(perData.find(function(p){return p.period===per})||perData[0]||{}).artists||[];
   var aEl=document.getElementById('lfm-artists');
   if(curArtists.length){
-    var aSlice=curArtists.slice(0,50).reverse();
+    var aSlice=curArtists.slice(0,100).reverse();
     aEl.style.height=(aSlice.length*18+20)+'px';
     var aChart=echarts.init(aEl);
     aChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var idx=aSlice.length-p.dataIndex;return'<b>#'+idx+' '+tp(p).name+'</b>: '+tp(p).value+' plays'}},
@@ -1794,13 +1794,13 @@ function renderLastfm(){
   var curTracks=(trData.find(function(p){return p.period===per})||trData[0]||{}).tracks||[];
   var tEl=document.getElementById('lfm-tracks');
   if(curTracks.length){
-    var tSlice=curTracks.slice(0,50).reverse();
+    var tSlice=curTracks.slice(0,100).reverse();
     tEl.style.height=(tSlice.length*18+20)+'px';
     var tChart=echarts.init(tEl);
     tChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt,formatter:function(p){var t=tSlice[p.dataIndex];return t?'<b>#'+(tSlice.length-p.dataIndex)+' '+t.n+'</b><br/>'+t.a+'<br/>'+t.c+' plays':''}},
       grid:{left:gl(150),right:30,top:4,bottom:4},
       xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
-      yAxis:{type:'category',data:tSlice.map(function(d,i){var num=tSlice.length-i;var name=d.n.length>25?d.n.substring(0,23)+'…':d.n;return num+'. '+name}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      yAxis:{type:'category',data:tSlice.map(function(d,i){var num=tSlice.length-i;var name=d.n.length>35?d.n.substring(0,33)+'…':d.n;return num+'. '+name}),axisLabel:{color:'#ccc',fontSize:9,interval:0,overflow:'truncate',width:mob?100:170},axisLine:{lineStyle:{color:'#333'}}},
       series:[{type:'bar',data:tSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#14b8a6')},barMaxWidth:14,barCategoryGap:'20%',label:{show:true,position:'right',color:'#a78bfa',fontSize:9}}]});
     ch.push(tChart);
   }
@@ -2109,7 +2109,7 @@ function _spToast(msg,color){
   setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove()},600)},2000);
 }
 
-function _spDate(d){if(!d)return'';var p=d.split('-');if(p.length!==3)return d;return p[1]+'/'+p[2]+'/'+p[0]}
+function _spDate(d){if(!d)return'';var p=d.split('-');if(p.length!==3)return d;return parseInt(p[1])+'/'+parseInt(p[2])}
 
 function openSportsAdd(){
   var ov=document.getElementById('sp-overlay');
@@ -2163,9 +2163,9 @@ function searchSportsTeam(){
     var teams=d.teams||[];
     if(!teams.length){el.innerHTML='<div style="color:var(--t2);padding:10px">No teams found. Try the full name (e.g. "Los Angeles Lakers")</div>';return}
     var h='';teams.slice(0,8).forEach(function(t){
-      h+='<div onclick="loadTeamEvents(\''+t.idTeam+'\',\''+t.strTeam.replace(/'/g,"\\'")+'\')" style="padding:12px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;gap:10px" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'none\'">';
-      if(t.strTeamBadge)h+='<img src="'+t.strTeamBadge+'" style="width:28px;height:28px;object-fit:contain">';
-      h+='<div><div style="font-weight:600;font-size:14px">'+t.strTeam+'</div><div style="font-size:11px;color:var(--t2)">'+t.strSport+' · '+t.strLeague+'</div></div></div>';
+      h+='<div onclick="loadTeamEvents(\''+t.idTeam+'\',\''+t.strTeam.replace(/'/g,"\\'")+'\')" style="padding:14px 16px;margin-bottom:8px;background:var(--sf);border:1px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:12px;min-height:56px;-webkit-tap-highlight-color:transparent;transition:background .15s" ontouchstart="this.style.background=\'#1e1e3a\'" ontouchend="this.style.background=\'var(--sf)\'">';
+      if(t.strTeamBadge)h+='<img src="'+t.strTeamBadge+'" style="width:32px;height:32px;object-fit:contain">';
+      h+='<div><div style="font-weight:600;font-size:15px">'+t.strTeam+'</div><div style="font-size:12px;color:var(--t2)">'+t.strSport+' · '+t.strLeague+'</div></div></div>';
     });el.innerHTML=h;
   }).catch(function(){el.innerHTML='<div style="color:#ef4444;padding:10px">Search failed — try again</div>'});
 }
