@@ -2683,7 +2683,7 @@ function _unBuildPanel(show){
   h+='<button onclick="markWatchedAt(\''+slug2+'\','+show.season+','+show.episode+','+(show.ep_trakt_id||0)+',\'now\')" style="flex:1;padding:14px;background:var(--tv);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-weight:600">✓ Watched Now</button>';
   if(show.ep_aired)h+='<button onclick="markWatchedAt(\''+slug2+'\','+show.season+','+show.episode+','+(show.ep_trakt_id||0)+',\''+show.ep_aired+'\')" style="flex:1;padding:14px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:10px;font-size:14px;cursor:pointer">📅 Watched at Air</button>';
   h+='</div>';
-  h+='<div style="display:flex;gap:8px"><input type="datetime-local" id="un-custom-date" style="flex:1;padding:12px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:var(--tx);font-size:13px"><button onclick="markWatchedAt(\''+slug2+'\','+show.season+','+show.episode+','+(show.ep_trakt_id||0)+',document.getElementById(\'un-custom-date\').value)" style="padding:12px 16px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:10px;font-size:13px;cursor:pointer">Set</button></div>';
+  h+='<div style="display:flex;gap:8px"><input type="datetime-local" id="un-custom-date" style="flex:1;padding:12px;background:var(--bg);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:var(--tx);font-size:13px"><button onclick="markWatchedAt(\''+slug2+'\','+show.season+','+show.episode+','+(show.ep_trakt_id||0)+',document.getElementById(\'un-custom-date\').value)" style="padding:12px 16px;background:var(--sf);color:var(--tx);border:1px solid rgba(255,255,255,.1);border-radius:10px;font-size:13px;cursor:pointer">📅 Watched at Date</button></div>';
   h+='</div>';
   return h;
 }
@@ -2782,20 +2782,35 @@ function _crNav(dir){
   }
 }
 
+function _traktSync(epTraktId,watchedAt,onDone){
+  var cid=D._tc,tok=D._tt;
+  if(!cid||!tok){console.warn('Trakt credentials not injected');if(onDone)onDone(false);return}
+  var body=JSON.stringify({episodes:[{ids:{trakt:epTraktId},watched_at:watchedAt}]});
+  fetch('https://api.trakt.tv/sync/history',{method:'POST',headers:{'Content-Type':'application/json','trakt-api-version':'2','trakt-api-key':cid,'Authorization':'Bearer '+tok},body:body})
+  .then(function(r){if(!r.ok)throw new Error('Trakt '+r.status);return r.json()})
+  .then(function(d){console.log('Trakt synced:',d);if(onDone)onDone(true)})
+  .catch(function(e){console.error('Trakt sync failed:',e);alert('Failed to sync to Trakt: '+e.message);if(onDone)onDone(false)});
+}
+
 function markWatchedAt(slug,season,episode,epTraktId,when){
   var key=slug+'|'+season+'|'+episode;
-  _unWatched[key]=when==='now'?new Date().toISOString():when;
+  var watchedAt=when==='now'?new Date().toISOString():when;
+  if(!watchedAt){alert('Please select a date first');return}
+  _unWatched[key]=watchedAt;
   localStorage.setItem('iris_un_watched',JSON.stringify(_unWatched));
   openUpNext();
+  if(epTraktId)_traktSync(epTraktId,watchedAt);
 }
 
 function markWatched(slug,season,episode,epTraktId,btn){
   var key=slug+'|'+season+'|'+episode;
   var card=btn.closest('.un-card');
   card.style.opacity='0.3';card.style.pointerEvents='none';
-  _unWatched[key]=new Date().toISOString();
+  var watchedAt=new Date().toISOString();
+  _unWatched[key]=watchedAt;
   localStorage.setItem('iris_un_watched',JSON.stringify(_unWatched));
   setTimeout(function(){card.style.transition='all .3s';card.style.maxHeight='0';card.style.overflow='hidden';card.style.padding='0';card.style.margin='0';card.style.border='none';setTimeout(function(){card.remove()},350)},150);
+  if(epTraktId)_traktSync(epTraktId,watchedAt);
 }
 
 function removeRecent(epId,btn){
