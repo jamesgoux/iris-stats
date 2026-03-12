@@ -218,56 +218,80 @@ def fetch_cast_and_studios(entries):
     # === EPISODE-LEVEL CREDITS: fetch per-season cast from TMDB ===
     # This gives accurate episode counts per person per show
     ep_credits = defaultdict(lambda: defaultdict(set))  # person_slug -> show_slug -> set of (s,e,year) tuples
+    # Load cached season credits (avoid re-fetching from TMDB)
+    season_cache_path = "data/season_credits.json"
+    season_cache = {}
+    if os.path.exists(season_cache_path):
+        with open(season_cache_path) as f:
+            season_cache = json.load(f)
+
     if TMDB_API_KEY and show_episodes:
-        print(f"\n  Fetching episode-level credits for {len(show_episodes)} shows...")
         season_count = sum(len(seasons) for seasons in show_episodes.values())
-        print(f"  Total seasons to fetch: {season_count}")
-        fetched_seasons = 0
+        cached_count = 0; fetched_count = 0
+        print(f"\n  Episode-level credits for {len(show_episodes)} shows, {season_count} seasons...")
+
         for slug, seasons in show_episodes.items():
             tmdb_info = slug_tmdb.get(slug)
             if not tmdb_info: continue
             tmdb_id, _ = tmdb_info
             for season_num, ep_nums in seasons.items():
-                try:
-                    url = f"{TMDB_BASE}/tv/{tmdb_id}/season/{season_num}?api_key={TMDB_API_KEY}&append_to_response=credits"
-                    sr = retry_request("get", url, timeout=10)
-                    if not sr or sr.status_code != 200: continue
-                    sdata = sr.json()
-                    # Season regulars — credit for all user's watched episodes in this season
-                    season_cast = sdata.get("credits", {}).get("cast", [])
-                    for c in season_cast:
-                        pid = _slugify(c.get("name", ""))
+                cache_key = f"{tmdb_id}|{season_num}"
+                # Use cache if available
+                if cache_key in season_cache:
+                    sdata = season_cache[cache_key]
+                    cached_count += 1
+                else:
+                    # Fetch from TMDB
+                    try:
+                        url = f"{TMDB_BASE}/tv/{tmdb_id}/season/{season_num}?api_key={TMDB_API_KEY}&append_to_response=credits"
+                        sr = retry_request("get", url, timeout=10)
+                        if not sr or sr.status_code != 200: continue
+                        sdata = sr.json()
+                        # Cache: store only cast/guest_stars (not full episode data)
+                        season_cache[cache_key] = {
+                            "credits": {"cast": [{"name": c.get("name",""), "gender": c.get("gender",0)} for c in sdata.get("credits",{}).get("cast",[])]},
+                            "episodes": [{"episode_number": ep.get("episode_number"), "guest_stars": [{"name": gs.get("name",""), "gender": gs.get("gender",0)} for gs in ep.get("guest_stars",[])]} for ep in sdata.get("episodes",[])]
+                        }
+                        fetched_count += 1
+                        if fetched_count % 50 == 0:
+                            print(f"  fetched {fetched_count} seasons (cached {cached_count})...")
+                            with open(season_cache_path, "w") as f:
+                                json.dump(season_cache, f, separators=(',', ':'))
+                        time.sleep(0.05)
+                    except Exception:
+                        continue
+
+                # Process season data (from cache or fresh fetch)
+                season_cast = sdata.get("credits", {}).get("cast", [])
+                for c in season_cast:
+                    pid = _slugify(c.get("name", ""))
+                    if not pid: continue
+                    for ep_num in ep_nums:
+                        wy = ep_watch_year.get((slug, season_num, ep_num), "")
+                        ep_credits[pid][slug].add((season_num, ep_num, wy))
+                    if pid not in people or not people[pid]["name"]:
+                        people[pid]["name"] = c.get("name", "")
+                        g = c.get("gender", 0)
+                        if g in (1, 2): people[pid]["gender"] = g
+                        people[pid]["titles"].add(slug)
+                for ep_data in sdata.get("episodes", []):
+                    ep_num = ep_data.get("episode_number")
+                    if ep_num not in ep_nums: continue
+                    for gs in ep_data.get("guest_stars", []):
+                        pid = _slugify(gs.get("name", ""))
                         if not pid: continue
-                        for ep_num in ep_nums:
-                            wy = ep_watch_year.get((slug, season_num, ep_num), "")
-                            ep_credits[pid][slug].add((season_num, ep_num, wy))
-                        # Ensure person exists in people dict
+                        wy = ep_watch_year.get((slug, season_num, ep_num), "")
+                        ep_credits[pid][slug].add((season_num, ep_num, wy))
                         if pid not in people or not people[pid]["name"]:
-                            people[pid]["name"] = c.get("name", "")
-                            g = c.get("gender", 0)
+                            people[pid]["name"] = gs.get("name", "")
+                            g = gs.get("gender", 0)
                             if g in (1, 2): people[pid]["gender"] = g
                             people[pid]["titles"].add(slug)
-                    # Per-episode guest stars — credit only for that specific episode
-                    for ep_data in sdata.get("episodes", []):
-                        ep_num = ep_data.get("episode_number")
-                        if ep_num not in ep_nums: continue  # user didn't watch this episode
-                        for gs in ep_data.get("guest_stars", []):
-                            pid = _slugify(gs.get("name", ""))
-                            if not pid: continue
-                            wy = ep_watch_year.get((slug, season_num, ep_num), "")
-                            ep_credits[pid][slug].add((season_num, ep_num, wy))
-                            if pid not in people or not people[pid]["name"]:
-                                people[pid]["name"] = gs.get("name", "")
-                                g = gs.get("gender", 0)
-                                if g in (1, 2): people[pid]["gender"] = g
-                                people[pid]["titles"].add(slug)
-                except Exception as e:
-                    pass
-                fetched_seasons += 1
-                if fetched_seasons % 50 == 0:
-                    print(f"  episode credits: {fetched_seasons}/{season_count} seasons")
-                time.sleep(0.05)  # TMDB rate limit
-        print(f"  Episode credits: {len(ep_credits)} people with episode-level data")
+
+        # Save cache
+        with open(season_cache_path, "w") as f:
+            json.dump(season_cache, f, separators=(',', ':'))
+        print(f"  Episode credits: {len(ep_credits)} people (fetched {fetched_count}, cached {cached_count})")
 
     # Build ep_credits output: person_slug -> {show_slug: [[s,e],[s,e],...]}
     ep_credits_out = {}
