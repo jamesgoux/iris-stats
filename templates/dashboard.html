@@ -273,6 +273,12 @@ body{overflow-x:hidden}
 <div class="cd s-th"><h3><span class="i">🏛️</span>Top Theaters</h3><div id="th-venues" style="height:280px"></div></div>
 <div class="cd s-th"><h3><span class="i">👥</span>Theater Companions</h3><div id="th-companions" style="height:280px"></div></div>
 </div>
+<!-- WORKOUTS (Apple Health) -->
+<div class="g2 med-s" data-med="all" id="hw-wrap" style="display:none">
+<div id="sec-hw" class="cd fw"><h3><span class="i">🏃</span>Workouts</h3><div id="hw-stats" class="sg" style="margin-bottom:8px"></div><div id="hw-chart" style="height:280px"></div></div>
+<div class="cd"><h3><span class="i">🏋️</span>Workout Types</h3><div id="hw-types" style="height:280px"></div></div>
+<div class="cd"><h3><span class="i">📋</span>Recent Workouts</h3><div class="stb" id="hw-recent" style="font-size:12px;max-height:350px"></div></div>
+</div>
 <!-- SPORTS -->
 <div class="g2 med-s" data-med="all sports" id="sp-wrap" style="display:none">
 <div id="sec-sp" class="cd fw s-sp"><h3><span class="i">🏟️</span>Sports <button onclick="openSportsAdd()" style="float:right;font-size:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--tx);border-radius:6px;padding:6px 12px;cursor:pointer;min-height:32px;-webkit-tap-highlight-color:transparent;transition:background .15s">+ Add Event</button></h3><div class="vtog" id="sp-wt-filter" style="margin-bottom:6px"><button class="vb vb-on" onclick="_spSetWtFilter('all')">All</button><button class="vb" onclick="_spSetWtFilter('live')">🏟️ Live</button><button class="vb" onclick="_spSetWtFilter('tv')">📺 TV</button><button class="vb" onclick="_spSetWtFilter('remote')">📡 Remote</button></div><div id="sp-chart" style="height:280px"></div></div>
@@ -2474,6 +2480,87 @@ function _spSetWtFilter(v){
   renderSports();
 }
 
+function renderHealth(){
+  var hw=D.health;var wrap=document.getElementById('hw-wrap');
+  if(!hw||!hw.total){if(wrap)wrap.style.display='none';return}
+  wrap.style.display='';
+  // Filter by year
+  var recent=hw.recent||[];var byMonth=hw.by_month||{};var byYear=hw.by_year||{};
+  if(cy!=='all'){
+    recent=recent.filter(function(w){return(w.date||'').substring(0,4)===cy});
+    var fMonth={};Object.keys(byMonth).forEach(function(k){if(k.startsWith(cy))fMonth[k]=byMonth[k]});byMonth=fMonth;
+  }
+  var yrData=cy==='all'?byYear:(byYear[cy]?{[cy]:byYear[cy]}:{});
+  var totalW=0,totalD=0,totalC=0;
+  Object.values(cy==='all'?byYear:yrData).forEach(function(v){totalW+=v.count;totalD+=v.dur;totalC+=v.cal});
+
+  // Stats tiles
+  var statsEl=document.getElementById('hw-stats');
+  statsEl.innerHTML=sc(totalW,'🏋️ Workouts','var(--sp)')+sc(Math.round(totalD/3600)+'h','⏱️ Duration','#fb923c')+sc(Math.round(totalC/1000)+'k','🔥 Calories','#ef4444');
+
+  // Activity timeline (workouts per month or year)
+  var chartEl=document.getElementById('hw-chart');
+  var periods,counts,durs;
+  if(cy==='all'){
+    periods=Object.keys(byYear).sort();
+    counts=periods.map(function(p){return byYear[p].count});
+    durs=periods.map(function(p){return Math.round(byYear[p].dur/3600)});
+  }else{
+    periods=Object.keys(byMonth).sort();
+    counts=periods.map(function(p){return byMonth[p].count});
+    durs=periods.map(function(p){return Math.round(byMonth[p].dur/3600)});
+  }
+  if(periods.length){
+    var hwChart=echarts.init(chartEl);
+    hwChart.setOption({tooltip:{trigger:'axis',...tt},grid:{left:50,right:40,top:30,bottom:24},
+      title:{text:totalW+' workouts'+(cy!=='all'?' in '+cy:''),left:16,top:0,textStyle:{color:'#666',fontSize:11,fontWeight:'normal'}},
+      xAxis:{type:'category',data:periods,axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},
+      yAxis:[{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},{type:'value',position:'right',axisLabel:{color:'#666'},splitLine:{show:false}}],
+      series:[{name:'Workouts',type:'bar',data:counts,itemStyle:{color:'var(--sp)'},barMaxWidth:20},
+        {name:'Hours',type:'line',yAxisIndex:1,data:durs,itemStyle:{color:'#fb923c'},lineStyle:{width:2},symbol:'circle',symbolSize:4}]});
+    ch.push(hwChart);
+  }else{chartEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No workout data'+(cy!=='all'?' in '+cy:'')+'</div>'}
+
+  // Workout types bar chart
+  var typesEl=document.getElementById('hw-types');
+  var types=(hw.types||[]).filter(function(t){
+    if(cy==='all')return true;
+    // Recount from recent for year filter
+    return recent.some(function(w){return w.type===t[0]});
+  });
+  if(cy!=='all'){
+    var tc={};recent.forEach(function(w){tc[w.type]=(tc[w.type]||0)+1});
+    types=Object.entries(tc).sort(function(a,b){return b[1]-a[1]});
+  }
+  var typeNames=types.map(function(t){return t[0]}).reverse();
+  var typeCounts=types.map(function(t){return t[1]}).reverse();
+  var hwColors={'Running':'#ef4444','Walking':'#4ade80','Cycling':'#3b82f6','Traditional Strength Training':'#fb923c','HIIT':'#a78bfa','Yoga':'#14b8a6','Swimming':'#0ea5e9','Hiking':'#84cc16','Dance':'#ec4899','Elliptical':'#fbbf24'};
+  if(typeNames.length){
+    var tChart=echarts.init(typesEl);
+    tChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt},
+      grid:{left:gl(160),right:30,top:8,bottom:8},
+      xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
+      yAxis:{type:'category',data:typeNames,axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
+      series:[{type:'bar',data:typeCounts.map(function(v,i){return{value:v,itemStyle:{color:hwColors[typeNames[i]]||'#0ea5e9'}}}),barMaxWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:10}}]});
+    ch.push(tChart);
+  }else{typesEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No data</div>'}
+
+  // Recent workouts table
+  var recEl=document.getElementById('hw-recent');
+  if(recent.length){
+    var rh='<table style="width:100%"><thead><tr><th>Date</th><th>Workout</th><th>Duration</th><th>Cal</th></tr></thead><tbody>';
+    recent.slice(0,15).forEach(function(w){
+      var d=(w.date||'').substring(0,10);var parts=d.split('-');
+      var dateStr=parts.length===3?parseInt(parts[1])+'/'+parseInt(parts[2])+'/'+parts[0].substring(2):d;
+      var durMin=Math.round((w.dur||0)/60);
+      var durStr=durMin>=60?Math.floor(durMin/60)+'h '+durMin%60+'m':durMin+'m';
+      var color=hwColors[w.type]||'#0ea5e9';
+      rh+='<tr><td>'+dateStr+'</td><td style="color:'+color+'">'+w.type+'</td><td>'+durStr+'</td><td>'+(w.cal||0)+'</td></tr>';
+    });
+    rh+='</tbody></table>';recEl.innerHTML=rh;
+  }else{recEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:20px">No recent workouts</div>'}
+}
+
 function renderSports(){
   var wrap=document.getElementById('sp-wrap');
   if(ct!=='all'&&ct!=='sports'){wrap.style.display='none';return}
@@ -3040,7 +3127,7 @@ function render(){ch.forEach(function(c){try{c.dispose()}catch(e){}});ch=[];
     // Batch 2: all remaining sections — staggered with setTimeout to avoid jank
     setTimeout(function(){renderGoodreads();renderLastfm()},0);
     setTimeout(function(){renderConcerts();renderTheater()},50);
-    setTimeout(function(){renderPodcasts();renderSports();renderStatus()},100);
+    setTimeout(function(){renderPodcasts();renderHealth();renderSports();renderStatus()},100);
     // Dismiss loader after batch 1 (user sees content immediately)
     var loader=document.getElementById('iris-loader');if(loader){loader.classList.add('fade-out');setTimeout(function(){loader.remove()},600)}
   })}

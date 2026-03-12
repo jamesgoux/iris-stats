@@ -2008,6 +2008,58 @@ if os.path.exists("data/sports.json"):
         data["sp"] = sp_raw
         print(f"  Sports: {len(sp_raw)} events loaded from data/sports.json")
 
+# Health / Workouts — load from Shortcut-committed JSON
+if os.path.exists("data/health.json"):
+    with open("data/health.json") as f:
+        health_raw = json.load(f)
+    if health_raw:
+        # Deduplicate by date (in case of overlapping syncs)
+        seen = set()
+        health_deduped = []
+        for w in health_raw:
+            key = w.get("date", "") + "|" + w.get("type", "")
+            if key not in seen:
+                seen.add(key)
+                health_deduped.append(w)
+        # Parse dates and build aggregates
+        by_type = defaultdict(int)
+        by_month = defaultdict(lambda: {"count": 0, "dur": 0, "cal": 0})
+        by_year = defaultdict(lambda: {"count": 0, "dur": 0, "cal": 0})
+        total_dur = 0
+        total_cal = 0
+        for w in health_deduped:
+            wtype = w.get("type", "Other")
+            by_type[wtype] += 1
+            dur = w.get("dur", 0) or 0
+            cal = w.get("cal", 0) or 0
+            total_dur += dur
+            total_cal += cal
+            # Extract year and month from ISO date
+            dstr = w.get("date", "")[:10]  # "2026-03-10"
+            if len(dstr) >= 7:
+                ym = dstr[:7]
+                yr = dstr[:4]
+                by_month[ym]["count"] += 1
+                by_month[ym]["dur"] += dur
+                by_month[ym]["cal"] += cal
+                by_year[yr]["count"] += 1
+                by_year[yr]["dur"] += dur
+                by_year[yr]["cal"] += cal
+        # Sort types by count descending
+        types_sorted = sorted(by_type.items(), key=lambda x: -x[1])
+        # Recent workouts (last 20)
+        recent = sorted(health_deduped, key=lambda w: w.get("date", ""), reverse=True)[:20]
+        data["health"] = {
+            "total": len(health_deduped),
+            "total_dur": total_dur,
+            "total_cal": total_cal,
+            "types": types_sorted,
+            "by_month": dict(by_month),
+            "by_year": dict(by_year),
+            "recent": recent
+        }
+        print(f"  Health: {len(health_deduped)} workouts, {len(by_type)} types, {round(total_dur/3600,1)}h total")
+
 # Inject Trakt credentials for client-side mark-as-watched
 _trakt_token = os.environ.get("TRAKT_ACCESS_TOKEN", "")
 if _trakt_token and CLIENT_ID:

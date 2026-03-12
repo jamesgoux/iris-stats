@@ -1,0 +1,10 @@
+[
+  {"type":"Running","date":"2026-03-10T07:30:00-05:00","dur":1847,"cal":312,"dist":4.2},
+  {"type":"Traditional Strength Training","date":"2026-03-09T18:00:00-05:00","dur":3600,"cal":245,"dist":0},
+  {"type":"Walking","date":"2026-03-08T12:15:00-05:00","dur":1200,"cal":89,"dist":1.1},
+  {"type":"Running","date":"2026-03-06T06:45:00-05:00","dur":2100,"cal":380,"dist":5.1},
+  {"type":"Cycling","date":"2026-03-05T17:00:00-05:00","dur":2700,"cal":290,"dist":12.5},
+  {"type":"Traditional Strength Training","date":"2026-03-04T18:30:00-05:00","dur":3300,"cal":220,"dist":0},
+  {"type":"HIIT","date":"2026-03-03T06:00:00-05:00","dur":1800,"cal":350,"dist":0},
+  {"type":"Running","date":"2026-03-01T07:00:00-05:00","dur":2400,"cal":410,"dist":5.8}
+]
