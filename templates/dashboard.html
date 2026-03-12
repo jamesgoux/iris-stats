@@ -2419,8 +2419,8 @@ function renderSports(){
       var counts={};leagues[lg].forEach(function(e){var k=cy==='all'?e.date.substring(0,4):e.date.substring(0,7);counts[k]=(counts[k]||0)+1});
       return{name:lg,type:'bar',stack:'sp',data:periods.map(function(p){return counts[p]||0}),itemStyle:{color:_lgColor(lg)},barMaxWidth:30};
     });
-    spChart.setOption({tooltip:{trigger:'axis',...tt},legend:{data:lgNames,top:0,textStyle:{color:'#999',fontSize:10}},grid:{left:50,right:20,top:lgNames.length>1?36:30,bottom:24},
-      title:{text:filtered.length+' games'+(cy!=='all'?' in '+cy:''),left:'center',top:lgNames.length>1?20:0,textStyle:{color:'#999',fontSize:11,fontWeight:'normal'}},
+    spChart.setOption({tooltip:{trigger:'axis',...tt},legend:{data:lgNames.length>1?lgNames:[],right:10,top:0,textStyle:{color:'#999',fontSize:10}},grid:{left:50,right:20,top:36,bottom:24},
+      title:{text:filtered.length+' games'+(cy!=='all'?' in '+cy:''),left:16,top:0,textStyle:{color:'#666',fontSize:11,fontWeight:'normal'}},
       xAxis:{type:'category',data:periods,axisLabel:{color:'#ccc'},axisLine:{lineStyle:{color:'#333'}}},
       yAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
       series:spSeries});
