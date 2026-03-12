@@ -483,7 +483,10 @@ function stats(){
 
 function ptbl(id,pp){var tb=document.getElementById(id);tb.innerHTML='';
 // Pre-compute filtered counts and sort
-var items=[];pp.forEach(function(p){var m=p.m,s=p.s;if(cy!=='all'&&p.ti){m=0;s=0;p.ti.forEach(function(i){var t=TL[i];if(!t)return;if(sm(fby(t.eby))>0){if(t.type==='movie')m++;else s++}});if(m+s<2)return}
+var items=[];pp.forEach(function(p){var m=p.m,s=p.s;if(cy!=='all'&&p.ti){m=0;s=0;p.ti.forEach(function(i){var t=TL[i];if(!t)return;var yrCount=sm(fby(t.eby));if(yrCount>0){if(t.type==='movie')m++;else{
+  // Use episode-level credits for accurate show count
+  if(p.eps&&t.sl&&p.eps[t.sl]){s+=Math.min(p.eps[t.sl].length,yrCount)}else{s+=yrCount}
+}}});if(m+s<2)return}
 // Filter by type
 var sortVal=m+s;
 if(ct==='movie'){if(m===0)return;sortVal=m}

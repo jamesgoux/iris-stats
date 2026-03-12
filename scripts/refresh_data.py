@@ -82,12 +82,16 @@ def norm_show(e):
 def fetch_cast_and_studios(entries):
     show_slugs = set(); movie_slugs = set()
     slug_tmdb = {}  # slug -> (tmdb_id, is_show)
+    # Build show → seasons → episodes map from user's watch history
+    show_episodes = defaultdict(lambda: defaultdict(set))  # slug -> season -> set of episode nums
     for e in entries:
         if e["trakt_slug"]:
             is_show = e["type"] != "movie"
             (show_slugs if is_show else movie_slugs).add(e["trakt_slug"])
             if e.get("tmdb_id"):
                 slug_tmdb[e["trakt_slug"]] = (str(e["tmdb_id"]), is_show)
+            if is_show and e.get("season") and e.get("episode_number"):
+                show_episodes[e["trakt_slug"]][int(e["season"])].add(int(e["episode_number"]))
     # MERGE with existing people data so we never lose actors
     people = defaultdict(lambda: {"name": "", "gender": None, "titles": set()})
     directors = defaultdict(lambda: {"name": "", "titles": set()})
@@ -205,7 +209,69 @@ def fetch_cast_and_studios(entries):
             time.sleep(0.8)  # respect Trakt rate limits (0.3 caused frequent 429s)
     print(f"  people: {len(people)}, studios: {len(slug_studios)}, directors: {len(directors)}, writers: {len(writers)}")
     print(f"  Sources: TMDB={tmdb_ok}, Trakt fallback={trakt_fallback}, Skipped={skipped}")
+
+    # === EPISODE-LEVEL CREDITS: fetch per-season cast from TMDB ===
+    # This gives accurate episode counts per person per show
+    ep_credits = defaultdict(lambda: defaultdict(set))  # person_slug -> show_slug -> set of (s,e) tuples
+    if TMDB_API_KEY and show_episodes:
+        print(f"\n  Fetching episode-level credits for {len(show_episodes)} shows...")
+        season_count = sum(len(seasons) for seasons in show_episodes.values())
+        print(f"  Total seasons to fetch: {season_count}")
+        fetched_seasons = 0
+        for slug, seasons in show_episodes.items():
+            tmdb_info = slug_tmdb.get(slug)
+            if not tmdb_info: continue
+            tmdb_id, _ = tmdb_info
+            for season_num, ep_nums in seasons.items():
+                try:
+                    url = f"{TMDB_BASE}/tv/{tmdb_id}/season/{season_num}?api_key={TMDB_API_KEY}&append_to_response=credits"
+                    sr = retry_request("get", url, timeout=10)
+                    if not sr or sr.status_code != 200: continue
+                    sdata = sr.json()
+                    # Season regulars — credit for all user's watched episodes in this season
+                    season_cast = sdata.get("credits", {}).get("cast", [])
+                    for c in season_cast:
+                        pid = _slugify(c.get("name", ""))
+                        if not pid: continue
+                        for ep_num in ep_nums:
+                            ep_credits[pid][slug].add((season_num, ep_num))
+                        # Ensure person exists in people dict
+                        if pid not in people or not people[pid]["name"]:
+                            people[pid]["name"] = c.get("name", "")
+                            g = c.get("gender", 0)
+                            if g in (1, 2): people[pid]["gender"] = g
+                            people[pid]["titles"].add(slug)
+                    # Per-episode guest stars — credit only for that specific episode
+                    for ep_data in sdata.get("episodes", []):
+                        ep_num = ep_data.get("episode_number")
+                        if ep_num not in ep_nums: continue  # user didn't watch this episode
+                        for gs in ep_data.get("guest_stars", []):
+                            pid = _slugify(gs.get("name", ""))
+                            if not pid: continue
+                            ep_credits[pid][slug].add((season_num, ep_num))
+                            if pid not in people or not people[pid]["name"]:
+                                people[pid]["name"] = gs.get("name", "")
+                                g = gs.get("gender", 0)
+                                if g in (1, 2): people[pid]["gender"] = g
+                                people[pid]["titles"].add(slug)
+                except Exception as e:
+                    pass
+                fetched_seasons += 1
+                if fetched_seasons % 50 == 0:
+                    print(f"  episode credits: {fetched_seasons}/{season_count} seasons")
+                time.sleep(0.05)  # TMDB rate limit
+        print(f"  Episode credits: {len(ep_credits)} people with episode-level data")
+
+    # Build ep_credits output: person_slug -> {show_slug: [[s,e],[s,e],...]}
+    ep_credits_out = {}
+    for pid, shows in ep_credits.items():
+        ep_credits_out[pid] = {slug: sorted([list(t) for t in eps]) for slug, eps in shows.items()}
+
     people_out = {pid: {"name": i["name"], "gender": i["gender"], "titles": list(i["titles"])} for pid, i in people.items()}
+    # Add ep_credits to people_out
+    for pid in people_out:
+        if pid in ep_credits_out:
+            people_out[pid]["eps"] = ep_credits_out[pid]
     dir_out = {pid: {"name": i["name"], "titles": list(i["titles"])} for pid, i in directors.items()}
     wr_out = {pid: {"name": i["name"], "titles": list(i["titles"])} for pid, i in writers.items()}
     # Save persistently
@@ -248,23 +314,37 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     tl = []; ti = {}
     for k, t in tw.items():
         ti[k] = len(tl)
-        tl.append({"t":t["title"],"type":t["type"],"yr":t["year"],"eby":dict(t["eby"]),"tot":t["total"]})
+        slug = k.split(":", 1)[1] if ":" in k else ""
+        tl.append({"t":t["title"],"type":t["type"],"yr":t["year"],"eby":dict(t["eby"]),"tot":t["total"],"sl":slug})
 
-    # People
+    # People — use episode-level credits (eps) for accurate show counts
     ism = lambda g: g in (2, 'male'); isf = lambda g: g in (1, 'female')
     pd = []
     for pid, info in people.items():
         if not ism(info["gender"]) and not isf(info["gender"]): continue
         tis = []; mc = sc = 0
         max_recency = 0
+        person_eps = info.get("eps", {})  # show_slug -> [[s,e],[s,e],...]
         for ts in info["titles"]:
             rec = slug_recency.get(ts, 0)
             if rec > max_recency: max_recency = rec
-            for pre, typ in [("movie:", "movie"), ("show:", "show")]:
-                k = pre + ts
-                if k in ti: tis.append(ti[k]); mc += (1 if typ == "movie" else 0); sc += (1 if typ == "show" else 0)
+            mk = "movie:" + ts
+            if mk in ti:
+                tis.append(ti[mk]); mc += 1
+            sk = "show:" + ts
+            if sk in ti:
+                tis.append(ti[sk])
+                # Use episode-level credits if available, otherwise count as 1
+                if ts in person_eps:
+                    sc += len(person_eps[ts])  # count actual episodes they appeared in
+                else:
+                    sc += 1
         if mc + sc >= 2:
-            pd.append({"n": info["name"], "g": "m" if ism(info["gender"]) else "f", "m": mc, "s": sc, "tt": mc+sc, "ti": tis, "_rec": max_recency})
+            entry = {"n": info["name"], "g": "m" if ism(info["gender"]) else "f", "m": mc, "s": sc, "tt": mc+sc, "ti": tis, "_rec": max_recency}
+            # Add episode credits for year-accurate filtering
+            if person_eps:
+                entry["eps"] = person_eps
+            pd.append(entry)
     pd.sort(key=lambda x: (x["tt"], x["_rec"]), reverse=True)
     for p in pd: del p["_rec"]
 
