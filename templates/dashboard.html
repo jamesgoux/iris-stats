@@ -2589,13 +2589,13 @@ function renderHealth(){
   if(cy==='all'){
     periods=Object.keys(byYear).sort();
     counts=periods.map(function(p){return byYear[p].count});
-    durs=periods.map(function(p){return Math.round(byYear[p].dur/3600)});
-    cals=periods.map(function(p){return Math.round(byYear[p].cal/1000)});
+    durs=periods.map(function(p){return+(byYear[p].dur/3600).toFixed(1)});
+    cals=periods.map(function(p){return+(byYear[p].cal/1000).toFixed(2)});
   }else if(_hwRes==='month'){
     periods=Object.keys(byMonth).sort();
     counts=periods.map(function(p){return byMonth[p].count});
-    durs=periods.map(function(p){return Math.round(byMonth[p].dur/3600)});
-    cals=periods.map(function(p){return Math.round(byMonth[p].cal/1000)});
+    durs=periods.map(function(p){return+(byMonth[p].dur/3600).toFixed(1)});
+    cals=periods.map(function(p){return+(byMonth[p].cal/1000).toFixed(2)});
   }else{
     // Weekly: group by ISO week
     var weekMap={};
@@ -2609,8 +2609,8 @@ function renderHealth(){
     });
     periods=Object.keys(weekMap).sort();
     counts=periods.map(function(p){return weekMap[p].count});
-    durs=periods.map(function(p){return Math.round(weekMap[p].dur/3600)});
-    cals=periods.map(function(p){return Math.round(weekMap[p].cal/1000)});
+    durs=periods.map(function(p){return+(weekMap[p].dur/3600).toFixed(1)});
+    cals=periods.map(function(p){return+(weekMap[p].cal/1000).toFixed(2)});
     goalLine=true;
     totalWeeks=periods.length;
     hitWeeks=counts.filter(function(c){return c>=4}).length;
