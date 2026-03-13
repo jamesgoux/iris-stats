@@ -2035,6 +2035,15 @@ if os.path.exists("data/gametrack.json"):
         print(f"  Games: {gt_raw.get('total', 0)} games, {gt_raw.get('total_hours', 0)} hrs, "
               f"{gt_raw.get('total_finished', 0)} finished")
 
+# Board Games — load from BG Stats export
+if os.path.exists("data/boardgames.json"):
+    with open("data/boardgames.json") as f:
+        bg_raw = json.load(f)
+    if bg_raw:
+        data["bg"] = bg_raw
+        print(f"  Board Games: {bg_raw.get('total', 0)} plays, "
+              f"{bg_raw.get('unique_games', 0)} unique games")
+
 # Health / Workouts — load from Shortcut-committed JSON
 if os.path.exists("data/health.json"):
     with open("data/health.json") as f:

@@ -501,7 +501,7 @@ function stats(){
     var bgPlays=0,bgHrs=0,bgWins=0,bgMyPlays=0,bgGames={};
     // Use by_year for accurate play count (recent is capped at 30)
     var bgByY=bgA.by_year||{};
-    if(cy==='all'){bgPlays=bg.total||0;bgA.top_games.forEach(function(g){bgHrs+=g[3];bgGames[g[0]]=1});var me=bgA.top_players?bgA.top_players.find(function(p){return p[0]==='James Goux'}):null;if(me){bgMyPlays=me[1];bgWins=me[2]}}
+    if(cy==='all'){bgPlays=bg.total||0;(bgA.top_games||[]).forEach(function(g){bgHrs+=g[3];bgGames[g[0]]=1});var me=(bgA.top_players||[]).find(function(p){return p[0]==='James Goux'});if(me){bgMyPlays=me[1];bgWins=me[2]}}
     else{bgPlays=bgByY[cy]||0;bgR.forEach(function(p){bgHrs+=p.length*p.quantity*60;bgGames[p.game]=1;p.players.forEach(function(pl){if(pl.name==='James Goux'){bgMyPlays+=p.quantity;if(pl.win)bgWins+=p.quantity}})})}
     var winRate=bgMyPlays?Math.round(bgWins/bgMyPlays*100):0;
     el.innerHTML=sc(bgPlays,'🎲 Plays','#ec4899')+sc(Object.keys(bgGames).length,'🃏 Games','#ec4899')+sc(Math.round(bgHrs/3600)+'h','⏱️ Hours','#ec4899')+sc(winRate+'%','🏆 Win Rate','#ec4899');return}
@@ -2773,7 +2773,7 @@ function renderBoardGames(){
   else{chartEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No data</div>'}
 
   // Players — show 20, scrollable
-  var players=cy==='all'?agg.top_players.slice(0,20):[];
+  var players=cy==='all'?(agg.top_players||[]).slice(0,20):[];
   if(cy!=='all'){var pc2={};recent.forEach(function(p){p.players.forEach(function(pl){if(pl.name){if(!pc2[pl.name])pc2[pl.name]={p:0,w:0};pc2[pl.name].p+=p.quantity;if(pl.win)pc2[pl.name].w+=p.quantity}})});players=Object.entries(pc2).sort(function(a,b){return b[1].p-a[1].p}).slice(0,20).map(function(e){return[e[0],e[1].p,e[1].w]})}
   var plEl=document.getElementById('bg-players');
   var plH=Math.max(280,players.length*22+20);
