@@ -338,7 +338,7 @@ Drop CSV here or <span style="color:var(--bl);text-decoration:underline">click t
 <div id="ll-feed" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transition:transform .3s ease;will-change:transform">
 <div style="position:sticky;top:0;z-index:301;background:rgba(15,15,15,.97);backdrop-filter:blur(8px);padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px">
 <button onclick="closeLifelineFeed()" style="background:none;border:1px solid rgba(255,255,255,.1);color:var(--t2);border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center">←</button>
-<h2 style="font-size:18px;font-weight:700;margin:0;flex:1"><span class="i">🧬</span> Lifeline Feed</h2>
+<h2 style="font-size:18px;font-weight:700;margin:0;flex:1"><span class="i">🧬</span> Lifeline</h2>
 <div style="display:flex;gap:6px;align-items:center">
 <select id="ll-feed-type" onchange="ct=this.value;writeHash();openLifelineFeed()" style="padding:6px 8px;background:var(--sf);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--tx);font-size:12px"><option value="all">🌐 All</option><option value="movie">🎞️ Movies</option><option value="show">📺 Shows</option><option value="book">📚 Books</option><option value="music">🎧 Music</option><option value="concert">🎸 Concerts</option><option value="podcast">🎙️ Podcasts</option><option value="theater">🎭 Theater</option></select>
 <select id="ll-feed-year" onchange="cy=this.value;writeHash();openLifelineFeed()" style="padding:6px 8px;background:var(--sf);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--tx);font-size:12px"><option value="all">All Time</option></select>
@@ -802,6 +802,24 @@ function baseCharts(){
     }
     tlSeries.push({name:'Pod Episodes',type:'line',yAxisIndex:2,data:pcLineData,itemStyle:{color:'#ef4444'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
     tlLeg.push('Pod Episodes');
+  }
+  // Workouts overlay on activity timeline
+  var hwByM=(D.health||{}).by_month||{};
+  if((ct==='all'||ct==='health')&&Object.keys(hwByM).length){
+    var hwMData=mf.map(function(d){return(hwByM[d.month]||{}).count||0});
+    if(hwMData.some(function(v){return v>0})){
+      tlSeries.push({name:'Workouts',type:'line',yAxisIndex:2,data:hwMData,itemStyle:{color:'#1db954'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
+      tlLeg.push('Workouts');
+    }
+  }
+  // Sports overlay on activity timeline
+  if((ct==='all'||ct==='sports')&&SP.length){
+    var spByM={};SP.forEach(function(e){if(e.date){var m=e.date.substring(0,7);spByM[m]=(spByM[m]||0)+1}});
+    var spMData=mf.map(function(d){return spByM[d.month]||0});
+    if(spMData.some(function(v){return v>0})){
+      tlSeries.push({name:'Games',type:'line',yAxisIndex:2,data:spMData,itemStyle:{color:'#0ea5e9'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
+      tlLeg.push('Games');
+    }
   }
   c1.setOption({tooltip:{trigger:'axis',...tt},legend:{data:tlLeg.length>1?tlLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:40,top:36,bottom:30},xAxis:{type:'category',data:tlLabels,axisLabel:{color:'#666',interval:0,rotate:45,fontSize:window._tlRes==='weekly'?8:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:[{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},{type:'value',position:'right',axisLabel:{show:false},splitLine:{show:false}},{type:'value',position:'right',axisLabel:{show:false},splitLine:{show:false}}],series:tlSeries});
   if(ct==='all'&&tlLeg.length>1)legendIsolate(c1,tlLeg);
@@ -2778,7 +2796,7 @@ function closeLifelineFeed(){
   document.getElementById('ll-feed').style.transform='';
   _unlockBody();
 }
-// Slide-to-dismiss Lifeline Feed — mirrors Up Next swipe behavior
+// Slide-to-dismiss Lifeline — mirrors Up Next swipe behavior
 (function(){
   var ov=document.getElementById('ll-feed');if(!ov)return;
   var sx=0,sy=0,tracking=false,moved=false;
