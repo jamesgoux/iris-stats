@@ -859,28 +859,45 @@ function baseCharts(){
   // Workouts as stacked bar on activity timeline
   var hwByM=(D.health||{}).by_month||{};
   if((ct==='all'||ct==='health')&&Object.keys(hwByM).length){
-    var hwMData=mf.map(function(d){return(hwByM[d.month]||{}).count||0});
+    var hwMData;
+    if(window._tlRes==='weekly'){hwMData=[];mf.forEach(function(d){var v=(hwByM[d.month]||{}).count||0;for(var w=1;w<=4;w++)hwMData.push(Math.round(v/4))})}
+    else{hwMData=mf.map(function(d){return(hwByM[d.month]||{}).count||0})}
     if(hwMData.some(function(v){return v>0})){
-      tlSeries.push({name:'Workouts',type:'bar',stack:'t',data:hwMData,itemStyle:{color:'#1db954'},barMaxWidth:cy==='all'?4:12});
+      tlSeries.push({name:'Workouts',type:'bar',stack:'t',data:hwMData,itemStyle:{color:'#1db954'},barMaxWidth:tlBarW});
       tlLeg.push('Workouts');
     }
   }
   // Sports as stacked bar on activity timeline
   if((ct==='all'||ct==='sports')&&SP.length){
     var spByM={};SP.forEach(function(e){if(e.date){var m=e.date.substring(0,7);spByM[m]=(spByM[m]||0)+1}});
-    var spMData=mf.map(function(d){return spByM[d.month]||0});
+    var spMData;
+    if(window._tlRes==='weekly'){spMData=[];mf.forEach(function(d){var v=spByM[d.month]||0;for(var w=1;w<=4;w++)spMData.push(Math.round(v/4))})}
+    else{spMData=mf.map(function(d){return spByM[d.month]||0})}
     if(spMData.some(function(v){return v>0})){
-      tlSeries.push({name:'Sports',type:'bar',stack:'t',data:spMData,itemStyle:{color:'#0ea5e9'},barMaxWidth:cy==='all'?4:12});
+      tlSeries.push({name:'Sports',type:'bar',stack:'t',data:spMData,itemStyle:{color:'#0ea5e9'},barMaxWidth:tlBarW});
       tlLeg.push('Sports');
+    }
+  }
+  // Board games as stacked bar on activity timeline
+  if((ct==='all'||ct==='boardgame')&&D.bg&&D.bg.total){
+    var bgMByM=(D.bg.agg||{}).by_month||{};
+    var bgMData;
+    if(window._tlRes==='weekly'){bgMData=[];mf.forEach(function(d){var v=bgMByM[d.month]||0;for(var w=1;w<=4;w++)bgMData.push(Math.round(v/4))})}
+    else{bgMData=mf.map(function(d){return bgMByM[d.month]||0})}
+    if(bgMData.some(function(v){return v>0})){
+      tlSeries.push({name:'Board Games',type:'bar',stack:'t',data:bgMData,itemStyle:{color:'#ec4899'},barMaxWidth:tlBarW});
+      tlLeg.push('Board Games');
     }
   }
   // Video games as stacked bar on activity timeline
   if((ct==='all'||ct==='game')&&D.gt&&D.gt.total){
     var gtByM={};(D.gt.all||[]).forEach(function(g){var d=g.finish_date||g.start_date;if(d){var m=d.substring(0,7);gtByM[m]=(gtByM[m]||0)+1}});
-    var gtMData=mf.map(function(d){return gtByM[d.month]||0});
+    var gtMData;
+    if(window._tlRes==='weekly'){gtMData=[];mf.forEach(function(d){var v=gtByM[d.month]||0;for(var w=1;w<=4;w++)gtMData.push(Math.round(v/4))})}
+    else{gtMData=mf.map(function(d){return gtByM[d.month]||0})}
     if(gtMData.some(function(v){return v>0})){
-      tlSeries.push({name:'Video Games',type:'bar',stack:'t',data:gtMData,itemStyle:{color:'#6366f1'},barMaxWidth:cy==='all'?4:12});
-      tlLeg.push('Games');
+      tlSeries.push({name:'Video Games',type:'bar',stack:'t',data:gtMData,itemStyle:{color:'#6366f1'},barMaxWidth:tlBarW});
+      tlLeg.push('Video Games');
     }
   }
   c1.setOption({tooltip:{trigger:'axis',...tt},legend:{data:tlLeg.length>1?tlLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:40,top:36,bottom:30},xAxis:{type:'category',data:tlLabels,axisLabel:{color:'#666',interval:0,rotate:45,fontSize:window._tlRes==='weekly'?8:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:[{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},{type:'value',position:'right',axisLabel:{show:false},splitLine:{show:false}},{type:'value',position:'right',axisLabel:{show:false},splitLine:{show:false}}],series:tlSeries});
