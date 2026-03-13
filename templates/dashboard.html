@@ -159,7 +159,7 @@ body{overflow-x:hidden}
 <div class="sg" id="st"></div>
 <!-- LIFELINE: 30-day activity -->
 <div class="g2 med-s" data-med="all movie show book music concert theater">
-<div id="sec-ll" class="cd fw s-t"><h3><span class="i">🧬</span>Lifeline <button onclick="openLifelineFeed()" style="float:right;font-size:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--tx);border-radius:6px;padding:6px 12px;cursor:pointer;min-height:32px;-webkit-tap-highlight-color:transparent;transition:background .15s">📜 Full Feed</button></h3><div id="ll-sel" class="vtog" style="margin-bottom:4px"></div><div id="llc" style="height:280px"></div></div>
+<div id="sec-ll" class="cd fw s-t"><h3><span class="i">🧬</span>Lifeline <span style="float:right;display:flex;gap:6px"><button onclick="openOnThisDay()" style="font-size:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--tx);border-radius:6px;padding:6px 12px;cursor:pointer;min-height:32px;-webkit-tap-highlight-color:transparent;transition:background .15s">📅 On This Day</button><button onclick="openLifelineFeed()" style="font-size:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--tx);border-radius:6px;padding:6px 12px;cursor:pointer;min-height:32px;-webkit-tap-highlight-color:transparent;transition:background .15s">📜 Full Feed</button></span></h3><div id="ll-sel" class="vtog" style="margin-bottom:4px"></div><div id="llc" style="height:280px"></div></div>
 </div>
 <!-- TIMELINE: Yearly / Monthly -->
 <div class="g2 med-s" data-med="all movie show book concert podcast sports theater health boardgame game">
@@ -3105,9 +3105,46 @@ function openLifelineFeed(){
   };
 }
 
+function openOnThisDay(){
+  var ll=D.ll||{};
+  var now=new Date();
+  var mmdd='-'+(now.getMonth()+1<10?'0':'')+(now.getMonth()+1)+'-'+(now.getDate()<10?'0':'')+now.getDate();
+  var today=now.getFullYear()+mmdd;
+  var allowedTypes=_llFilterTypes();
+  _llFeedDays=Object.keys(ll).filter(function(d){
+    if(!d.endsWith(mmdd))return false;
+    if(d===today)return false; // exclude today
+    var v=ll[d];
+    if(allowedTypes){return allowedTypes.some(function(ty){return v[ty]})}
+    return(v.ep||v.mv||v.sc||v.bk||v.co||v.th||v.pc||v.wk||v.sp||v.bg||v.gt);
+  }).sort().reverse();
+  _llFeedIdx=0;
+  var content=document.getElementById('ll-feed-content');
+  var label=_llMonthNames[now.getMonth()]+' '+now.getDate();
+  content.innerHTML='<div style="padding:12px 16px;max-width:600px;margin:0 auto;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--ac)">📅 '+label+'</div><div style="font-size:13px;color:var(--t2);margin-top:4px">'+_llFeedDays.length+' year'+ (_llFeedDays.length!==1?'s':'')+' of history</div></div>';
+  document.getElementById('ll-feed').style.display='';
+  document.getElementById('sp-overlay').style.display;
+  ch.forEach(function(c){try{c.dispatchAction({type:'hideTip'})}catch(e){}});
+  _lockBody();
+  // Update header title
+  document.getElementById('ll-feed').querySelector('h2').innerHTML='<span class="i">📅</span> On This Day';
+  // Hide year/type filters (not relevant for this view)
+  var feedYear=document.getElementById('ll-feed-year');if(feedYear)feedYear.style.display='none';
+  var feedType=document.getElementById('ll-feed-type');if(feedType)feedType.style.display='none';
+  _llRenderBatch();
+  document.getElementById('ll-feed').onscroll=function(){
+    var el=document.getElementById('ll-feed');
+    if(el.scrollTop+el.clientHeight>=el.scrollHeight-200)_llRenderBatch();
+  };
+}
+
 function closeLifelineFeed(){
   document.getElementById('ll-feed').style.display='none';
   document.getElementById('ll-feed').style.transform='';
+  // Restore header + filters for next open
+  document.getElementById('ll-feed').querySelector('h2').innerHTML='<span class="i">🧬</span> Lifeline';
+  var feedYear=document.getElementById('ll-feed-year');if(feedYear)feedYear.style.display='';
+  var feedType=document.getElementById('ll-feed-type');if(feedType)feedType.style.display='';
   _unlockBody();
 }
 // Slide-to-dismiss Lifeline — mirrors Up Next swipe behavior
