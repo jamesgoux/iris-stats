@@ -1124,12 +1124,17 @@ function baseCharts(){
   var c6=echarts.init(document.getElementById('yrc'));
   var yrSeries=[];var yrLeg=[];
   var grY=D.c.gr_y||{};var conY=D.c.con_y||{};var thY=D.c.th_y||{};var pcY=D.c.pc_y||{};
-  var ySe=ct==='all'||ct==='show',yMo=ct==='all'||ct==='movie',yBk=ct==='all'||ct==='book',yCo=ct==='all'||ct==='concert',yTh=ct==='all'||ct==='theater',yPc=ct==='all'||ct==='podcast';
+  var ySe=ct==='all'||ct==='show',yMo=ct==='all'||ct==='movie',yBk=ct==='all'||ct==='book',yCo=ct==='all'||ct==='concert',yTh=ct==='all'||ct==='theater',yPc=ct==='all'||ct==='podcast',ySp=ct==='all'||ct==='sports',yHw=ct==='all'||ct==='health';
   if(yMo){yrSeries.push({name:'Movies',type:'bar',stack:'t',data:yr.map(function(d){return d.movies}),itemStyle:{color:'#fb923c'}});yrLeg.push('Movies')}
   if(ySe){yrSeries.push({name:'Seasons',type:'bar',stack:'t',data:yr.map(function(d){return d.seasons}),itemStyle:{color:'#14b8a6'}});yrLeg.push('Seasons')}
   if(yBk&&Object.keys(grY).length){yrSeries.push({name:'Books',type:'bar',stack:'t',data:yr.map(function(d){return grY[d.year]||0}),itemStyle:{color:'#fbbf24'}});yrLeg.push('Books')}
   if(yCo&&Object.keys(conY).length){yrSeries.push({name:'Concerts',type:'bar',stack:'t',data:yr.map(function(d){return conY[d.year]||0}),itemStyle:{color:'#3b82f6'}});yrLeg.push('Concerts')}
   if(yTh&&Object.keys(thY).length){yrSeries.push({name:'Theater',type:'bar',stack:'t',data:yr.map(function(d){return thY[d.year]||0}),itemStyle:{color:'#a78bfa'}});yrLeg.push('Theater')}
+  // Sports as stacked bar
+  if(ySp&&SP.length){var spYr={};SP.forEach(function(e){if(e.date){var y=e.date.substring(0,4);spYr[y]=(spYr[y]||0)+1}});yrSeries.push({name:'Games',type:'bar',stack:'t',data:yr.map(function(d){return spYr[d.year]||0}),itemStyle:{color:'#0ea5e9'}});yrLeg.push('Games')}
+  // Workouts as stacked bar
+  var hwYrAgg=(D.health||{}).by_year||{};
+  if(yHw&&Object.keys(hwYrAgg).length){yrSeries.push({name:'Workouts',type:'bar',stack:'t',data:yr.map(function(d){return(hwYrAgg[d.year]||{}).count||0}),itemStyle:{color:'#1db954'}});yrLeg.push('Workouts')}
   // Scrobbles line overlay (secondary y-axis)
   var lfmYr=D.lfm&&D.lfm.yearly?D.lfm.yearly:[];
   var lfmYrMap={};lfmYr.forEach(function(y){lfmYrMap[y.yr]=y.s||0});
@@ -1142,12 +1147,6 @@ function baseCharts(){
   if((ct==='all'||ct==='podcast')&&Object.keys(pcYrLine).length){
     yrSeries.push({name:'Pod Episodes',type:'line',yAxisIndex:2,data:yr.map(function(d){return pcYrLine[d.year]||0}),itemStyle:{color:'#ef4444'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
     yrLeg.push('Pod Episodes');
-  }
-  // Workouts line overlay
-  var hwYr=(D.health||{}).by_year||{};
-  if((ct==='all'||ct==='health')&&Object.keys(hwYr).length){
-    yrSeries.push({name:'Workouts',type:'line',yAxisIndex:2,data:yr.map(function(d){return(hwYr[d.year]||{}).count||0}),itemStyle:{color:'#1db954'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
-    yrLeg.push('Workouts');
   }
   c6.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){return p.map(function(s){return s.marker+s.seriesName+': '+s.value}).join('<br/>')}},legend:{data:yrLeg.length>1?yrLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:40,top:36,bottom:24},xAxis:{type:'category',data:yr.map(function(d){return d.year}),axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:[{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},{type:'value',position:'right',axisLabel:{show:false},splitLine:{show:false}},{type:'value',position:'right',axisLabel:{show:false},splitLine:{show:false}}],series:yrSeries});
   if(ct==='all'&&yrLeg.length>1)legendIsolate(c6,yrLeg);
