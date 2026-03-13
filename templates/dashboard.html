@@ -2545,7 +2545,7 @@ function _spSetWtFilter(v){
 function renderHealth(){
   try{
   var hw=D.health;var wrap=document.getElementById('hw-wrap');
-  if(!hw||!hw.total){if(wrap)wrap.style.display='none';return}
+  if(!hw||!hw.total||!(ct==='all'||ct==='health')){if(wrap)wrap.style.display='none';return}
   wrap.style.display='';
   // Filter by year
   var recent=hw.recent||[];var byMonth=hw.by_month||{};var byYear=hw.by_year||{};
@@ -2626,7 +2626,7 @@ function renderHealth(){
 }
 function renderBoardGames(){
   var bg=D.bg;var wrap=document.getElementById('bg-wrap');
-  if(!bg||!bg.total){if(wrap)wrap.style.display='none';return}
+  if(!bg||!bg.total||!(ct==='all'||ct==='boardgame')){if(wrap)wrap.style.display='none';return}
   wrap.style.display='';
   var agg=bg.agg||{};var recent=bg.recent||[];
   if(cy!=='all')recent=recent.filter(function(p){return(p.date||'').startsWith(cy)});
