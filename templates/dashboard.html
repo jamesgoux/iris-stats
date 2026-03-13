@@ -10,7 +10,7 @@
 <title>Iris // jamesgoux</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <style>
-:root{--bg:#0f0f0f;--sf:#1a1a2e;--ac:#fb923c;--tx:#eee;--t2:#999;--gr:#4ade80;--bl:#14b8a6;--pu:#14b8a6;--or:#fb923c;--tv:#14b8a6;--mv:#fb923c;--mu:#1db954;--bk:#fbbf24;--cn:#3b82f6;--th:#a78bfa;--sp:#0ea5e9}
+:root{--bg:#0f0f0f;--sf:#1a1a2e;--ac:#fb923c;--tx:#eee;--t2:#999;--gr:#4ade80;--bl:#14b8a6;--pu:#14b8a6;--or:#fb923c;--tv:#14b8a6;--mv:#fb923c;--mu:#15803d;--bk:#fbbf24;--cn:#3b82f6;--th:#a78bfa;--sp:#0ea5e9}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:0}
 .dash{max-width:1400px;margin:0 auto;padding:0 16px 16px}
@@ -147,7 +147,7 @@ body{overflow-x:hidden}
 <h1><svg class="iris-logo" viewBox="0 0 512 512" width="28" height="28" style="vertical-align:middle;margin-right:6px"><defs><radialGradient id="ig" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e94560"/><stop offset="45%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#c4b5fd"/></radialGradient></defs><path d="M256 96C128 96 32 256 32 256s96 160 224 160 224-160 224-160S384 96 256 96z" fill="#c4b5fd"/><circle cx="256" cy="256" r="200" fill="url(#ig)"/><circle cx="256" cy="256" r="80" fill="#0f0f0f"/><circle cx="220" cy="220" r="28" fill="rgba(255,255,255,0.4)"/><circle cx="280" cy="240" r="12" fill="rgba(255,255,255,0.2)"/></svg><span style="color:var(--ac);font-weight:800">iris</span> <span style="color:var(--t2);font-weight:400">// jamesgoux</span></h1>
 <div class="fctrls">
 <svg class="iris-logo-mob" viewBox="0 0 512 512" width="24" height="24" style="display:none;vertical-align:middle;flex-shrink:0"><defs><radialGradient id="igm" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e94560"/><stop offset="45%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#c4b5fd"/></radialGradient></defs><path d="M256 96C128 96 32 256 32 256s96 160 224 160 224-160 224-160S384 96 256 96z" fill="#c4b5fd"/><circle cx="256" cy="256" r="200" fill="url(#igm)"/><circle cx="256" cy="256" r="80" fill="#0f0f0f"/><circle cx="220" cy="220" r="28" fill="rgba(255,255,255,0.4)"/></svg>
-<div class="fbtn"><select id="gs"><option value="all">🌐 All</option><option value="movie">🎞️ Movies</option><option value="show">📺 Shows</option><option value="book">📚 Books</option><option value="music">🎧 Music</option><option value="concert">🎸 Concerts</option><option value="podcast">🎙️ Podcasts</option><option value="sports">🏟️ Sports</option><option value="health">🏃 Health</option><option value="theater">🎭 Theater</option></select></div>
+<div class="fbtn"><select id="gs"><option value="all">🌐 All</option><option value="movie">🎞️ Movies</option><option value="show">📺 Shows</option><option value="book">📚 Books</option><option value="music">🎧 Music</option><option value="concert">🎸 Concerts</option><option value="podcast">🎙️ Podcasts</option><option value="sports">🏟️ Sports</option><option value="health">🏃 Workouts</option><option value="theater">🎭 Theater</option></select></div>
 <div class="fbtn"><select id="ys"><option value="all">All Time</option></select></div>
 <button class="hbtn" id="refresh-btn" onclick="this.querySelector('.rf-icon').classList.add('hbtn-spin');this.style.color='var(--ac)';document.querySelector('.fbar').classList.add('fbar-pulse');setTimeout(function(){location.reload()},900)" title="Refresh"><span class="rf-icon" style="display:inline-block">↻</span></button>
 <div style="position:relative"><button class="hbtn" onclick="var m=document.getElementById('jmp-menu');m.style.display=m.style.display==='block'?'none':'block'" title="Jump to section"><span style="display:block;transform:translateY(-1px)">☰</span></button><div id="jmp-menu" style="display:none;position:absolute;right:0;top:100%;margin-top:6px;background:var(--sf);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:6px 0;min-width:200px;max-height:70vh;overflow-y:auto;z-index:150;box-shadow:0 8px 30px rgba(0,0,0,.5)"></div></div>
@@ -439,7 +439,7 @@ function stats(){
   // Single-medium filters
   if(ct==='music'){
     var lfm=D.lfm||{};var yrD=cy!=='all'&&lfm.yearly?(lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:lfm.total,a:lfm.artists,al:lfm.albums};
-    el.innerHTML=sc((yrD.s||0).toLocaleString(),'🎧 Scrobbles','#1db954')+sc((yrD.a||0).toLocaleString(),'🎤 Artists','#1db954')+sc((yrD.al||0).toLocaleString(),'💿 Albums','#1db954');return}
+    el.innerHTML=sc((yrD.s||0).toLocaleString(),'🎧 Scrobbles','#15803d')+sc((yrD.a||0).toLocaleString(),'🎤 Artists','#15803d')+sc((yrD.al||0).toLocaleString(),'💿 Albums','#15803d');return}
   if(ct==='book'){
     var gr=D.gr||{};var fb=cy==='all'?(gr.all||[]):(gr.all||[]).filter(function(b){return b.yr===cy});
     var tp2=fb.reduce(function(s,b){return s+b.p},0);
@@ -466,8 +466,7 @@ function stats(){
   if(ct==='health'){
     var hw=D.health||{};var hby=hw.by_year||{};var htW=0,htD=0,htC=0;
     Object.entries(hby).forEach(function(e){if(cy==='all'||e[0]===cy){htW+=e[1].count;htD+=e[1].dur;htC+=e[1].cal}});
-    var htTypes=hw.types||[];var topType=htTypes.length?htTypes[0][0]:'';
-    el.innerHTML=sc(htW,'🏋️ Workouts','#0ea5e9')+sc(Math.round(htD/3600)+'h','⏱️ Hours','#fb923c')+sc(Math.round(htC/1000)+'k','🔥 Calories','#ef4444')+sc(topType,'🥇 Top Activity','#4ade80');return}
+    el.innerHTML=sc(htW,'🏋️ Workouts','#1db954')+sc(Math.round(htD/3600)+'h','⏱️ Hours','#fb923c')+sc(Math.round(htC/1000)+'k','🔥 Calories','#ef4444');return}
   // Movie/show/all — compute counts
   var mw=0,ew=0,rt=0,rtm=0,rts=0;D.c.m.filter(function(m){return cy==='all'||m.month.startsWith(cy)}).forEach(function(m){mw+=m.movies;ew+=m.episodes;rt+=(m.rt||0);rtm+=(m.rt_m||0);rts+=(m.rt_s||0)});
   var totalDays=Math.round(rt/60/24*10)/10;var movieDays=Math.round(rtm/60/24*10)/10;var showDays=Math.round(rts/60/24*10)/10;
@@ -480,19 +479,21 @@ function stats(){
     if(mob){
       h2=sc((mw+ew).toLocaleString(),'👁️ Watches','#b0b0b0')+sc(totalDays+'d','⏱️ Days','#b0b0b0')+sc((cy==='all'?s.unique_movies:mw).toLocaleString(),'🎞️ Movies','var(--ac)')+sc(ew.toLocaleString(),'📺 Episodes','var(--pu)');
       if(D.pc&&D.pc.total_podcasts){var pcY=cy!=='all'&&D.pc.yearly?D.pc.yearly.find(function(y){return y.yr===cy}):null;var pcEps=pcY?pcY.eps:D.pc.total_episodes;h2+=sc(pcEps,'🎙️ Podcasts','#ef4444')}
-      if(D.lfm&&D.lfm.total){var lfmY=cy!=='all'&&D.lfm.yearly?(D.lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:D.lfm.total};h2+=sc((lfmY.s||0).toLocaleString(),'🎧 Scrobbles','#1db954')}
+      if(D.lfm&&D.lfm.total){var lfmY=cy!=='all'&&D.lfm.yearly?(D.lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:D.lfm.total};h2+=sc((lfmY.s||0).toLocaleString(),'🎧 Scrobbles','#15803d')}
       if(D.con&&D.con.total){var conR=D.con.recent||[];var conF=cy==='all'?conR:conR.filter(function(e){return e.yr===cy});var conEv={};conF.forEach(function(e){conEv[e.date+'|'+e.venue]=true});h2+=sc(Object.keys(conEv).length,'🎸 Concerts','#3b82f6')}
       if(D.gr&&D.gr.total){var grF=cy==='all'?(D.gr.all||[]):(D.gr.all||[]).filter(function(b){return b.yr===cy});h2+=sc(grF.length,'📚 Books','#fbbf24')}
       if(D.th&&D.th.total){var thF=cy==='all'?(D.th.all||[]):(D.th.all||[]).filter(function(e){return e.y===cy});if(thF.length)h2+=sc(thF.length,'🎭 Plays','#a78bfa')}
       if(SP.length){var spAll=cy==='all'?SP:SP.filter(function(e){return e.date&&e.date.substring(0,4)===cy});if(spAll.length)h2+=sc(spAll.length,'🏟️ Games','#0ea5e9')}
+      if(D.health&&D.health.total){var hwBy=D.health.by_year||{};var hwCt=0;Object.entries(hwBy).forEach(function(e){if(cy==='all'||e[0]===cy)hwCt+=e[1].count});if(hwCt)h2+=sc(hwCt,'🏃 Workouts','#1db954')}
     }else{
       h2=sc((mw+ew).toLocaleString(),'👁️ Watches','#b0b0b0')+sc(totalDays,'⏱️ Days','#b0b0b0')+sc((cy==='all'?s.unique_movies:mw).toLocaleString(),'🎞️ Movies','var(--ac)')+sc(s.unique_shows,'📺 Shows','var(--pu)')+sc(seasonCount,'📦 Seasons','var(--pu)')+sc(ew.toLocaleString(),'🔢 Episodes','var(--pu)');
       if(D.pc&&D.pc.total_podcasts){var pcY=cy!=='all'&&D.pc.yearly?D.pc.yearly.find(function(y){return y.yr===cy}):null;var pcHrs=pcY?pcY.hrs:D.pc.total_listened_hrs;var pcEps=pcY?pcY.eps:D.pc.total_episodes;var pcDays=Math.round(pcHrs/24*10)/10;var pcShows=cy!=='all'&&D.pc.top_y&&D.pc.top_y[cy]?D.pc.top_y[cy].length:D.pc.total_podcasts;h2+=sc(pcShows,'📡 Podcasts','#ef4444')+sc(pcEps,'📻 Pod Episodes','#ef4444')+sc(pcDays+'d','🎙️ Pod Days','#ef4444')}
-      if(D.lfm&&D.lfm.total){var lfmY=cy!=='all'&&D.lfm.yearly?(D.lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:D.lfm.total,a:D.lfm.artists,al:D.lfm.albums};h2+=sc((lfmY.s||0).toLocaleString(),'🎧 Scrobbles','#1db954')+sc((lfmY.a||0).toLocaleString(),'🎤 Artists','#1db954')+sc((lfmY.al||0).toLocaleString(),'💿 Albums','#1db954')}
+      if(D.lfm&&D.lfm.total){var lfmY=cy!=='all'&&D.lfm.yearly?(D.lfm.yearly.find(function(y){return y.yr===cy})||{}):{s:D.lfm.total,a:D.lfm.artists,al:D.lfm.albums};h2+=sc((lfmY.s||0).toLocaleString(),'🎧 Scrobbles','#15803d')+sc((lfmY.a||0).toLocaleString(),'🎤 Artists','#15803d')+sc((lfmY.al||0).toLocaleString(),'💿 Albums','#15803d')}
       if(D.con&&D.con.total){var conR=D.con.recent||[];var conF=cy==='all'?conR:conR.filter(function(e){return e.yr===cy});var conEv={};conF.forEach(function(e){conEv[e.date+'|'+e.venue]=true});var conUA=conF.map(function(e){return e.artist}).filter(function(v,i,a){return a.indexOf(v)===i}).length;var conSongs=conF.reduce(function(s,e){return s+e.songs},0);h2+=sc(Object.keys(conEv).length,'🎸 Concerts','#3b82f6')+sc(conF.length,'🎤 Sets','#3b82f6')+sc(conUA,'🎙️ Artists','#3b82f6')+sc(conSongs,'🎵 Songs','#3b82f6')}
       if(D.gr&&D.gr.total){var grAll=D.gr.all||[];var grF=cy==='all'?grAll:grAll.filter(function(b){return b.yr===cy});h2+=sc(grF.length,'📚 Books','#fbbf24')+sc(grF.reduce(function(s,b){return s+b.p},0).toLocaleString(),'📖 Pages','#fbbf24')}
       if(D.th&&D.th.total){var thF=cy==='all'?(D.th.all||[]):(D.th.all||[]).filter(function(e){return e.y===cy});h2+=sc(thF.length,'🎭 Plays','#a78bfa')}
       if(SP.length){var spAll=cy==='all'?SP:SP.filter(function(e){return e.date&&e.date.substring(0,4)===cy});if(spAll.length)h2+=sc(spAll.length,'🏟️ Games','#0ea5e9')}
+      if(D.health&&D.health.total){var hwBy=D.health.by_year||{};var hwCt=0;Object.entries(hwBy).forEach(function(e){if(cy==='all'||e[0]===cy)hwCt+=e[1].count});if(hwCt)h2+=sc(hwCt,'🏃 Workouts','#1db954')}
     }
   }
   el.innerHTML=h2;
@@ -576,7 +577,7 @@ function renderLifeline(){
       {name:'Movies',type:'bar',stack:'ll',data:posData.mv,itemStyle:{color:new echarts.graphic.LinearGradient(0,1,0,0,[{offset:0,color:'rgba(251,146,60,0.4)'},{offset:1,color:'#fb923c'}])},barMaxWidth:bw},
       {name:'Episodes',type:'bar',stack:'ll',data:posData.ep,itemStyle:{color:new echarts.graphic.LinearGradient(0,1,0,0,[{offset:0,color:'rgba(20,184,166,0.4)'},{offset:1,color:'#14b8a6'}])},barMaxWidth:bw},
       {name:'Books',type:'bar',stack:'ll',data:posData.bk,itemStyle:{color:new echarts.graphic.LinearGradient(0,1,0,0,[{offset:0,color:'rgba(251,191,36,0.4)'},{offset:1,color:'#fbbf24'}])},barMaxWidth:bw},
-      {name:'Scrobbles',type:'bar',stack:'ll',data:negScScaled,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(29,185,84,0.4)'},{offset:1,color:'#1db954'}])},barMaxWidth:bw},
+      {name:'Scrobbles',type:'bar',stack:'ll',data:negScScaled,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(21,128,61,0.4)'},{offset:1,color:'#15803d'}])},barMaxWidth:bw},
       {name:'Concerts',type:'bar',stack:'ll',data:negData.co,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(59,130,246,0.4)'},{offset:1,color:'#3b82f6'}])},barMaxWidth:bw},
       {name:'Plays',type:'bar',stack:'ll',data:negData.th,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(167,139,250,0.4)'},{offset:1,color:'#a78bfa'}])},barMaxWidth:bw}
   ];
@@ -781,7 +782,7 @@ function baseCharts(){
     }else{
       scrobData=mf.map(function(d){return lfmMoMap[d.month]||0});
     }
-    tlSeries.push({name:'Scrobbles',type:'line',yAxisIndex:1,data:scrobData,itemStyle:{color:'#1db954'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
+    tlSeries.push({name:'Scrobbles',type:'line',yAxisIndex:1,data:scrobData,itemStyle:{color:'#15803d'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
     tlLeg.push('Scrobbles');
   }
   // Podcasts line overlay (secondary y-axis) for monthly/weekly
@@ -814,7 +815,7 @@ function baseCharts(){
       var ex=el.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val==='lfm-'+month)return}
       var div=document.createElement('div');div.className='chart-detail';div.dataset.val='lfm-'+month;
       var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+month+' Scrobbles</b>';
-      if(ta.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists</div>';ta.slice(0,8).forEach(function(a){h+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#1db954">'+a.c+'</span></div>'})}
+      if(ta.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists</div>';ta.slice(0,8).forEach(function(a){h+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#15803d">'+a.c+'</span></div>'})}
       div.innerHTML=h;el.parentElement.appendChild(div);return;
     }
     var raw=mtData[month]||[];if(!raw.length)return;
@@ -826,7 +827,7 @@ function baseCharts(){
     var detailH2=_detailHtml(month+' ('+titles.length+' titles)',titles,50);
     // Append top scrobble artists for this month
     var lfmMoD=lfmMo.find(function(m2){return m2.m===month});
-    if(lfmMoD&&lfmMoD.ta&&lfmMoD.ta.length){detailH2+='<div style="margin-top:6px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists ('+lfmMoD.ta.length+')</div>';lfmMoD.ta.slice(0,5).forEach(function(a){detailH2+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#1db954">'+a.c+'</span></div>'})}
+    if(lfmMoD&&lfmMoD.ta&&lfmMoD.ta.length){detailH2+='<div style="margin-top:6px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists ('+lfmMoD.ta.length+')</div>';lfmMoD.ta.slice(0,5).forEach(function(a){detailH2+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#15803d">'+a.c+'</span></div>'})}
     div.innerHTML=detailH2;el.parentElement.appendChild(div)});
   ch.push(c1);
   }
@@ -1108,7 +1109,7 @@ function baseCharts(){
   var lfmYr=D.lfm&&D.lfm.yearly?D.lfm.yearly:[];
   var lfmYrMap={};lfmYr.forEach(function(y){lfmYrMap[y.yr]=y.s||0});
   if((ct==='all'||ct==='music')&&lfmYr.length){
-    yrSeries.push({name:'Scrobbles',type:'line',yAxisIndex:1,data:yr.map(function(d){return lfmYrMap[d.year]||0}),itemStyle:{color:'#1db954'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
+    yrSeries.push({name:'Scrobbles',type:'line',yAxisIndex:1,data:yr.map(function(d){return lfmYrMap[d.year]||0}),itemStyle:{color:'#15803d'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
     yrLeg.push('Scrobbles');
   }
   // Podcasts line overlay (secondary y-axis)
@@ -1120,7 +1121,7 @@ function baseCharts(){
   // Workouts line overlay
   var hwYr=(D.health||{}).by_year||{};
   if((ct==='all'||ct==='health')&&Object.keys(hwYr).length){
-    yrSeries.push({name:'Workouts',type:'line',yAxisIndex:2,data:yr.map(function(d){return(hwYr[d.year]||{}).count||0}),itemStyle:{color:'#0ea5e9'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
+    yrSeries.push({name:'Workouts',type:'line',yAxisIndex:2,data:yr.map(function(d){return(hwYr[d.year]||{}).count||0}),itemStyle:{color:'#1db954'},lineStyle:{width:2},symbol:'circle',symbolSize:4});
     yrLeg.push('Workouts');
   }
   c6.setOption({tooltip:{trigger:'axis',...tt,formatter:function(p){return p.map(function(s){return s.marker+s.seriesName+': '+s.value}).join('<br/>')}},legend:{data:yrLeg.length>1?yrLeg:[],right:10,top:0,textStyle:{color:'#999'}},grid:{left:50,right:40,top:36,bottom:24},xAxis:{type:'category',data:yr.map(function(d){return d.year}),axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},yAxis:[{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},{type:'value',position:'right',axisLabel:{show:false},splitLine:{show:false}},{type:'value',position:'right',axisLabel:{show:false},splitLine:{show:false}}],series:yrSeries});
@@ -1136,7 +1137,7 @@ function baseCharts(){
       var ex=el.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val==='lfm-'+year)return}
       var div=document.createElement('div');div.className='chart-detail';div.dataset.val='lfm-'+year;
       var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+year+' Scrobbles</b>';
-      if(ta.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists</div>';ta.slice(0,8).forEach(function(a){h+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#1db954">'+a.c+'</span></div>'})}
+      if(ta.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists</div>';ta.slice(0,8).forEach(function(a){h+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#15803d">'+a.c+'</span></div>'})}
       div.innerHTML=h;el.parentElement.appendChild(div);return;
     }
     var allow=_legTypes(c6);
@@ -1153,7 +1154,7 @@ function baseCharts(){
     var detailH=_detailHtml(year,flat);
     // Append top scrobble artists if available
     var lfmD2=lfmYr.find(function(y){return y.yr===year});
-    if(lfmD2&&lfmD2.ta&&lfmD2.ta.length){detailH+='<div style="margin-top:6px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists ('+lfmD2.ta.length+')</div>';lfmD2.ta.slice(0,5).forEach(function(a){detailH+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#1db954">'+a.c+'</span></div>'})}
+    if(lfmD2&&lfmD2.ta&&lfmD2.ta.length){detailH+='<div style="margin-top:6px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists ('+lfmD2.ta.length+')</div>';lfmD2.ta.slice(0,5).forEach(function(a){detailH+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#15803d">'+a.c+'</span></div>'})}
     div.innerHTML=detailH;el.parentElement.appendChild(div)});
   ch.push(c6);
   }
@@ -1714,7 +1715,7 @@ function renderLastfm(){
   // Listening activity — yearly (all time) or monthly/weekly (year filtered)
   window._lfmMet=window._lfmMet||'s';var met=window._lfmMet;
   var metLabels={s:'Scrobbles',a:'Artists',al:'Albums'};
-  var metColors={s:'#1db954',a:'#60a5fa',al:'#fb923c'};
+  var metColors={s:'#15803d',a:'#60a5fa',al:'#fb923c'};
   var wEl=document.getElementById('lfm-weekly');
   var isYr=cy!=='all';
   var lfmYearly=lfm.yearly||[];var lfmMonthly=lfm.monthly||[];var lfmWeekly=lfm.weekly||[];
@@ -1758,7 +1759,7 @@ function renderLastfm(){
       var ex=wEl.parentElement.querySelector('.chart-detail');if(ex){ex.remove();if(ex.dataset.val===key)return}
       var div=document.createElement('div');div.className='chart-detail';div.dataset.val=key;
       var h='<span class="cd-close" onclick="this.parentElement.remove()">✕</span><b>'+key+'</b>';
-      if(ta.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists</div>';ta.slice(0,8).forEach(function(a){h+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#1db954">'+a.c+'</span></div>'})}
+      if(ta.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--t2)">🎤 Top Artists</div>';ta.slice(0,8).forEach(function(a){h+='<div class="cd-item"><span>'+a.n+'</span><span class="nm" style="color:#15803d">'+a.c+'</span></div>'})}
       if(tal.length){h+='<div style="margin-top:4px;font-size:10px;font-weight:600;color:var(--t2)">💿 Top Albums</div>';tal.slice(0,8).forEach(function(a){var name=a.a?a.n+' — '+a.a:a.n;h+='<div class="cd-item"><span>'+name+'</span><span class="nm" style="color:#fb923c">'+a.c+'</span></div>'})}
       div.innerHTML=h;wEl.parentElement.appendChild(div);
     });
@@ -1808,7 +1809,7 @@ function renderLastfm(){
       grid:{left:gl(130),right:36,top:4,bottom:4},
       xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
       yAxis:{type:'category',data:aSlice.map(function(d,i){return(aSlice.length-i)+'. '+d.n}),axisLabel:{color:'#ccc',fontSize:10,interval:0},axisLine:{lineStyle:{color:'#333'}}},
-      series:[{type:'bar',data:aSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#1db954')},barMaxWidth:14,barCategoryGap:'20%',label:{show:true,position:'right',color:'#1db954',fontSize:9}}]});
+      series:[{type:'bar',data:aSlice.map(function(d){return d.c}),itemStyle:{color:LG('#0f3460','#15803d')},barMaxWidth:14,barCategoryGap:'20%',label:{show:true,position:'right',color:'#15803d',fontSize:9}}]});
     ch.push(aChart);
   }
 
@@ -1846,7 +1847,7 @@ function renderLastfm(){
   if(genres.length){
     var gSlice=genres.slice(0,10).reverse();
     var gChart=echarts.init(gEl);
-    var gCols=['#1db954','#60a5fa','#a78bfa','#e94560','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24','#22d3ee'];
+    var gCols=['#15803d','#60a5fa','#a78bfa','#e94560','#fb923c','#4ade80','#f472b6','#38bdf8','#fbbf24','#22d3ee'];
     gChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt},
       grid:{left:gl(110),right:30,top:8,bottom:8},
       xAxis:{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},
@@ -2527,7 +2528,7 @@ function renderHealth(){
       title:{text:totalW+' workouts'+(cy!=='all'?' in '+cy:''),left:16,top:0,textStyle:{color:'#666',fontSize:11,fontWeight:'normal'}},
       xAxis:{type:'category',data:periods,axisLabel:{color:'#666',fontSize:10},axisLine:{lineStyle:{color:'#333'}}},
       yAxis:[{type:'value',axisLabel:{color:'#666'},splitLine:{lineStyle:{color:'#222'}}},{type:'value',position:'right',axisLabel:{color:'#666'},splitLine:{show:false}}],
-      series:[{name:'Workouts',type:'bar',data:counts,itemStyle:{color:'#0ea5e9'},barMaxWidth:20},
+      series:[{name:'Workouts',type:'bar',data:counts,itemStyle:{color:'#1db954'},barMaxWidth:20},
         {name:'Hours',type:'line',yAxisIndex:1,data:durs,itemStyle:{color:'#fb923c'},lineStyle:{width:2},symbol:'circle',symbolSize:4}]});
     ch.push(hwChart);
   }else{chartEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:40px">No workout data'+(cy!=='all'?' in '+cy:'')+'</div>'}
@@ -2545,7 +2546,7 @@ function renderHealth(){
   }
   var typeNames=types.map(function(t){return t[0]}).reverse();
   var typeCounts=types.map(function(t){return t[1]}).reverse();
-  var hwColors={'Running':'#ef4444','Walking':'#4ade80','Cycling':'#3b82f6','Traditional Strength Training':'#fb923c','HIIT':'#a78bfa','Yoga':'#14b8a6','Swimming':'#0ea5e9','Hiking':'#84cc16','Dance':'#ec4899','Elliptical':'#fbbf24'};
+  var hwColors={'Running':'#1db954','Walking':'#4ade80','Cycling':'#3b82f6','Traditional Strength Training':'#fb923c','HIIT':'#a78bfa','Yoga':'#14b8a6','Swimming':'#0ea5e9','Hiking':'#84cc16','Rowing':'#fbbf24','Dance':'#ec4899','Elliptical':'#fb923c'};
   if(typeNames.length){
     var tChart=echarts.init(typesEl);
     tChart.setOption({tooltip:{trigger:mob?'item':'axis',axisPointer:{type:'shadow'},...tt},
@@ -2695,7 +2696,7 @@ function deleteSportsEvent(id){
 
 // Lifeline Full Feed
 var _llFeedDays=[];var _llFeedIdx=0;var _llFeedBatch=15;
-var _llTypeInfo={ep:{icon:'📺',color:'#0a7d7d',label:'Episodes'},mv:{icon:'🎞️',color:'#c97530',label:'Movies'},sc:{icon:'🎧',color:'#189543',label:'Scrobbles'},bk:{icon:'📚',color:'#c99a1e',label:'Books'},co:{icon:'🎸',color:'#3068c5',label:'Concerts'},th:{icon:'🎭',color:'#8670c8',label:'Plays'},pc:{icon:'🎙️',color:'#c03636',label:'Podcasts'},wk:{icon:'🏃',color:'#0ea5e9',label:'Workouts'}};
+var _llTypeInfo={ep:{icon:'📺',color:'#0a7d7d',label:'Episodes'},mv:{icon:'🎞️',color:'#c97530',label:'Movies'},sc:{icon:'🎧',color:'#15803d',label:'Scrobbles'},bk:{icon:'📚',color:'#c99a1e',label:'Books'},co:{icon:'🎸',color:'#3068c5',label:'Concerts'},th:{icon:'🎭',color:'#8670c8',label:'Plays'},pc:{icon:'🎙️',color:'#c03636',label:'Podcasts'},wk:{icon:'🏃',color:'#1db954',label:'Workouts'}};
 var _llDayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var _llMonthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 // Map dashboard type filter values to lifeline event types
