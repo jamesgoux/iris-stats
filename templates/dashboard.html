@@ -338,6 +338,12 @@ body{overflow-x:hidden}
 Drop CSV here or <span style="color:var(--bl);text-decoration:underline">click to browse</span>
 </div>
 <div id="csv-status" style="margin-top:8px;font-size:11px;color:var(--t2)"></div>
+<p style="color:var(--t2);font-size:12px;margin:16px 0 10px">Drop a <b>BG Stats</b> JSON export to update board game player names and locations.</p>
+<div id="bgs-drop" style="border:2px dashed rgba(255,255,255,.1);border-radius:8px;padding:30px;text-align:center;cursor:pointer;color:var(--t2);font-size:13px;transition:border-color .2s">
+<input type="file" id="bgs-file" accept=".json" style="display:none">
+Drop BG Stats JSON or <span style="color:#ec4899;text-decoration:underline">click to browse</span>
+</div>
+<div id="bgs-status" style="margin-top:8px;font-size:11px;color:var(--t2)"></div>
 </div>
 <div class="status" id="status"></div>
 </div>
@@ -3436,6 +3442,56 @@ function processMezzanine(lines,headers){
     stat.innerHTML=ok?'<span style="color:var(--gr)">✓</span> Imported & synced to GitHub!':'<span style="color:var(--gr)">✓</span> Imported. <span style="color:#ef4444">Sync failed — push CSV manually.</span>';
   });
   renderTheater();
+}
+})();
+
+// BG Stats JSON Importer — commits to repo via GitHub PAT
+(function(){
+var drop=document.getElementById('bgs-drop');if(!drop)return;
+var inp=document.getElementById('bgs-file');
+var stat=document.getElementById('bgs-status');
+drop.onclick=function(){inp.click()};
+drop.ondragover=function(e){e.preventDefault();drop.style.borderColor='#ec4899'};
+drop.ondragleave=function(){drop.style.borderColor='rgba(255,255,255,.1)'};
+drop.ondrop=function(e){e.preventDefault();drop.style.borderColor='rgba(255,255,255,.1)';if(e.dataTransfer.files[0])processBGS(e.dataTransfer.files[0])};
+inp.onchange=function(){if(inp.files[0])processBGS(inp.files[0])};
+
+function processBGS(file){
+  stat.textContent='Reading...';stat.style.color='var(--t2)';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!data.plays||!data.players||!data.games){stat.textContent='Invalid BG Stats export (missing plays/players/games)';stat.style.color='#ef4444';return}
+      stat.textContent='Valid: '+data.plays.length+' plays, '+data.players.length+' players, '+data.games.length+' games. Uploading...';
+      commitBGS(e.target.result,data);
+    }catch(err){stat.textContent='Error: '+err.message;stat.style.color='#ef4444'}
+  };
+  reader.readAsText(file);
+}
+
+function commitBGS(content,parsed){
+  var pat=localStorage.getItem('iris_gh_pat');
+  if(!pat){
+    pat=prompt('Enter GitHub Personal Access Token (needs repo scope):');
+    if(!pat){stat.textContent='Cancelled';return}
+    localStorage.setItem('iris_gh_pat',pat);
+  }
+  // Get current file SHA (needed for update)
+  fetch('https://api.github.com/repos/jamesgoux/iris-stats/contents/data/bgstats_export.json',{
+    headers:{'Authorization':'token '+pat}
+  }).then(function(r){return r.ok?r.json():{sha:null}}).then(function(existing){
+    var body={message:'Update BG Stats export ('+parsed.plays.length+' plays)',content:btoa(unescape(encodeURIComponent(content)))};
+    if(existing.sha)body.sha=existing.sha;
+    return fetch('https://api.github.com/repos/jamesgoux/iris-stats/contents/data/bgstats_export.json',{
+      method:'PUT',
+      headers:{'Authorization':'token '+pat,'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+  }).then(function(r){
+    if(r.ok){stat.textContent='✓ Uploaded! '+parsed.plays.length+' plays, '+parsed.players.length+' players. Will rebuild on next refresh.';stat.style.color='#4ade80'}
+    else{r.json().then(function(d){stat.textContent='Upload failed: '+(d.message||r.status);stat.style.color='#ef4444';if(r.status===401)localStorage.removeItem('iris_gh_pat')})}
+  }).catch(function(e){stat.textContent='Error: '+e.message;stat.style.color='#ef4444'});
 }
 })();
 </script></body></html>
