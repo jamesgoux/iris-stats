@@ -2462,8 +2462,8 @@ function filterSportsEvents(){
   var h='';
   h+='<table style="width:100%;font-size:14px"><tbody>';
   filtered.forEach(function(ev){
-    var hs=Number(ev.intHomeScore),as2=Number(ev.intAwayScore);
-    var hasScore=ev.intHomeScore!=null&&ev.intHomeScore!=='';
+    var hasScore=ev.intHomeScore!=null&&ev.intHomeScore!==''&&ev.intHomeScore!=='None'&&ev.intAwayScore!=='None';
+    var hs=hasScore?Number(ev.intHomeScore):0,as2=hasScore?Number(ev.intAwayScore):0;
     var score=hasScore?ev.intHomeScore+' - '+ev.intAwayScore:'—';
     var isHome=ev.strHomeTeam===tn;
     var won=hasScore&&((isHome&&hs>as2)||(!isHome&&as2>hs));
@@ -2483,9 +2483,9 @@ function filterSportsEvents(){
     h+='<td style="color:var(--t2);font-size:12px;padding:8px 4px;white-space:nowrap">'+localDate+'</td>';
     h+='<td style="padding:8px 4px;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:2px;justify-content:center;width:100%;font-variant-numeric:tabular-nums">';
     h+='<span style="font-weight:'+(hasScore&&as2>hs?'700':'400')+';font-size:11px">'+_spAbbr(ev.strAwayTeam)+'</span>'+_spBadge(awayBadge,18);
-    h+='<span style="font-weight:'+(hasScore&&as2>hs?'800':'500')+';min-width:14px;text-align:right">'+(added?'':as2)+'</span>';
-    h+='<span style="color:var(--t2);margin:0 1px">'+(added?'<span style="color:var(--sp)">✓</span>':'–')+'</span>';
-    h+='<span style="font-weight:'+(hasScore&&hs>as2?'800':'500')+';min-width:14px;text-align:left">'+(added?'':hs)+'</span>';
+    h+='<span style="font-weight:'+(hasScore&&as2>hs?'800':'500')+';min-width:14px;text-align:right">'+(added?'':(hasScore?as2:''))+'</span>';
+    h+='<span style="color:var(--t2);margin:0 1px">'+(added?'<span style="color:var(--sp)">✓</span>':(hasScore?'–':'·'))+'</span>';
+    h+='<span style="font-weight:'+(hasScore&&hs>as2?'800':'500')+';min-width:14px;text-align:left">'+(added?'':(hasScore?hs:''))+'</span>';
     h+=_spBadge(homeBadge,18)+'<span style="font-weight:'+(hasScore&&hs>as2?'700':'400')+';font-size:11px">'+_spAbbr(ev.strHomeTeam)+'</span>';
     h+='</span></td>';
     h+='<td style="font-size:11px;color:var(--t2);padding:8px 4px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(ev.strVenue||'')+'</td>';
