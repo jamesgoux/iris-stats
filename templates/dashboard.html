@@ -448,7 +448,7 @@ function sm(e){return Object.values(e||{}).reduce(function(a,b){return a+b},0)}
 // Type filter helper: does this entry type match current filter?
 function tmatch(type){return ct==='all'||(ct==='movie'&&type==='movie')||(ct==='show'&&type!=='movie')}
 
-function sc(val,label,color){return'<div class="sc"><div class="v" style="color:'+color+'">'+(val===0?'0':val)+'</div><div class="l">'+label+'</div></div>'}
+function sc(val,label,color){if(val===0||val==='0'||val==='0h'||val==='0k'||val==='0%')return'';return'<div class="sc"><div class="v" style="color:'+color+'">'+val+'</div><div class="l">'+label+'</div></div>'}
 function stats(){
   var el=document.getElementById('st');
   // Single-medium filters
