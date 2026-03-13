@@ -1,0 +1,29 @@
+name: Refresh Board Games
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - name: Fetch BGG data
+        env:
+          BGG_USERNAME: jamesgoux
+          BGG_PASSWORD: ${{ secrets.BGG_PASSWORD }}
+        run: python scripts/refresh_boardgames.py
+      - name: Commit data
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git pull --no-rebase -X ours || true
+          git add data/boardgames.json
+          git diff --staged --quiet || git commit -m "Auto-refresh board games data"
+          git push
