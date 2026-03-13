@@ -284,7 +284,7 @@ body{overflow-x:hidden}
 </div>
 <!-- WORKOUTS (Apple Health) -->
 <div class="g2 med-s" data-med="all health" id="hw-wrap" style="display:none">
-<div id="sec-hw" class="cd fw"><h3><span class="i">🏃</span>Workouts</h3><div id="hw-stats" class="sg" style="margin-bottom:8px"></div><div id="hw-toggle" class="vtog" style="margin-bottom:4px"></div><div id="hw-chart" style="height:280px"></div></div>
+<div id="sec-hw" class="cd fw"><h3><span class="i">🏃</span>Workouts</h3><div id="hw-toggle" class="vtog" style="margin-bottom:4px"></div><div id="hw-chart" style="height:280px"></div></div>
 <div class="cd"><h3><span class="i">🏋️</span>Workout Types</h3><div id="hw-types" style="height:280px"></div></div>
 <div class="cd"><h3><span class="i">📋</span>Recent Workouts</h3><div class="stb" id="hw-recent" style="font-size:12px;max-height:350px"></div></div>
 </div>
@@ -2556,9 +2556,6 @@ function renderHealth(){
   var totalW=0,totalD=0,totalC=0;
   Object.values(cy==='all'?byYear:yrData).forEach(function(v){totalW+=v.count;totalD+=v.dur;totalC+=v.cal});
 
-  // Stats tiles
-  document.getElementById('hw-stats').innerHTML=sc(totalW,'🏋️ Workouts','#1db954')+sc(Math.round(totalD/3600)+'h','⏱️ Duration','#fb923c')+sc(Math.round(totalC/1000)+'k','🔥 Calories','#ef4444');
-
   // Toggle (week/month when year selected, year when all)
   var togEl=document.getElementById('hw-toggle');
   if(cy!=='all'){
@@ -2648,7 +2645,7 @@ function renderHealth(){
     });
     rh+='</tbody></table>';recEl.innerHTML=rh;
   }else{recEl.innerHTML='<div style="text-align:center;color:var(--t2);padding:20px">No recent workouts</div>'}
-  }catch(e){document.getElementById('hw-stats').innerHTML='<div style="color:#ef4444;padding:10px">Health error: '+e.message+'</div>'}
+  }catch(e){console.error('Health render error:',e)}
 }
 function renderBoardGames(){
   var bg=D.bg;var wrap=document.getElementById('bg-wrap');
