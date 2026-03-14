@@ -2390,14 +2390,14 @@ function loadTeamEvents(teamId,teamName,teamBadge){
 function jumpToSportsYear(yr){
   if(yr==='all'){window._spYearFilter=null;filterSportsEvents();return}
   window._spYearFilter=yr;
-  // Check if we've already loaded this season
+  // Check if we've already loaded this season (from cache or previous API fetch)
   var have=window._spAllEvents.some(function(ev){return(ev.dateEvent||'').startsWith(yr)});
   if(have){filterSportsEvents();return}
-  // Find the season index for this year and load from there
+  // Year not in cache — fall back to live API
+  window._spUsingCache=false;
   var targetSeasons=[yr+'-'+(parseInt(yr)+1),yr];
   var idx=-1;window._spSeasons.forEach(function(s,i){if(idx<0&&targetSeasons.indexOf(s)>=0)idx=i});
   if(idx>=0&&idx>=window._spSeasonIdx){
-    // Jump ahead: load from the target season onward
     window._spSeasonIdx=idx;
     _spLoadBatch(2);
   }else{filterSportsEvents()}
