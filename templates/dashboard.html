@@ -166,12 +166,12 @@ body{overflow-x:hidden}
 <div id="sec-tl" class="cd fw s-t"><h3 id="tlh"><span class="i">📈</span>Yearly Activity</h3><div id="yrc" style="height:280px"></div><div id="tlc" style="height:280px;display:none"></div></div>
 </div>
 <div class="g2 med-s" data-med="all movie show">
-<div id="sec-act" class="cd s-a"><h3><span class="i">🎭</span>Most Watched Actors <button class="ptbl-new-btn" onclick="_ptblToggleNew('atb',D.a,this)" style="float:right;font-size:11px;padding:4px 10px;background:none;border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;cursor:pointer;display:none">★ New</button></h3><div class="stb"><table><thead><tr><th>#</th><th>Actor</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="atb"></tbody></table></div></div>
-<div class="cd s-a"><h3><span class="i">🎭</span>Most Watched Actresses <button class="ptbl-new-btn" onclick="_ptblToggleNew('xtb',D.x,this)" style="float:right;font-size:11px;padding:4px 10px;background:none;border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;cursor:pointer;display:none">★ New</button></h3><div class="stb"><table><thead><tr><th>#</th><th>Actress</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="xtb"></tbody></table></div></div>
+<div id="sec-act" class="cd s-a"><h3><span class="i">🎭</span>Most Watched Actors <button class="ptbl-new-btn" onclick="_ptblToggleNew('atb',D.a,this)" style="float:right;font-size:11px;padding:4px 10px;background:none;border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;cursor:pointer;display:none">↑ Climbers</button></h3><div class="stb"><table><thead><tr><th>#</th><th>Actor</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="atb"></tbody></table></div></div>
+<div class="cd s-a"><h3><span class="i">🎭</span>Most Watched Actresses <button class="ptbl-new-btn" onclick="_ptblToggleNew('xtb',D.x,this)" style="float:right;font-size:11px;padding:4px 10px;background:none;border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;cursor:pointer;display:none">↑ Climbers</button></h3><div class="stb"><table><thead><tr><th>#</th><th>Actress</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="xtb"></tbody></table></div></div>
 </div>
 <div class="g2 med-s" data-med="all movie show">
-<div id="sec-crew" class="cd s-c"><h3><span class="i">🎬</span>Most Watched Directors <button class="ptbl-new-btn" onclick="_ptblToggleNew('dtb',D.d||[],this)" style="float:right;font-size:11px;padding:4px 10px;background:none;border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;cursor:pointer;display:none">★ New</button></h3><div class="stb"><table><thead><tr><th>#</th><th>Director</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="dtb"></tbody></table></div></div>
-<div class="cd s-c"><h3><span class="i">✍️</span>Most Watched Writers <button class="ptbl-new-btn" onclick="_ptblToggleNew('wtb',D.w||[],this)" style="float:right;font-size:11px;padding:4px 10px;background:none;border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;cursor:pointer;display:none">★ New</button></h3><div class="stb"><table><thead><tr><th>#</th><th>Writer</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="wtb"></tbody></table></div></div>
+<div id="sec-crew" class="cd s-c"><h3><span class="i">🎬</span>Most Watched Directors <button class="ptbl-new-btn" onclick="_ptblToggleNew('dtb',D.d||[],this)" style="float:right;font-size:11px;padding:4px 10px;background:none;border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;cursor:pointer;display:none">↑ Climbers</button></h3><div class="stb"><table><thead><tr><th>#</th><th>Director</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="dtb"></tbody></table></div></div>
+<div class="cd s-c"><h3><span class="i">✍️</span>Most Watched Writers <button class="ptbl-new-btn" onclick="_ptblToggleNew('wtb',D.w||[],this)" style="float:right;font-size:11px;padding:4px 10px;background:none;border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;cursor:pointer;display:none">↑ Climbers</button></h3><div class="stb"><table><thead><tr><th>#</th><th>Writer</th><th>Mov</th><th>Show</th><th>Total</th></tr></thead><tbody id="wtb"></tbody></table></div></div>
 </div>
 <!-- TOP SHOWS POSTERS -->
 <div class="g2 med-s" data-med="all show">
@@ -569,7 +569,7 @@ items.push({p:p,m:m,s:s,tot:m+s,sv:sortVal})});
 items.sort(function(a,b){return b.sv-a.sv});
 // Assign rank numbers before any filtering
 items.forEach(function(item,i){item.rk=i+1});
-// Show/hide "★ New" button based on whether any items have gains
+// Show/hide "↑ Climbers" button based on whether any items have gains
 var hasAnyGain=items.some(function(item){return _personGain(item.p)>0});
 var newBtn=tb.closest('.cd').querySelector('.ptbl-new-btn');
 if(newBtn)newBtn.style.display=hasAnyGain?'':'none';

@@ -984,24 +984,20 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
                     if cur_year in tl[idx].get("eby", {}): g_cy += 1
                 elif idx in tl_recent_show and c_eps:
                     sl = tl_recent_show[idx]
-                    ep_set = c_eps.get(sl)
-                    if not ep_set: continue
-                    # Convert set to list format for _check_show_gain
-                    ep_list = [list(ep) for ep in ep_set]
-                    new_all, new_cy = _check_show_gain({"_": ep_list}, "_")  # won't work — need dict
-                    # Inline check instead (simpler for sets)
+                    ep_data = c_eps.get(sl)
+                    if not ep_data: continue
                     all_recent = True
                     any_older_cy = False
                     has_cy = False
-                    for ep in ep_set:
+                    for ep in ep_data:
                         sn, en = ep[0], ep[1]
-                        yr = ep[2] if len(ep) > 2 else ""
+                        yr = str(ep[2]) if len(ep) > 2 else ""
                         if yr == cur_year: has_cy = True
                         wd = ep_watch_date.get((sl, sn, en), "")
                         if wd and wd < cutoff_date:
                             all_recent = False
                             if wd[:4] == cur_year: any_older_cy = True
-                    if all_recent and ep_set: g_all += 1
+                    if all_recent and ep_data: g_all += 1
                     if (all_recent or not any_older_cy) and has_cy: g_cy += 1
             if g_all or g_cy:
                 gp = {}
@@ -1240,6 +1236,8 @@ if do_cast:
     people, slug_studios, directors_raw, writers_raw, crew_ep_credits = fetch_cast_and_studios(entries)
     with open("data/people.json", "w") as f:
         json.dump(people, f, separators=(',', ':'))
+    with open("data/crew_episodes.json", "w") as f:
+        json.dump(crew_ep_credits, f, separators=(',', ':'))
 else:
     print("\n[2/3] Using cached cast + studios + crew (set FULL_REFRESH=1 to re-fetch)")
     with open("data/people.json") as f:
@@ -1257,6 +1255,9 @@ else:
     if os.path.exists("data/writers.json"):
         with open("data/writers.json") as f: writers_raw = json.load(f)
     crew_ep_credits = {}
+    if os.path.exists("data/crew_episodes.json"):
+        with open("data/crew_episodes.json") as f:
+            crew_ep_credits = json.load(f)
 
 # Save entry slugs with last watched year for headshot priority
 slug_recency = {}
