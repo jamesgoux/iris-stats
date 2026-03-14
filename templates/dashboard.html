@@ -2313,7 +2313,15 @@ function closeSportsAdd(){
 }
 
 function quickLoadTeam(teamName){
-  // Skip search results — look up team ID and go straight to events
+  // Check if team is in pre-cached schedule — skip API call entirely
+  var cached=_spSchedule.teams[teamName];
+  if(cached&&cached.team_id){
+    // Find badge from existing events
+    var badge='';SP.forEach(function(e){if(!badge&&e.my_team===teamName){badge=(e.my_team===e.home_team?e.home_badge:e.away_badge)||''}});
+    loadTeamEvents(cached.team_id,teamName,badge);
+    return;
+  }
+  // Fallback: live API search for uncached teams
   document.getElementById('sp-team-results').innerHTML='<div style="color:var(--t2);padding:10px">Loading '+teamName+'...</div>';
   fetch('https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t='+encodeURIComponent(teamName)).then(function(r){return r.json()}).then(function(d){
     var teams=d.teams||[];
@@ -2472,7 +2480,7 @@ function _spLoadBatch(count){
   });
 }
 
-function loadMoreSportsEvents(){_spLoadBatch(2)}
+function loadMoreSportsEvents(){if(!window._spUsingCache)_spLoadBatch(2)}
 
 var _spAbbrMap={
 // NFL
@@ -2537,13 +2545,15 @@ function filterSportsEvents(){
     return(ev.strEvent||'').toLowerCase().indexOf(ql)>=0||(ev.strVenue||'').toLowerCase().indexOf(ql)>=0||_spDateMatch(ev.dateEvent,ql)||(ev.strHomeTeam||'').toLowerCase().indexOf(ql)>=0||(ev.strAwayTeam||'').toLowerCase().indexOf(ql)>=0;
   });
   // Auto-search away games if filtering by opponent name and no/few results
-  if(ql&&ql.length>=3&&filtered.length<3){
+  // Skip if using cached data (already has home + away)
+  if(!window._spUsingCache&&ql&&ql.length>=3&&filtered.length<3){
     // Try to find a matching team name for away game search
     var knownTeams={};window._spAllEvents.forEach(function(ev){knownTeams[ev.strHomeTeam]=1;knownTeams[ev.strAwayTeam]=1});
     Object.keys(knownTeams).forEach(function(t){if(t!==window._spTeamName&&t.toLowerCase().indexOf(ql)>=0)_spSearchAway(t)});
   }
   // Auto-load more seasons if search has no results but more seasons available
-  if(ql&&filtered.length===0&&window._spSeasonIdx<window._spSeasons.length){
+  // Skip if using cached data (already has all seasons)
+  if(!window._spUsingCache&&ql&&filtered.length===0&&window._spSeasonIdx<window._spSeasons.length){
     var loadEl=document.getElementById('sp-ev-loading');
     if(loadEl&&!loadEl._loading){
       loadEl.textContent='Searching older seasons...';
