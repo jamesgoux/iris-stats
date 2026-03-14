@@ -73,5 +73,20 @@
     "away_badge": "https://r2.thesportsdb.com/images/media/team/badge/yyz5dh1554140884.png",
     "watch_type": "live",
     "my_team": "Los Angeles Dodgers"
+  },
+  {
+    "id": "2052506",
+    "date": "2024-10-06",
+    "sport": "American Football",
+    "league": "NFL",
+    "home_team": "Los Angeles Rams",
+    "away_team": "Green Bay Packers",
+    "home_score": "19",
+    "away_score": "24",
+    "venue": "SoFi Stadium",
+    "home_badge": "https://r2.thesportsdb.com/images/media/team/badge/8e8v4i1599764614.png",
+    "away_badge": "https://r2.thesportsdb.com/images/media/team/badge/rqpwtr1421434717.png",
+    "watch_type": "live",
+    "my_team": "Green Bay Packers"
   }
 ]
