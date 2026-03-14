@@ -337,6 +337,13 @@ def fetch_cast_and_studios(entries):
 
 def build_data(entries, people, headshots, posters, slug_studios, directors_raw, writers_raw, crew_ep_credits=None):
     if crew_ep_credits is None: crew_ep_credits = {}
+    # Build episode watch dates from entries (for green highlight per-person checks)
+    ep_watch_date = {}
+    for e in entries:
+        if e.get("type") != "movie" and e.get("trakt_slug") and e.get("season") and e.get("episode_number"):
+            wa = e.get("watched_at", "")
+            if wa and len(wa) >= 10:
+                ep_watch_date[(e["trakt_slug"], int(e["season"]), int(e["episode_number"]))] = wa[:10]
     # Per-slug metadata for clickable charts
     slug_meta = {}
     for e in entries:
