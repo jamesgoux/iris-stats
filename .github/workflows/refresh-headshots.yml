@@ -15,7 +15,7 @@ concurrency:
 jobs:
   headshots:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +48,12 @@ jobs:
 
       - name: Refresh sports schedules
         run: python scripts/refresh_sports_schedule.py
+        continue-on-error: true
+
+      - name: Backfill crew episode credits
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: python scripts/backfill_crew_episodes.py
         continue-on-error: true
 
       - name: Backfill setlist songs
