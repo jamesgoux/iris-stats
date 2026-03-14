@@ -329,9 +329,14 @@ def fetch_cast_and_studios(entries):
         json.dump(dir_out, f, separators=(',', ':'))
     with open("data/writers.json", "w") as f:
         json.dump(wr_out, f, separators=(',', ':'))
-    return people_out, slug_studios, dir_out, wr_out
+    # Build crew_ep_credits output for build_data
+    crew_ep_out = {}
+    for cpid, shows in crew_ep_credits.items():
+        crew_ep_out[cpid] = {slug: sorted([list(t) for t in eps]) for slug, eps in shows.items()}
+    return people_out, slug_studios, dir_out, wr_out, crew_ep_out
 
-def build_data(entries, people, headshots, posters, slug_studios, directors_raw, writers_raw):
+def build_data(entries, people, headshots, posters, slug_studios, directors_raw, writers_raw, crew_ep_credits=None):
+    if crew_ep_credits is None: crew_ep_credits = {}
     # Per-slug metadata for clickable charts
     slug_meta = {}
     for e in entries:
@@ -459,15 +464,12 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
                 # We know the person has eps[slug].y = {year: count}
                 # Check if ALL their episode watches for this show are within 7 days
                 pname = p["n"]
-                # Find this person's specific episode keys
-                pid = None
-                for _pid, _info in people.items():
-                    if _info["name"] == pname:
-                        pid = _pid
-                        break
-                if not pid or sl not in ep_credits.get(pid, {}):
+                # Find this person's episode tuples from people dict
+                pid = _slugify(pname)
+                person_eps_data = people.get(pid, {}).get("eps", {}).get(sl)
+                if not person_eps_data:
                     continue
-                person_ep_keys = ep_credits[pid][sl]  # set of (season, ep, year) tuples
+                person_ep_keys = [tuple(ep) for ep in person_eps_data]  # list of (s, e, yr) tuples
                 # Check: were any of this person's episodes watched BEFORE the cutoff?
                 all_recent = True
                 any_older_in_cy = False
@@ -1244,7 +1246,7 @@ os.makedirs("data", exist_ok=True)
 do_cast = os.environ.get("FULL_REFRESH") == "1" or not os.path.exists("data/people.json")
 if do_cast:
     print("\n[2/3] Fetching cast + studios + crew...")
-    people, slug_studios, directors_raw, writers_raw = fetch_cast_and_studios(entries)
+    people, slug_studios, directors_raw, writers_raw, crew_ep_credits = fetch_cast_and_studios(entries)
     with open("data/people.json", "w") as f:
         json.dump(people, f, separators=(',', ':'))
 else:
@@ -1263,6 +1265,7 @@ else:
     writers_raw = {}
     if os.path.exists("data/writers.json"):
         with open("data/writers.json") as f: writers_raw = json.load(f)
+    crew_ep_credits = {}
 
 # Save entry slugs with last watched year for headshot priority
 slug_recency = {}
@@ -1372,7 +1375,7 @@ if os.path.exists("data/mezzanine.csv"):
             })
 
 print(f"\n[3/3] Building dashboard ({len(entries)} entries, {len(people)} people, {len(hs)} headshots, {len(ps)} posters)...")
-data = build_data(entries, people, hs, ps, slug_studios, directors_raw, writers_raw)
+data = build_data(entries, people, hs, ps, slug_studios, directors_raw, writers_raw, crew_ep_credits)
 data["lg"] = logos  # studio/network logos
 
 # Letterboxd data: match to Trakt entries via TMDB ID, build rating distribution + tag cloud
