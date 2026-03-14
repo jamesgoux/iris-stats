@@ -386,6 +386,82 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     pd.sort(key=lambda x: (x["tt"], x["_rec"]), reverse=True)
     for p in pd: del p["_rec"]
 
+    # Green highlights: pre-compute gains for "all" and current year only
+    # A person gains if they're in a movie/show watched in the last 7 days
+    # that is genuinely new (not previously watched within that filter period)
+    from datetime import datetime, timedelta
+    cutoff_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    cur_year = datetime.now().strftime("%Y")
+    recent_movies = set()  # titles watched in last 7 days
+    recent_shows = set()
+    older_movies = set()   # titles watched before 7 days
+    older_shows_all = set()  # show titles with ANY older watch
+    older_shows_cur = set()  # show titles with older watches in current year
+
+    for e in entries:
+        d = e.get("watched_at", "")[:10]
+        if not d: continue
+        title = e.get("title", "") or e.get("show_title", "")
+        if not title: continue
+        if d >= cutoff_date:
+            if e["type"] == "movie": recent_movies.add(title)
+            else: recent_shows.add(title)
+        else:
+            if e["type"] == "movie":
+                older_movies.add(title)
+            else:
+                older_shows_all.add(title)
+                if d[:4] == cur_year:
+                    older_shows_cur.add(title)
+
+    # Classify each TL title: new for "all", new for current year, or not new
+    tl_new_all = set()  # TL indices new for all-time view
+    tl_new_cy = set()   # TL indices new for current-year view
+
+    for idx, t in enumerate(tl):
+        title = t["t"]
+        if t["type"] == "movie":
+            if title in recent_movies and title not in older_movies:
+                tl_new_all.add(idx)
+                if cur_year in t.get("eby", {}):
+                    tl_new_cy.add(idx)
+        else:
+            if title in recent_shows:
+                if title not in older_shows_all:
+                    tl_new_all.add(idx)
+                if title not in older_shows_cur and cur_year in t.get("eby", {}):
+                    tl_new_cy.add(idx)
+
+    # For each person, compute g+ with just "all" and current year
+    boosted_count = 0
+    for p in pd:
+        g_all = 0
+        g_cy = 0
+        for idx in p.get("ti", []):
+            if idx in tl_new_all:
+                t = tl[idx]
+                if t["type"] == "movie":
+                    g_all += 1
+                else:
+                    sl = t.get("sl", "")
+                    if sl and p.get("eps", {}).get(sl):
+                        g_all += 1
+            if idx in tl_new_cy:
+                t = tl[idx]
+                if t["type"] == "movie":
+                    g_cy += 1
+                else:
+                    sl = t.get("sl", "")
+                    if sl and p.get("eps", {}).get(sl):
+                        g_cy += 1
+        if g_all or g_cy:
+            p["g+"] = {}
+            if g_all: p["g+"]["all"] = g_all
+            if g_cy: p["g+"][cur_year] = g_cy
+            boosted_count += 1
+    if boosted_count:
+        print(f"  Green highlights: {boosted_count} people with new titles (7d)")
+
     # Show year data
     syd = defaultdict(lambda: {"name": "", "yd": defaultdict(lambda: {"e": 0, "m": 0}), "net": ""})
     for e in entries:
