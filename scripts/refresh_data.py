@@ -2119,6 +2119,8 @@ if os.path.exists("data/health.json"):
             "by_year": dict(by_year),
             "recent": recent
         }
+        # Full workout array for year filtering + lifeline + charts
+        data["_hwAll"] = health_deduped
         print(f"  Health: {len(health_deduped)} workouts, {len(by_type)} types, {round(total_dur/3600,1)}h total")
 
 # Inject Trakt credentials for client-side mark-as-watched
