@@ -386,6 +386,81 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     pd.sort(key=lambda x: (x["tt"], x["_rec"]), reverse=True)
     for p in pd: del p["_rec"]
 
+    # Green highlights: pre-compute per-year gains for each person
+    # A person gains a title if they're in a movie/show watched in the last 7 days
+    # that is genuinely new (not previously watched within that filter period)
+    from datetime import datetime, timedelta
+    cutoff_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    recent_movies = set()  # title names watched in last 7 days
+    recent_shows = set()
+    older_movies = set()   # title names watched before 7 days
+    older_shows_by_year = defaultdict(set)  # title -> set of years with older watches
+
+    for e in entries:
+        d = e.get("watched_at", "")[:10]
+        if not d: continue
+        title = e.get("title", "") or e.get("show_title", "")
+        if not title: continue
+        if d >= cutoff_date:
+            if e["type"] == "movie": recent_movies.add(title)
+            else: recent_shows.add(title)
+        else:
+            yr = d[:4]
+            if e["type"] == "movie": older_movies.add(title)
+            else: older_shows_by_year[title].add(yr)
+
+    # Map TL indices to their new-status per year
+    # For movies: new if in recent and NOT in older
+    # For shows: new for year Y if in recent and NOT in older[title] for year Y
+    tl_new_movie = set()  # TL indices of truly new movies
+    tl_new_show_years = defaultdict(set)  # TL index -> set of years it's new for
+
+    all_years = sorted(set(e["watched_at"][:4] for e in entries if e.get("watched_at")))
+
+    for idx, t in enumerate(tl):
+        title = t["t"]
+        if t["type"] == "movie":
+            if title in recent_movies and title not in older_movies:
+                tl_new_movie.add(idx)
+        else:
+            if title in recent_shows:
+                older_yrs = older_shows_by_year.get(title, set())
+                show_eby_yrs = set(t.get("eby", {}).keys())  # years this show was actually watched
+                if not older_yrs:
+                    # Brand new show — never watched before last 7 days
+                    tl_new_show_years[idx].add("all")
+                    for yr in show_eby_yrs:
+                        tl_new_show_years[idx].add(yr)
+                else:
+                    # Show watched before — only new for years without older watches
+                    # AND only for years the show actually has data
+                    for yr in show_eby_yrs:
+                        if yr not in older_yrs:
+                            tl_new_show_years[idx].add(yr)
+
+    # For each person, compute g+ = {year: gain_count}
+    boosted_count = 0
+    for p in pd:
+        gains = defaultdict(int)  # year -> count
+        for idx in p.get("ti", []):
+            if idx in tl_new_movie:
+                gains["all"] += 1
+                for yr in tl[idx].get("eby", {}).keys():
+                    gains[yr] += 1
+            elif idx in tl_new_show_years:
+                new_yrs = tl_new_show_years[idx]
+                # Person must have eps for this show
+                t = tl[idx]
+                sl = t.get("sl", "")
+                if sl and p.get("eps", {}).get(sl):
+                    for yr in new_yrs:
+                        gains[yr] += 1
+        if gains:
+            p["g+"] = dict(gains)
+            boosted_count += 1
+    if boosted_count:
+        print(f"  Green highlights: {boosted_count} people with new titles (7d)")
+
     # Show year data
     syd = defaultdict(lambda: {"name": "", "yd": defaultdict(lambda: {"e": 0, "m": 0}), "net": ""})
     for e in entries:
