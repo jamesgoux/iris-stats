@@ -82,6 +82,10 @@ def norm_show(e):
 def fetch_cast_and_studios(entries):
     show_slugs = set(); movie_slugs = set()
     slug_tmdb = {}  # slug -> (tmdb_id, is_show)
+    # Build set of show slugs watched in last 7 days (for targeted crew re-fetch)
+    from datetime import datetime, timedelta
+    _cutoff_7d = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    _recent_slugs_7d = set(e["trakt_slug"] for e in entries if e.get("trakt_slug") and e["type"] != "movie" and e.get("watched_at", "")[:10] >= _cutoff_7d)
     # Build show → seasons → episodes map from user's watch history
     show_episodes = defaultdict(lambda: defaultdict(set))  # slug -> season -> set of episode nums
     ep_watch_year = {}  # (slug, season, episode) -> watch year
@@ -239,10 +243,11 @@ def fetch_cast_and_studios(entries):
             tmdb_id, _ = tmdb_info
             for season_num, ep_nums in seasons.items():
                 cache_key = f"{tmdb_id}|{season_num}"
-                # Use cache if available (re-fetch if missing crew data)
+                # Use cache if available
+                # Re-fetch if missing crew data AND this is a recently-watched show
                 cached_entry = season_cache.get(cache_key)
-                has_crew = cached_entry and any(ep.get("crew") for ep in cached_entry.get("episodes", []))
-                if cached_entry and has_crew:
+                needs_crew = cached_entry and not any(ep.get("crew") for ep in cached_entry.get("episodes", [])) and slug in _recent_slugs_7d
+                if cached_entry and not needs_crew:
                     sdata = cached_entry
                     cached_count += 1
                 else:
