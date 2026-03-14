@@ -85,6 +85,7 @@ def fetch_cast_and_studios(entries):
     # Build show → seasons → episodes map from user's watch history
     show_episodes = defaultdict(lambda: defaultdict(set))  # slug -> season -> set of episode nums
     ep_watch_year = {}  # (slug, season, episode) -> watch year
+    ep_watch_date = {}  # (slug, season, episode) -> full date (YYYY-MM-DD)
     for e in entries:
         if e["trakt_slug"]:
             is_show = e["type"] != "movie"
@@ -97,6 +98,7 @@ def fetch_cast_and_studios(entries):
                 wa = e.get("watched_at", "")
                 if wa and len(wa) >= 4:
                     ep_watch_year[(e["trakt_slug"], sn, en)] = wa[:4]
+                    ep_watch_date[(e["trakt_slug"], sn, en)] = wa[:10]
     # MERGE with existing people data so we never lose actors
     people = defaultdict(lambda: {"name": "", "gender": None, "titles": set()})
     directors = defaultdict(lambda: {"name": "", "titles": set()})
@@ -387,73 +389,98 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     for p in pd: del p["_rec"]
 
     # Green highlights: pre-compute gains for "all" and current year only
-    # A person gains if they're in a movie/show watched in the last 7 days
-    # that is genuinely new (not previously watched within that filter period)
+    # Per-person logic using actual episode watch dates:
+    # Movies: new if watched in last 7 days and NOT a rewatch
+    # Shows: new for this person if ALL their episodes were watched in last 7 days
+    #   (i.e. none of their specific episodes were watched before the 7-day window)
     from datetime import datetime, timedelta
     cutoff_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
     cur_year = datetime.now().strftime("%Y")
-    recent_movies = set()  # titles watched in last 7 days
-    recent_shows = set()
-    older_movies = set()   # titles watched before 7 days
-    older_shows_all = set()  # show titles with ANY older watch
-    older_shows_cur = set()  # show titles with older watches in current year
 
+    # Movies: recent vs older
+    recent_movies = set()
+    older_movies = set()
+    # Shows watched recently (for quick pre-filter)
+    recent_show_slugs = set()
     for e in entries:
         d = e.get("watched_at", "")[:10]
         if not d: continue
-        title = e.get("title", "") or e.get("show_title", "")
-        if not title: continue
-        if d >= cutoff_date:
-            if e["type"] == "movie": recent_movies.add(title)
-            else: recent_shows.add(title)
-        else:
-            if e["type"] == "movie":
-                older_movies.add(title)
-            else:
-                older_shows_all.add(title)
-                if d[:4] == cur_year:
-                    older_shows_cur.add(title)
+        if e["type"] == "movie":
+            title = e.get("title", "")
+            if d >= cutoff_date: recent_movies.add(title)
+            else: older_movies.add(title)
+        elif e.get("trakt_slug") and d >= cutoff_date:
+            recent_show_slugs.add(e["trakt_slug"])
 
-    # Classify each TL title: new for "all", new for current year, or not new
-    tl_new_all = set()  # TL indices new for all-time view
-    tl_new_cy = set()   # TL indices new for current-year view
-
+    # Map TL movie indices that are new
+    tl_new_movie = set()
     for idx, t in enumerate(tl):
-        title = t["t"]
-        if t["type"] == "movie":
-            if title in recent_movies and title not in older_movies:
-                tl_new_all.add(idx)
-                if cur_year in t.get("eby", {}):
-                    tl_new_cy.add(idx)
-        else:
-            if title in recent_shows:
-                if title not in older_shows_all:
-                    tl_new_all.add(idx)
-                if title not in older_shows_cur and cur_year in t.get("eby", {}):
-                    tl_new_cy.add(idx)
+        if t["type"] == "movie" and t["t"] in recent_movies and t["t"] not in older_movies:
+            tl_new_movie.add(idx)
 
-    # For each person, compute g+ with just "all" and current year
+    # For shows: use ep_watch_date to check per-person episode dates
+    # ep_credits has: pid -> slug -> {(season, ep, year)} for each person's episodes
+    # ep_watch_date has: (slug, season, ep) -> "YYYY-MM-DD" for each episode's watch date
+
     boosted_count = 0
     for p in pd:
         g_all = 0
         g_cy = 0
         for idx in p.get("ti", []):
-            if idx in tl_new_all:
-                t = tl[idx]
-                if t["type"] == "movie":
+            t = tl[idx]
+            if t["type"] == "movie":
+                if idx in tl_new_movie:
                     g_all += 1
-                else:
-                    sl = t.get("sl", "")
-                    if sl and p.get("eps", {}).get(sl):
-                        g_all += 1
-            if idx in tl_new_cy:
-                t = tl[idx]
-                if t["type"] == "movie":
-                    g_cy += 1
-                else:
-                    sl = t.get("sl", "")
-                    if sl and p.get("eps", {}).get(sl):
+                    if cur_year in t.get("eby", {}):
                         g_cy += 1
+            else:
+                sl = t.get("sl", "")
+                if not sl or sl not in recent_show_slugs:
+                    continue
+                # Get this person's episode list for this show
+                p_eps_raw = p.get("eps", {}).get(sl)
+                if not p_eps_raw:
+                    continue
+                # Look up each of this person's episodes in ep_credits
+                # We need the (season, ep) tuples — stored in ep_credits[pid][slug]
+                # But pd doesn't have pid. Use name to find in ep_credits.
+                # Alternative: check using eps year data + ep_watch_date
+                # We know the person has eps[slug].y = {year: count}
+                # Check if ALL their episode watches for this show are within 7 days
+                pname = p["n"]
+                # Find this person's specific episode keys
+                pid = None
+                for _pid, _info in people.items():
+                    if _info["name"] == pname:
+                        pid = _pid
+                        break
+                if not pid or sl not in ep_credits.get(pid, {}):
+                    continue
+                person_ep_keys = ep_credits[pid][sl]  # set of (season, ep, year) tuples
+                # Check: were any of this person's episodes watched BEFORE the cutoff?
+                all_recent = True
+                any_older_in_cy = False
+                for ep_tuple in person_ep_keys:
+                    sn, en = ep_tuple[0], ep_tuple[1]
+                    watch_d = ep_watch_date.get((sl, sn, en), "")
+                    if watch_d and watch_d < cutoff_date:
+                        all_recent = False
+                        if watch_d[:4] == cur_year:
+                            any_older_in_cy = True
+                if all_recent and person_ep_keys:
+                    g_all += 1
+                    if any(ep_tuple[2] == cur_year if len(ep_tuple) > 2 else False for ep_tuple in person_ep_keys):
+                        g_cy += 1
+                elif not any_older_in_cy and any(ep_tuple[2] == cur_year if len(ep_tuple) > 2 else False for ep_tuple in person_ep_keys):
+                    # Show was watched before (all time), but person's episodes in current year are all recent
+                    person_cy_eps = [ep for ep in person_ep_keys if len(ep) > 2 and ep[2] == cur_year]
+                    cy_all_recent = all(
+                        ep_watch_date.get((sl, ep[0], ep[1]), "") >= cutoff_date
+                        for ep in person_cy_eps
+                    ) if person_cy_eps else False
+                    if cy_all_recent:
+                        g_cy += 1
+
         if g_all or g_cy:
             p["g+"] = {}
             if g_all: p["g+"]["all"] = g_all
@@ -920,17 +947,30 @@ def build_data(entries, people, headshots, posters, slug_studios, directors_raw,
     dir_list = build_crew(directors_raw)
     wr_list = build_crew(writers_raw)
 
-    # Apply green highlights to crew (same logic, no eps check needed)
+    # Apply green highlights to crew (show-level: new if show slug has no older watches)
+    older_show_slugs_all = set()  # slugs with ANY older watch
+    older_show_slugs_cy = set()   # slugs with older watch in current year
+    for e in entries:
+        d = e.get("watched_at", "")[:10]
+        if not d or d >= cutoff_date or e["type"] == "movie": continue
+        slug = e.get("trakt_slug", "")
+        if slug:
+            older_show_slugs_all.add(slug)
+            if d[:4] == cur_year: older_show_slugs_cy.add(slug)
     for cl in [dir_list, wr_list]:
         for p in cl:
             g_all = g_cy = 0
             for idx in p.get("ti", []):
-                if idx in tl_new_movie:
-                    g_all += 1
-                    if cur_year in tl[idx].get("eby", {}): g_cy += 1
-                elif idx in tl_new_show_years:
-                    if "all" in tl_new_show_years[idx]: g_all += 1
-                    if cur_year in tl_new_show_years[idx]: g_cy += 1
+                t = tl[idx]
+                if t["type"] == "movie":
+                    if idx in tl_new_movie:
+                        g_all += 1
+                        if cur_year in t.get("eby", {}): g_cy += 1
+                else:
+                    sl = t.get("sl", "")
+                    if sl in recent_show_slugs:
+                        if sl not in older_show_slugs_all: g_all += 1
+                        if sl not in older_show_slugs_cy and cur_year in t.get("eby", {}): g_cy += 1
             if g_all or g_cy:
                 gp = {}
                 if g_all: gp["all"] = g_all
