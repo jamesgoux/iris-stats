@@ -88,5 +88,20 @@
     "away_badge": "",
     "watch_type": "live",
     "my_team": "Los Angeles Dodgers"
+  },
+  {
+    "id": "1656878",
+    "date": "2022-10-11",
+    "sport": "Baseball",
+    "league": "MLB",
+    "home_team": "Los Angeles Dodgers",
+    "away_team": "San Diego Padres",
+    "home_score": "5",
+    "away_score": "3",
+    "venue": "",
+    "home_badge": "",
+    "away_badge": "",
+    "watch_type": "live",
+    "my_team": "Los Angeles Dodgers"
   }
 ]
