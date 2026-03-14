@@ -30,21 +30,6 @@
     "my_team": "Los Angeles Dodgers"
   },
   {
-    "id": "1910740",
-    "date": "2023-10-08",
-    "sport": "Baseball",
-    "league": "MLB",
-    "home_team": "Los Angeles Dodgers",
-    "away_team": "Arizona Diamondbacks",
-    "home_score": "2",
-    "away_score": "11",
-    "venue": "",
-    "home_badge": "",
-    "away_badge": "",
-    "watch_type": "live",
-    "my_team": "Los Angeles Dodgers"
-  },
-  {
     "id": "2423873",
     "date": "2026-02-08",
     "sport": "American Football",
